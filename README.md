@@ -36,7 +36,7 @@ React Frontend (Vite)          ← chat UI, hosted on GitHub Pages
 
 ### Prerequisites
 - [Node.js 20+](https://nodejs.org) installed
-- An [Anthropic API key](https://console.anthropic.com) (free tier works)
+- An [Anthropic API key](https://console.anthropic.com)
 
 ### 1. Clone the repo
 ```bash
@@ -78,29 +78,14 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) — you're live! 🎉
+Open [http://localhost:5173](http://localhost:5173) — you're live!
 
 ---
 
-## Deployment (Free)
+## Deployment 
 
 ### Backend → Render
-
-1. Go to [render.com](https://render.com) and sign up with GitHub
-2. Click **New → Web Service** and connect this repo
-3. Configure:
-   - **Root Directory:** `mcp-server`
-   - **Build Command:** `npm install`
-   - **Start Command:** `npm start`
-   - **Environment Variable:** `ANTHROPIC_API_KEY` = your key
-4. Deploy — Render gives you a URL like `https://ask-my-resume-xxxx.onrender.com`
-
 ### Frontend → GitHub Pages
-
-1. In your GitHub repo, go to **Settings → Secrets and variables → Actions**
-2. Add a secret: `VITE_API_URL` = your Render URL from above
-3. Go to **Settings → Pages** and set source to **GitHub Actions**
-4. Push to `main` — the GitHub Action will build and deploy automatically
 
 ---
 
@@ -110,20 +95,49 @@ Open [http://localhost:5173](http://localhost:5173) — you're live! 🎉
 ask-my-resume/
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml        # Auto-deploys frontend on push to main
+│       └── deploy.yml                # Auto-deploys frontend on push to main
 ├── mcp-server/
-│   ├── index.js              # Express server + MCP tool + Claude agentic loop
-│   ├── resume.pdf            # My resume (the AI's source of truth)
-│   ├── .env.example          # Environment variable template
-│   └── package.json
+│   ├── index.js                      # Express server setup + resume loading
+│   ├── resume.pdf                    # Jay's resume (the AI's source of truth)
+│   ├── package.json
+│   ├── .env.example                  # Environment variable template
+│   ├── lib/
+│   │   ├── claude.js                 # Anthropic client + agentic loop
+│   │   ├── config.js                 # Server configuration
+│   │   ├── prompts.js                # System prompts for Claude
+│   │   ├── resume.js                 # Resume PDF loading & caching
+│   │   └── tools.js                  # MCP tool definitions (search_resume)
+│   └── routes/
+│       ├── chat.js                   # POST /chat endpoint
+│       └── health.js                 # GET /health endpoint
 └── frontend/
-    ├── src/
-    │   ├── App.jsx           # Chat UI + API calls
-    │   └── main.jsx          # React entry point
     ├── index.html
     ├── vite.config.js
+    ├── package.json
     ├── .env.example
-    └── package.json
+    ├── public/
+    ├── src/
+    │   ├── App.jsx                   # Main app with routing
+    │   ├── main.jsx                  # React entry point
+    │   ├── theme.js                  # MUI theme (beige + dark grey)
+    │   ├── config/
+    │   │   └── constants.js          # App-wide constants & config
+    │   ├── components/
+    │   │   ├── ChatHeader.jsx        # Chat page header with status
+    │   │   ├── ChatInput.jsx         # Message input with auto-resize
+    │   │   ├── EmptyState.jsx        # Initial state with suggested questions
+    │   │   ├── Message.jsx           # Individual message bubble
+    │   │   ├── MessageAvatar.jsx     # User/AI avatar component
+    │   │   ├── MessagesList.jsx      # Messages container with typing indicator
+    │   │   ├── NavDrawer.jsx         # Mobile-first navigation menu
+    │   │   ├── TypingIndicator.jsx   # Animated dots while AI responds
+    │   │   └── index.js              # Component exports
+    │   └── pages/
+    │       ├── ChatPage.jsx          # Main chat interface
+    │       ├── AboutPage.jsx         # About the project & tech stack
+    │       ├── ContactPage.jsx       # Contact & social links
+    │       └── index.js              # Page exports
+    └── README.md
 ```
 
 ---
