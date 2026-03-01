@@ -1,6 +1,7 @@
 import { createTheme } from "@mui/material/styles";
 
 // Beige + dark grey — minimal (dark background, beige text)
+// Thoughtful, warm, minimalistic theme
 const beige = "#DDD0C8";
 const darkGrey = "#323232";
 const beigeMuted = "#b8a99e";
