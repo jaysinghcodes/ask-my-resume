@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 
-export function ChatHeader({ backendOk }) {
+export function ChatHeader() {
   return (
     <Box
       component="header"
@@ -19,29 +19,13 @@ export function ChatHeader({ backendOk }) {
         <Typography
           variant="caption"
           sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.75,
+            display: "block",
             mb: 0.75,
             letterSpacing: "0.2em",
-            color: backendOk === false ? "error.main" : "primary.main",
+            color: "primary.main",
           }}
         >
-          <Box
-            component="span"
-            sx={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              bgcolor: backendOk === false ? "error.main" : "primary.main",
-              animation: backendOk === false ? "none" : "pulse 2s infinite",
-              "@keyframes pulse": {
-                "0%, 100%": { opacity: 1 },
-                "50%": { opacity: 0.3 },
-              },
-            }}
-          />
-          {backendOk === false ? "Backend offline" : "AI Resume Assistant"}
+          AI Resume Assistant
         </Typography>
         <Typography
           variant="h1"

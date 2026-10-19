@@ -4,6 +4,7 @@ import {
   TextField,
   Stack,
   Alert,
+  Button,
   IconButton,
   Typography,
 } from "@mui/material";
@@ -16,9 +17,10 @@ export function ChatInput({
   onKeyDown,
   loading,
   error,
+  onRetry,
   onDismissError,
 }) {
-  const textareaRef = useRef(null);
+  const textareaRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
 
   function autoResize() {
     const el = textareaRef.current;
@@ -48,7 +50,36 @@ export function ChatInput({
       }}
     >
       {error && (
-        <Alert severity="error" onClose={onDismissError} sx={{ mb: 1.5 }}>
+        <Alert
+          severity="error"
+          onClose={onDismissError}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={onRetry}
+              disabled={loading}
+              sx={{ minHeight: 44, whiteSpace: "nowrap" }}
+            >
+              Try again
+            </Button>
+          }
+          sx={{
+            mb: 1.5,
+            alignItems: "center",
+            flexWrap: "wrap",
+            "& .MuiAlert-message": {
+              minWidth: 0,
+              flex: "1 1 180px",
+              overflowWrap: "anywhere",
+            },
+            "& .MuiAlert-action": {
+              marginLeft: 0,
+              paddingTop: 0,
+              alignItems: "center",
+            },
+          }}
+        >
           {error}
         </Alert>
       )}
