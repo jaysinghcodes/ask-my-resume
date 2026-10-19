@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import fs from "fs";
-import { MAX_TOOL_ROUNDS, runAgenticLoop } from "../lib/claude.js";
+import { MAX_TOOL_ROUNDS, ToolRoundLimitError, runAgenticLoop } from "../lib/claude.js";
 
 /**
  * @param {string} id
@@ -46,14 +46,15 @@ describe("runAgenticLoop", () => {
     });
     const client = { messages: { create } };
 
-    const result = await runAgenticLoop(/** @type {any} */ (client), {
-      systemPrompt: "system",
-      messages: [{ role: "user", content: "Tell me about his AWS work" }],
-      model: "model-from-env",
-    });
+    await expect(
+      runAgenticLoop(/** @type {any} */ (client), {
+        systemPrompt: "system",
+        messages: [{ role: "user", content: "Tell me about his AWS work" }],
+        model: "model-from-env",
+      }),
+    ).rejects.toBeInstanceOf(ToolRoundLimitError);
 
     expect(create).toHaveBeenCalledTimes(5);
-    expect(result).toBe("");
     expect(seen[0].model).toBe("model-from-env");
     expect(seen[0].lastRole).toBe("user");
     expect(seen[1].lastRole).toBe("user");

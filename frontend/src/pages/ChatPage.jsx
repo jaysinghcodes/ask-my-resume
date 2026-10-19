@@ -36,7 +36,9 @@ export function ChatPage() {
 
       if (!res.ok) throw new Error("chat failed");
       const data = await res.json();
-      if (typeof data.response !== "string") throw new Error("chat failed");
+      if (typeof data.response !== "string" || data.response.trim() === "") {
+        throw new Error("chat failed");
+      }
 
       setMessages([...history, { role: "ai", content: data.response }]);
     } catch {

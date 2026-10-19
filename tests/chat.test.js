@@ -111,6 +111,45 @@ describe("POST /api/chat", () => {
     );
   });
 
+  it("returns the friendly error when a capped tool loop has no text", async () => {
+    const actual = await vi.importActual("../lib/claude.js");
+    let calls = 0;
+    const create = vi.fn(async () => {
+      calls += 1;
+      if (calls > 5) {
+        throw new Error("loop continued past 5 tool rounds");
+      }
+      return {
+        stop_reason: "tool_use",
+        content: [
+          {
+            type: "tool_use",
+            id: `tool_${calls}`,
+            name: "search_resume",
+            input: { query: "skills" },
+          },
+        ],
+      };
+    });
+    /** @type {import("vitest").Mock} */ (createClient).mockImplementationOnce(() => ({
+      messages: { create },
+    }));
+    /** @type {import("vitest").Mock} */ (runAgenticLoop).mockImplementationOnce(
+      /** @type {any} */ (actual).runAgenticLoop,
+    );
+
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    process.env.MODEL_ID = "model-from-env";
+    const response = await POST(
+      chatRequest({ messages: [{ role: "user", content: "Hi" }] }),
+    );
+
+    expect(create).toHaveBeenCalledTimes(5);
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: FRIENDLY });
+    expect(response.headers.get("access-control-allow-origin")).toBeNull();
+  });
+
   it("returns the friendly error for a bad body", async () => {
     const response = await POST(chatRequest({ nope: true }));
     expect(response.status).toBe(400);
