@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm install && npm install --prefix frontend",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev --prefix frontend -- --host 127.0.0.1 --port $PORT",
+  "outputDirectory": "frontend/dist",
+  "fluid": true,
+  "functions": {
+    "api/chat.js": {
+      "maxDuration": 60,
+      "includeFiles": "mcp-server/resume.pdf"
+    },
+    "api/health.js": {
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}

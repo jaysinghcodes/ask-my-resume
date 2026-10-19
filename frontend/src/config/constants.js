@@ -2,9 +2,10 @@
  * App-wide constants and config.
  */
 
-export const API_URL =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? "/api" : "http://localhost:3001");
+export const API_URL = "/api";
+
+export const CHAT_ERROR_MESSAGE =
+  "Something went wrong getting that answer. Try again.";
 
 export const SUGGESTED_QUESTIONS = [
   "What are Jay's strongest technical skills?",
@@ -13,9 +14,6 @@ export const SUGGESTED_QUESTIONS = [
   "Is he a good fit for a backend role?",
   "What cloud platforms does he know?",
 ];
-
-export const BACKEND_ERROR_HINT =
-  "Start the backend with: cd mcp-server && npm install && npm start";
 
 export const CONTACT_LINKS = [
   {

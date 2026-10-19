@@ -1,43 +1,25 @@
 import { useState, useRef, useEffect } from "react";
 import { Box } from "@mui/material";
-import { API_URL, BACKEND_ERROR_HINT } from "../config/constants";
+import { API_URL, CHAT_ERROR_MESSAGE } from "../config/constants";
 import { ChatHeader, EmptyState, ChatInput, MessagesList } from "../components";
 
+/**
+ * @typedef {{ role: string, content: string }} ChatMessage
+ */
+
 export function ChatPage() {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(/** @type {ChatMessage[]} */ ([]));
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [backendOk, setBackendOk] = useState(null);
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef(/** @type {HTMLDivElement | null} */ (null));
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`${API_URL}/health`)
-      .then((r) => (r.ok ? true : false))
-      .then((ok) => {
-        if (!cancelled) setBackendOk(ok);
-      })
-      .catch(() => {
-        if (!cancelled) setBackendOk(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function sendMessage(text) {
-    const question = text.trim();
-    if (!question || loading) return;
-
+  async function requestAnswer(history) {
     setError("");
-    const newMessages = [...messages, { role: "user", content: question }];
-    setMessages(newMessages);
-    setInput("");
     setLoading(true);
 
     try {
@@ -45,27 +27,38 @@ export function ChatPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: newMessages.map((m) => ({
+          messages: history.map((m) => ({
             role: m.role,
             content: m.content,
           })),
         }),
       });
 
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      if (!res.ok) throw new Error("chat failed");
       const data = await res.json();
+      if (typeof data.response !== "string") throw new Error("chat failed");
 
-      setMessages([...newMessages, { role: "ai", content: data.response }]);
-    } catch (err) {
-      const parts = [
-        "Couldn't reach the server.",
-        backendOk === false ? BACKEND_ERROR_HINT : "",
-        err?.message || "",
-      ].filter(Boolean);
-      setError(parts.join(" "));
+      setMessages([...history, { role: "ai", content: data.response }]);
+    } catch {
+      setError(CHAT_ERROR_MESSAGE);
     } finally {
       setLoading(false);
     }
+  }
+
+  function sendMessage(text) {
+    const question = text.trim();
+    if (!question || loading) return;
+
+    const newMessages = [...messages, { role: "user", content: question }];
+    setMessages(newMessages);
+    setInput("");
+    requestAnswer(newMessages);
+  }
+
+  function retry() {
+    if (loading || messages.length === 0) return;
+    requestAnswer(messages);
   }
 
   function handleKeyDown(e) {
@@ -91,7 +84,7 @@ export function ChatPage() {
         minWidth: 0,
       }}
     >
-      <ChatHeader backendOk={backendOk} />
+      <ChatHeader />
 
       <Box
         sx={{
@@ -132,6 +125,7 @@ export function ChatPage() {
         onKeyDown={handleKeyDown}
         loading={loading}
         error={error}
+        onRetry={retry}
         onDismissError={() => setError("")}
       />
     </Box>

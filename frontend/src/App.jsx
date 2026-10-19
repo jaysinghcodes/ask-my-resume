@@ -5,7 +5,7 @@ import { ChatPage, AboutPage, ContactPage } from "./pages";
 
 export default function App() {
   return (
-    <BrowserRouter basename="/ask-my-resume">
+    <BrowserRouter>
       <Box
         sx={{
           minHeight: "100vh",
