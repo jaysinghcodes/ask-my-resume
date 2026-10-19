@@ -20,7 +20,7 @@ The page and the API share one origin. There is no CORS middleware and no separa
 
 ### Prerequisites
 
-- Node.js 20 or newer
+- Node.js 24
 - An Anthropic API key and a Claude model id. See [docs/SETUP.md](docs/SETUP.md). The Anthropic workspace, key, and monthly spend limit come first.
 
 ### Install and check
