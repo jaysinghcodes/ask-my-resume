@@ -11,4 +11,4 @@ kb/kb.json
 mcp-server/resume.pdf
 mcp-server/**/*.pdf
 **/*[Rr]esume*.[Pp][Dd][Ff]
-!/public/Jay-Singh-Resume-Oct-2026.pdf
+!/frontend/public/Jay-Singh-Resume-Oct-2026.pdf

@@ -1,16 +1,16 @@
 /**
- * Scan committed text files and PDFs for phone numbers.
+ * Repo phone scan. Stay in sync with the phone bar in lib/kb-build.js
+ * from PR #18 (issue #3, not on main yet).
  *
- * Stay in sync with the PHONE rule in lib/kb-build.js from PR #18 (not on main yet):
- * separated 3 3 4 forms, with an optional leading country code.
- * This repo scan also covers the CI forms from issue #19:
- * unseparated 10 digit runs with an optional leading 1 or +1,
- * tel links, an opening bracket with no space after it,
- * international numbers (a leading + and 8 to 15 digits),
- * and runs of 10 or more digits in phone shapes.
- * Whitespace runs, including non breaking spaces, collapse to one space
- * before matching. Years, dates, versions, SHAs, and long ids are not flagged.
- * Output is file path and line number only. Matched text is never printed.
+ * Normalize each character with NFKC, strip Unicode Cf, fold Arabic Indic
+ * digits to ASCII (NFKC leaves them unchanged), and map U+2010 to U+2015
+ * and U+2212 to an ASCII hyphen. Collapse whitespace, then drop separators
+ * that sit between digits (space, dash, dot, slash, underscore, comma,
+ * parentheses). A run of 10 to 15 digits fails, with or without a leading
+ * + or 00. A neighboring letter or x does not exempt that run. tel links
+ * fail the same way. Hex hashes of 7 to 40 characters that contain a letter,
+ * UUIDs, ISO dates, and exact tokens in scripts/phone-scan-allowlist.txt
+ * are kept. Output is the file path and line number only.
  */
 
 import { execFileSync, spawnSync } from "node:child_process";
@@ -19,6 +19,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const FIXTURE_DIR = "tests/fixtures/phone-scan";
+const ALLOWLIST_REL = "scripts/phone-scan-allowlist.txt";
 
 const LOCKFILE_BASENAMES = new Set([
   "package-lock.json",
@@ -48,199 +49,173 @@ const SKIP_EXT = new Set([
   ".lockb",
 ]);
 
+const ISO_DATE = /(?<!\d)\d{4}-\d{2}-\d{2}(?:[tT]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:[zZ]|[+-]\d{2}:?\d{2})?)?(?!\d)/g;
+const UUID_TOKEN = /(?<![0-9a-fA-F])[0-9a-fA-F]{8}[-\s][0-9a-fA-F]{4}[-\s][0-9a-fA-F]{4}[-\s][0-9a-fA-F]{4}[-\s][0-9a-fA-F]{12}(?![0-9a-fA-F])/g;
+const HEX_HASH = /(?<![0-9a-fA-F])[0-9a-fA-F]{7,40}(?![0-9a-fA-F])/g;
+const PHONE_RUN = /(?<!\d)(?:\+|00)?\d{10,15}(?!\d)/g;
+const SEPARATOR = /(?<=\d)[ \t./\\_,()\-\u2010-\u2015\u2212]+(?=\d)/g;
+
 /**
  * @param {string} ch
- * @returns {boolean}
+ * @returns {string}
  */
-function isWhitespace(ch) {
-  return /[\s\u00a0\u2007\u202f]/u.test(ch);
+function foldChar(ch) {
+  if (/\p{Cf}/u.test(ch)) return "";
+  let next = ch.normalize("NFKC").replace(/\p{Cf}/gu, "");
+  next = next.replace(/[\u2010-\u2015\u2212]/g, "-");
+  let folded = "";
+  for (const part of next) {
+    const cp = part.codePointAt(0) ?? 0;
+    if (cp >= 0x0660 && cp <= 0x0669) folded += String(cp - 0x0660);
+    else if (cp >= 0x06f0 && cp <= 0x06f9) folded += String(cp - 0x06f0);
+    else if (/\p{Zs}/u.test(part) || part === "\n" || part === "\t") folded += " ";
+    else folded += part;
+  }
+  return folded;
 }
 
 /**
- * Collapse whitespace runs to one space. Newlines stay mapped so a hit can
- * report the original line.
  * @param {string} input
- * @returns {{ text: string, lines: number[] }}
+ * @returns {{ ch: string, line: number }[]}
  */
-export function normalizeForScan(input) {
+export function normalizeChars(input) {
   const source = String(input).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-  let text = "";
-  /** @type {number[]} */
-  const lines = [];
+  /** @type {{ ch: string, line: number }[]} */
+  const out = [];
   let line = 1;
-  let pending = false;
-  let pendingLine = 1;
-
-  for (const ch of source) {
-    if (ch === "\n") line += 1;
-    if (isWhitespace(ch)) {
-      if (!pending) pendingLine = line;
-      pending = true;
+  const units = [...source];
+  for (let i = 0; i < units.length; i += 1) {
+    const ch = units[i];
+    if (ch === "\n") {
+      line += 1;
+      out.push({ ch: "\n", line });
       continue;
     }
-    if (pending && text.length > 0) {
-      text += " ";
-      lines.push(pendingLine);
+    if (ch === "%" && i + 2 < units.length && /^[0-9a-fA-F]$/.test(units[i + 1]) && /^[0-9a-fA-F]$/.test(units[i + 2])) {
+      const decoded = String.fromCharCode(Number.parseInt(units[i + 1] + units[i + 2], 16));
+      i += 2;
+      for (const part of foldChar(decoded)) out.push({ ch: part, line });
+      continue;
     }
-    pending = false;
-    text += ch;
-    lines.push(line);
+    for (const part of foldChar(ch)) out.push({ ch: part, line });
   }
 
-  return { text, lines };
+  /** @type {{ ch: string, line: number }[]} */
+  const collapsed = [];
+  for (const item of out) {
+    const prev = collapsed[collapsed.length - 1];
+    if (item.ch === " " && prev && prev.ch === " ") continue;
+    collapsed.push(item);
+  }
+  return collapsed;
 }
 
 /**
+ * @param {{ ch: string, line: number }[]} items
+ * @param {RegExp} regex
+ * @param {(token: string) => boolean} [accept]
+ * @returns {{ ch: string, line: number }[]}
+ */
+function blankMatches(items, regex, accept) {
+  const text = items.map((item) => item.ch).join("");
+  const copy = items.map((item) => ({ ch: item.ch, line: item.line }));
+  regex.lastIndex = 0;
+  for (const match of text.matchAll(regex)) {
+    if (accept && !accept(match[0])) continue;
+    const start = match.index ?? 0;
+    for (let i = start; i < start + match[0].length; i += 1) {
+      copy[i] = { ch: "a", line: copy[i].line };
+    }
+  }
+  return copy;
+}
+
+/**
+ * @param {{ ch: string, line: number }[]} items
  * @param {string} token
- * @returns {boolean}
+ * @returns {{ ch: string, line: number }[]}
  */
-function looksLikeDate(token) {
-  const value = token.trim().replace(/^\+/, "");
-  if (/^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$/.test(value)) return true;
-  if (/^\d{1,2}[-/.]\d{1,2}[-/.]\d{4}$/.test(value)) return true;
-  if (/^(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])$/.test(value)) return true;
-  return false;
+function blankToken(items, token) {
+  if (!token) return items;
+  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return blankMatches(items, new RegExp(`(?<![0-9A-Za-z])${escaped}(?![0-9A-Za-z])`, "g"));
 }
 
 /**
- * @param {string} token
- * @returns {boolean}
+ * @param {{ ch: string, line: number }[]} items
+ * @returns {{ ch: string, line: number }[]}
  */
-function looksLikeVersion(token) {
-  const value = token.trim().replace(/^[vV]/, "");
-  if (!/^\d+(?:\.\d+){1,3}$/.test(value)) return false;
-  if (/^\d{3}\.\d{3}\.\d{4}$/.test(value)) return false;
-  return true;
-}
-
-/**
- * @param {string} token
- * @returns {boolean}
- */
-function looksLikeIpv4(token) {
-  if (!/^\d{1,3}(?:\.\d{1,3}){3}$/.test(token)) return false;
-  return token.split(".").every((part) => {
-    const n = Number(part);
-    return n <= 255;
-  });
-}
-
-/**
- * @param {string} token
- * @returns {number}
- */
-function digitCount(token) {
-  return token.replace(/\D/g, "").length;
-}
-
-/**
- * @param {string} raw
- * @returns {boolean}
- */
-function isInternational(raw) {
-  if (!raw.startsWith("+")) return false;
-  const count = digitCount(raw);
-  if (count < 8 || count > 15) return false;
-  if (looksLikeDate(raw) || looksLikeVersion(raw)) return false;
-  return /^\+\d(?:[\s().-]*\d)+$/.test(raw) || /^\+\d(?:[\s().-]*\d)*$/.test(raw);
-}
-
-/**
- * Separated NANP, including a bracket with no space before the next digits.
- * Optional leading 1 or +1. Also accepts a longer phone shaped tail up to 15 digits.
- * @param {string} raw
- * @returns {boolean}
- */
-function isSeparatedPhone(raw) {
-  if (looksLikeDate(raw) || looksLikeVersion(raw) || looksLikeIpv4(raw)) return false;
-  const count = digitCount(raw);
-  if (count < 10 || count > 15) return false;
-  if (/^(?:\+?1[\s.-])?(?:\(\d{3}\)[\s.-]?|\d{3}[\s.-])\d{3}[\s.-]\d{4,6}$/.test(raw)) return true;
-  if (/^\(\d{2,4}\)[\s.-]?\d{2,5}[\s.-]\d{3,6}$/.test(raw)) return true;
-  return false;
-}
-
-/**
- * Unseparated 10 digits, or 11 digits with a leading 1. Longer bare runs are ids.
- * @param {string} raw
- * @returns {boolean}
- */
-function isBarePhone(raw) {
-  if (/^\d{10}$/.test(raw)) return true;
-  if (/^1\d{10}$/.test(raw)) return true;
-  if (/^\+1\d{10}$/.test(raw)) return true;
-  return false;
-}
-
-/**
- * @param {string} raw
- * @returns {boolean}
- */
-function isTel(raw) {
-  const match = raw.match(/^tel:\s*(\+?\(?\d[\d\s().-]*\d)$/i);
-  if (!match) return false;
-  const count = digitCount(match[1]);
-  if (count < 8 || count > 15) return false;
-  if (looksLikeDate(match[1]) || looksLikeIpv4(match[1])) return false;
-  return true;
+function dropSeparators(items) {
+  let current = items;
+  let prev = "";
+  let next = current.map((item) => item.ch).join("");
+  while (next !== prev) {
+    prev = next;
+    /** @type {{ ch: string, line: number }[]} */
+    const kept = [];
+    let last = 0;
+    SEPARATOR.lastIndex = 0;
+    for (const match of next.matchAll(SEPARATOR)) {
+      const start = match.index ?? 0;
+      kept.push(...current.slice(last, start));
+      last = start + match[0].length;
+    }
+    kept.push(...current.slice(last));
+    current = kept;
+    next = current.map((item) => item.ch).join("");
+  }
+  return current;
 }
 
 /**
  * @param {string} text
+ * @param {string[]} [allowed]
  * @returns {{ line: number, rule: string }[]}
  */
-export function findPhoneHits(text) {
-  const normalized = normalizeForScan(text);
+export function findPhoneHits(text, allowed = []) {
+  let items = normalizeChars(text);
+  items = blankMatches(items, ISO_DATE);
+  items = blankMatches(items, UUID_TOKEN);
+  items = blankMatches(items, HEX_HASH, (token) => /[a-fA-F]/.test(token));
+  for (const token of allowed) items = blankToken(items, token);
+  items = dropSeparators(items);
+
+  const body = items.map((item) => item.ch).join("");
   /** @type {Map<number, string>} */
   const byLine = new Map();
-
-  /**
-   * @param {number} index
-   * @param {string} rule
-   */
-  function add(index, rule) {
-    const line = normalized.lines[index] || 1;
-    if (!byLine.has(line)) byLine.set(line, rule);
+  PHONE_RUN.lastIndex = 0;
+  for (const match of body.matchAll(PHONE_RUN)) {
+    const start = match.index ?? 0;
+    const line = items[start]?.line || 1;
+    if (!byLine.has(line)) byLine.set(line, "digits");
   }
-
-  const checks = [
-    {
-      rule: "tel",
-      re: /\btel:\s*\+?\(?\d(?:[\s().-]*\d){7,14}(?!\d)/gi,
-      accept: isTel,
-    },
-    {
-      rule: "intl",
-      re: /(?<![A-Za-z0-9])\+\d(?:[\s().-]*\d){7,14}(?![A-Za-z0-9])/g,
-      accept: isInternational,
-    },
-    {
-      rule: "separated",
-      re: /(?<![A-Za-z0-9])(?:\+?1[\s.-])?(?:\(\d{3}\)[\s.-]?|\d{3}[\s.-])\d{3}[\s.-]\d{4,6}(?![A-Za-z0-9])/g,
-      accept: isSeparatedPhone,
-    },
-    {
-      rule: "paren",
-      re: /(?<![A-Za-z0-9])\(\d{2,4}\)[\s.-]?\d{2,5}[\s.-]\d{3,6}(?![A-Za-z0-9])/g,
-      accept: isSeparatedPhone,
-    },
-    {
-      rule: "bare",
-      re: /(?<![A-Za-z0-9])(?:\+1|1)?\d{10}(?![A-Za-z0-9])/g,
-      accept: isBarePhone,
-    },
-  ];
-
-  for (const check of checks) {
-    for (const match of normalized.text.matchAll(check.re)) {
-      if (!check.accept(match[0])) continue;
-      add(match.index ?? 0, check.rule);
-    }
-  }
-
   return [...byLine.entries()]
     .sort((a, b) => a[0] - b[0])
     .map(([line, rule]) => ({ line, rule }));
+}
+
+/**
+ * @param {string} fileText
+ * @returns {{ tokens: string[], errors: number[] }}
+ */
+export function parseAllowlist(fileText) {
+  /** @type {string[]} */
+  const tokens = [];
+  /** @type {number[]} */
+  const errors = [];
+  fileText.split(/\r?\n/).forEach((line, index) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) return;
+    const tab = line.indexOf("\t");
+    const token = tab === -1 ? "" : line.slice(0, tab).trim();
+    const reason = tab === -1 ? "" : line.slice(tab + 1).trim();
+    if (!token || !reason) {
+      errors.push(index + 1);
+      return;
+    }
+    tokens.push(normalizeChars(token).map((item) => item.ch).join("").trim());
+  });
+  return { tokens, errors };
 }
 
 /**
@@ -256,6 +231,19 @@ export function shouldSkipRepoPath(rel, options = {}) {
   if (LOCKFILE_BASENAMES.has(path.posix.basename(norm))) return true;
   if (!options.explicit && (norm === FIXTURE_DIR || norm.startsWith(`${FIXTURE_DIR}/`))) return true;
   return false;
+}
+
+/**
+ * @param {string} file
+ * @param {string[]} allowed
+ * @returns {{ line: number, rule: string }[]}
+ */
+export function scanFile(file, allowed = []) {
+  const ext = path.extname(file).toLowerCase();
+  if (SKIP_EXT.has(ext)) return [];
+  if (ext === ".pdf") return findPhoneHits(readPdfText(file), allowed);
+  if (looksBinary(file)) return [];
+  return findPhoneHits(fs.readFileSync(file, "utf8"), allowed);
 }
 
 /**
@@ -292,18 +280,6 @@ function looksBinary(file) {
 }
 
 /**
- * @param {string} file
- * @returns {{ line: number, rule: string }[]}
- */
-export function scanFile(file) {
-  const ext = path.extname(file).toLowerCase();
-  if (SKIP_EXT.has(ext)) return [];
-  if (ext === ".pdf") return findPhoneHits(readPdfText(file));
-  if (looksBinary(file)) return [];
-  return findPhoneHits(fs.readFileSync(file, "utf8"));
-}
-
-/**
  * @param {string} root
  * @returns {string[]}
  */
@@ -311,10 +287,7 @@ function gitFiles(root) {
   const out = execFileSync(
     "git",
     ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-    {
-      cwd: root,
-      encoding: "utf8",
-    },
+    { cwd: root, encoding: "utf8" },
   );
   return out.split("\0").filter(Boolean);
 }
@@ -356,15 +329,33 @@ function toRel(root, file) {
 }
 
 /**
+ * @returns {string}
+ */
+function repoRoot() {
+  try {
+    return execFileSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim();
+  } catch {
+    return process.cwd();
+  }
+}
+
+/**
  * @param {string[]} argv
  * @returns {number}
  */
 export function main(argv = process.argv.slice(2)) {
   const root = repoRoot();
+  const allowPath = path.join(root, ALLOWLIST_REL);
+  const allowText = fs.existsSync(allowPath) ? fs.readFileSync(allowPath, "utf8") : "";
+  const allow = parseAllowlist(allowText);
+  if (allow.errors.length > 0) {
+    for (const line of allow.errors) console.log(`${ALLOWLIST_REL}:${line}`);
+    return 2;
+  }
+
   const explicit = argv.length > 0;
   /** @type {string[]} */
   const rels = [];
-
   if (!explicit) {
     for (const rel of gitFiles(root)) {
       if (shouldSkipRepoPath(rel, { explicit: false })) continue;
@@ -381,54 +372,32 @@ export function main(argv = process.argv.slice(2)) {
     }
   }
 
-  /** @type {{ file: string, line: number, rule: string }[]} */
+  /** @type {{ file: string, line: number }[]} */
   const hits = [];
   for (const rel of rels) {
     const absolute = path.join(root, rel);
     if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) continue;
     let found;
     try {
-      found = scanFile(absolute);
+      found = scanFile(absolute, allow.tokens);
     } catch (err) {
       const message = err instanceof Error ? err.message : "scan failed";
       console.error(message);
       return 2;
     }
-    for (const hit of found) {
-      hits.push({ file: rel, line: hit.line, rule: hit.rule });
-    }
+    for (const hit of found) hits.push({ file: rel, line: hit.line });
   }
 
-  const debug = process.env.PHONE_SCAN_DEBUG === "1";
   if (hits.length === 0) {
     console.log(`scanned ${rels.length} files, no phone numbers`);
     return 0;
   }
-
-  for (const hit of hits) {
-    if (debug) console.log(`${hit.file}:${hit.line} ${hit.rule}`);
-    else console.log(`${hit.file}:${hit.line}`);
-  }
+  for (const hit of hits) console.log(`${hit.file}:${hit.line}`);
   return 1;
-}
-
-/**
- * @returns {string}
- */
-function repoRoot() {
-  try {
-    return execFileSync("git", ["rev-parse", "--show-toplevel"], {
-      encoding: "utf8",
-    }).trim();
-  } catch {
-    return process.cwd();
-  }
 }
 
 const isDirectRun =
   process.argv[1] &&
   path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
 
-if (isDirectRun) {
-  process.exit(main());
-}
+if (isDirectRun) process.exit(main());
