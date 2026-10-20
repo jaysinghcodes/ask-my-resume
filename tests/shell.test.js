@@ -114,7 +114,8 @@ describe("layout shell", () => {
 
     expect(html).toContain("Jay Singh · AI native software engineer");
     expect(html).toContain('name="viewport"');
-    expect(html).toContain('rel="preload"');
+    // T13: font preloads competed with the first paint on mobile, so fonts load from the inlined CSS.
+    expect(html).not.toContain('as="font"');
     expect(html).not.toContain("fonts.googleapis.com");
     expect(html).not.toContain("fonts.gstatic.com");
     expect(main).toContain("@fontsource/source-serif-4/latin-400.css");

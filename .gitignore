@@ -3,6 +3,7 @@ node_modules/
 .env.local
 dist/
 frontend/dist/
+frontend/dist-ssr/
 .DS_Store
 .vercel
 kb/kb.json

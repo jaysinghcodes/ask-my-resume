@@ -16,6 +16,6 @@
     }
   },
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|favicon\\.ico|robots\\.txt|sitemap\\.xml|og-image\\.png|icon\\.svg|apple-touch-icon\\.png|assets/).*)", "destination": "/index.html" }
   ]
 }
