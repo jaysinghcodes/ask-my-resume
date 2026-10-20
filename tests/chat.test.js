@@ -360,7 +360,101 @@ describe("POST /api/chat", () => {
       expect(upstream?.aborted).toBe(true);
     });
     expect(stream).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(console.error).mock.calls.map((call) => String(call[0]))).not.toContain("Chat error");
+    const logged = vi.mocked(console.error).mock.calls.map((call) => String(call[0]));
+    expect(logged).not.toContain("Chat error");
+    expect(logged).not.toContain("Chat request timed out");
+  });
+
+  it("ends a timed out answer with the server error and no done", async () => {
+    const actual = await vi.importActual("../lib/claude.js");
+    /** @type {AbortSignal | undefined} */
+    let upstream;
+    let writes = 0;
+    const chunks = ["Jay ", "builds ", "cloud ", "platforms ", "and ", "more."];
+    const stream = vi.fn((_body, options) => {
+      upstream = options?.signal;
+      return {
+        /** @type {((delta: string) => void) | null} */
+        _onText: null,
+        /**
+         * @param {string} event
+         * @param {(delta: string) => void} listener
+         */
+        on(event, listener) {
+          if (event === "text") this._onText = listener;
+          return this;
+        },
+        finalMessage() {
+          const requestSignal = options?.signal;
+          return new Promise((resolve, reject) => {
+            if (!requestSignal) {
+              reject(new Error("missing signal"));
+              return;
+            }
+            let index = 0;
+            let settled = false;
+            /** @type {ReturnType<typeof setInterval> | undefined} */
+            let timer;
+            const finish = (aborted) => {
+              if (settled) return;
+              settled = true;
+              if (timer) clearInterval(timer);
+              if (aborted) reject(requestSignal.reason ?? new Error("aborted"));
+              else {
+                resolve({
+                  stop_reason: "end_turn",
+                  content: [{ type: "text", text: chunks.join("") }],
+                });
+              }
+            };
+            const send = () => {
+              if (requestSignal.aborted) {
+                finish(true);
+                return;
+              }
+              const chunk = chunks[index];
+              if (!chunk) {
+                finish(false);
+                return;
+              }
+              index += 1;
+              writes += 1;
+              this._onText?.(chunk);
+            };
+            send();
+            timer = setInterval(send, 400);
+            requestSignal.addEventListener("abort", () => finish(true), { once: true });
+          });
+        },
+      };
+    });
+    /** @type {import("vitest").Mock} */ (createClient).mockImplementationOnce(() => ({
+      messages: { stream },
+    }));
+    /** @type {import("vitest").Mock} */ (streamAgenticLoop).mockImplementationOnce(
+      /** @type {any} */ (actual).streamAgenticLoop,
+    );
+
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    process.env.MODEL_ID = "model-from-env";
+    process.env.IP_HASH_SALT = "salt";
+    process.env.CHAT_REQUEST_TIMEOUT_SECONDS = "1";
+    const response = await POST(chatRequest({ messages: [{ role: "user", content: "Hello" }] }));
+    const events = await readEvents(response);
+
+    expect(events.some((event) => event.event === "delta")).toBe(true);
+    expect(events.at(-1)).toEqual({
+      event: "error",
+      data: { code: "server", text: FRIENDLY.server },
+    });
+    expect(events.some((event) => event.event === "done" || event.event === "sources")).toBe(false);
+    expect(events.filter((event) => event.event === "error")).toHaveLength(1);
+    expect(upstream?.aborted).toBe(true);
+    expect(writes).toBeGreaterThan(0);
+    expect(writes).toBeLessThan(chunks.length);
+    expect(vi.mocked(console.error).mock.calls.map((call) => String(call[0]))).toEqual([
+      "Chat request timed out",
+    ]);
   });
 
   it("answers question 7 from the history window that starts on a user turn", async () => {
