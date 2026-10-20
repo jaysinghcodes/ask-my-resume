@@ -364,6 +364,36 @@ describe("knowledge base build", () => {
     expect(outputMissing(dir)).toBe(true);
   });
 
+  it("passes a commit SHA in a doc url and in text", () => {
+    const sha = "43aff81936cc627f6e3959879246fa6d0e1ca171";
+    const spacedId = "d1000000 0000 4000 8000 000000000001";
+    const hyphenId = ["d1000000", "0000", "4000", "8000", "000000000001"].join("-");
+    const url = `https://github.com/jaysinghcodes/Cleat/blob/${sha}/docs/architecture.md`;
+    const text = `Pinned at ${sha}. Demo org ${spacedId} stays on.`;
+    const result = build(tempKb({
+      "docs/cleat.json": [record({
+        id: "doc-cleat-architecture",
+        confidence: "verified",
+        public: true,
+        source: url,
+        project: "cleat",
+        title: "Architecture",
+        heading: "Stack",
+        text,
+        url,
+        notes: `Chunked by heading from Cleat docs/architecture.md at ${sha}. Org ${hyphenId}.`,
+      })],
+    }));
+
+    expect(result.ok).toBe(true);
+    const doc = requireKb(result).docs[0];
+    expect(doc.url).toBe(url);
+    expect(doc.text).toBe(text);
+    expect(doc.confidence).toBe("verified");
+    expect(doc.public).toBe(true);
+    expect(doc.source).toBe(url);
+  });
+
   it("passes years, dates, and ids that are not phone numbers", () => {
     const result = build(tempKb({
       "bullets.json": [bullet({
