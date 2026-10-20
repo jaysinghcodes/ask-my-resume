@@ -1,1 +1,750 @@
-[]
+[
+  {
+    "id": "faq-aws-work",
+    "question": "Tell me about his AWS work",
+    "answer": "At CapTech Consulting, on a core banking modernization for a Top 10 U.S. bank, Jay engineered cloud native services that migrated legacy systems to scalable AWS infrastructure, impacting 80% of the org and cutting product launch timelines from 9 months to 1 week. He builds REST APIs and Python and Go backed AWS Lambda services in the Product Lifecycle Management domain, and optimized ECS configurations and database throughput after 6 months of New Relic analysis, reducing infrastructure costs by 75%. As a 2023 intern he deployed and scaled full stack applications on AWS EC2, achieving a 50% increase in cost efficiency.",
+    "cites": [
+      "bullet-captech-consultant-1",
+      "bullet-captech-consultant-3",
+      "bullet-captech-consultant-4",
+      "bullet-captech-intern-2",
+      "skill-aws"
+    ],
+    "audience": "recruiter",
+    "featured": true,
+    "confidence": "verified",
+    "notes": "Resume only.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-infra-cost-75",
+    "question": "How did he cut infra cost 75%?",
+    "answer": "On the core banking modernization for a Top 10 U.S. bank, Jay used 6 months of New Relic analysis, which showed that about 50% of the provisioned resources were not being used. He right sized ECS configurations and database throughput, which reduced infrastructure costs by 75% with no performance tradeoff.",
+    "cites": [
+      "bullet-captech-consultant-4"
+    ],
+    "audience": "recruiter",
+    "featured": true,
+    "confidence": "verified",
+    "notes": "Resume plus Jay's answer (Q1). Do not add instance types or other specifics.",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026",
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "as_of": "2026-10-19"
+  },
+  {
+    "id": "faq-jd-fit",
+    "question": "Is he a fit for this JD?",
+    "answer": "Paste a job description. The assistant compares it to the roles, skills, and projects in this knowledge base, cites the records that match, and says when a requirement is not covered here.",
+    "cites": [
+      "profile-jay",
+      "role-captech-consultant",
+      "project-cleat",
+      "project-mission-control",
+      "project-ask-my-resume"
+    ],
+    "audience": "recruiter",
+    "featured": true,
+    "confidence": "verified",
+    "notes": "Featured chip from the v2 mockup. The assistant does not invent a fit.",
+    "public": true,
+    "source": "v2 mockup experience and ask section",
+    "as_of": "2026-10-20"
+  },
+  {
+    "id": "faq-llms",
+    "question": "What has he built with LLMs?",
+    "answer": "Yes, in production and not just as experiments. Ask Jay uses Claude tool use with a resume search tool: Claude calls the tool against his resume until it can answer from the source, built on the Anthropic SDK. Cleat runs a RAG pipeline over trainer knowledge bases with confidence gating, safety refusal rules that fire before generation, and an eval harness over a 105 message labeled set. He has also built with MCP (Model Context Protocol), and he runs a multi agent AI engineering team on Grok Bot with an automated QA gate in front of every pull request.",
+    "cites": [
+      "project-ask-my-resume",
+      "project-cleat",
+      "project-mission-control",
+      "skill-rag",
+      "skill-mcp"
+    ],
+    "audience": "hiring manager",
+    "featured": true,
+    "confidence": "verified",
+    "notes": "Featured chip from the v2 mockup.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-7-8m",
+    "question": "What was the $7.8M about?",
+    "answer": "Jay led data standardization across the bank's legacy systems using Databricks and Snowflake. Snowflake was used to look at and monitor the data, and Databricks notebooks did the reconciliation, checking standardized records to confirm incoming records were ingested. The $7.8M is the client's projected annual value from that work, through reduced operational costs and higher account opening completion rates.",
+    "cites": [
+      "bullet-captech-consultant-2"
+    ],
+    "audience": "recruiter",
+    "featured": true,
+    "confidence": "verified",
+    "notes": "Resume plus Jay's answers (Q2, Q5). The figure is the client's projection; no split.",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026",
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "as_of": "2026-10-19"
+  },
+  {
+    "id": "faq-9-months-to-1-week",
+    "question": "How did launch time drop to 1 week?",
+    "answer": "The old core banking at a Top 10 U.S. bank ran on COBOL. On the modernization, Jay engineered cloud native services on AWS, including REST APIs and Go Lambda services in the Product Lifecycle Management domain that support the release and management of new financial products. Because the new services were written in Go, concurrency went up, and all the checks required to launch a financial product went from 9 months to 1 week. The migration impacted 80% of the org; his services were part of that program outcome.",
+    "cites": [
+      "bullet-captech-consultant-1",
+      "bullet-captech-consultant-3"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "Resume plus Jay's answer (Q16).",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026",
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "as_of": "2026-10-19"
+  },
+  {
+    "id": "faq-data-engineering",
+    "question": "What data engineering has he done?",
+    "answer": "Jay led data standardization across legacy banking systems using Databricks and Snowflake: Snowflake was used to look at and monitor the data, and Databricks notebooks did the reconciliation, checking standardized records to confirm incoming records were ingested. The client projects that work at $7.8M in annual value. He built Databricks validation pipelines that reconcile records across each transformation to detect data loss, catching the partial failures that pass a job's own success check. He also built event driven ingestion workflows on Lambda and SQS. On the side he built the retrieval infrastructure in Cleat: chunking and embedding content as 1536 dimension vectors in pgvector behind an HNSW cosine index, served through a tenant scoped SQL function, across 8 database migrations with 5 SQL Row Level Security test suites.",
+    "cites": [
+      "bullet-captech-consultant-2",
+      "bullet-captech-consultant-4",
+      "bullet-captech-consultant-3",
+      "project-cleat"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "unsure",
+    "notes": "Claude written; some details come from Jay's chats, not artifacts. Agent may use it but Jay should skim.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q5)"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-go",
+    "question": "Does he know Go?",
+    "answer": "Yes. He writes production Go at a Top 10 U.S. bank: the production AWS Lambda services in the Product Lifecycle Management domain are in Go, alongside REST APIs. Python is what he used for the Databricks notebooks.",
+    "cites": [
+      "bullet-captech-consultant-3",
+      "skill-go"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "Jay's answer (Q6, Q12). Never say Go is his primary focus.",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026",
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "as_of": "2026-10-19"
+  },
+  {
+    "id": "faq-rag-evals",
+    "question": "What is his RAG and evals experience?",
+    "answer": "In Cleat he built the full pipeline: chunking and embedding trainer knowledge base content as 1536 dimension vectors in pgvector behind an HNSW cosine index, retrieved through a tenant scoped SQL function so content cannot leak between trainers. On evals, he built a harness that runs the gating logic against a 105 message labeled set with answer, escalate and refuse labels and fails the run on any single mismatch, so a prompt change that quietly degrades behavior cannot ship.",
+    "cites": [
+      "project-cleat",
+      "skill-rag",
+      "skill-llm-evals"
+    ],
+    "audience": "engineer",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-ai-safety",
+    "question": "Has he worked on AI safety or guardrails?",
+    "answer": "Yes, in a product context. Cleat's whole design question was when an AI should not answer. Replies auto send only above a confidence threshold the trainer sets between 0.60 and 0.95, with a hard 0.50 floor enforced in application code, a Zod schema and a database check constraint so no single missed path can bypass it. Safety refusal rules run before generation for emergency, self harm and medical questions, alert the coach, and write a machine readable reason code to an audit log so every decision can be explained later.",
+    "cites": [
+      "project-cleat",
+      "skill-ai-safety-guardrails"
+    ],
+    "audience": "hiring manager",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-healthcare",
+    "question": "Does he have healthcare experience?",
+    "answer": "Yes. At OSU Wexner Medical Center he engineered components of a $2M clinical research platform that providers use to track patients with infectious diseases, and designed the GraphQL APIs and data models behind it with Prisma and Apollo. He gathered feedback from clinical staff through iterative testing. In Cleat he also built safety refusal rules specifically for medical and self harm questions.",
+    "cites": [
+      "bullet-osu-wexner-1",
+      "bullet-osu-wexner-2",
+      "project-cleat"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "unsure",
+    "notes": "Do not let the assistant speculate about PHI, HIPAA or compliance specifics. Jay has not discussed those. Claude written; some details come from Jay's chats, not artifacts. Agent may use it but Jay should skim.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q3)"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-procrewz",
+    "question": "What did he do at ProCrewz?",
+    "answer": "Jay spent the summer of 2024 doing Salesforce development. He led the migration of the internal issue management system from Salesforce to Jira, improving scalability and cross platform integration. He wrote Apex triggers that enforce accurate client rate card displays, preventing pricing errors and revenue leakage. And he built reusable Lightning based job templates that increased production and logging efficiency by over 40%. He also gathered requirements from business users and trained the team on what he shipped.",
+    "cites": [
+      "role-procrewz-salesforce-intern",
+      "bullet-procrewz-1",
+      "bullet-procrewz-2",
+      "bullet-procrewz-3"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q3)"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-fullstack-or-backend",
+    "question": "Is he full stack or backend?",
+    "answer": "Backend leaning, with real full stack range. His day to day at the bank is backend and data: REST APIs, Lambda services in Python and Go, Databricks pipelines. But he has shipped React frontends at CapTech and the medical center, and on his own projects he built the Next.js web app, the Expo and React Native mobile app, and the React dashboards himself. He has also done DevOps work when a project needed it. In his own words, what he cares about is being close to the product and owning it end to end rather than owning one layer.",
+    "cites": [
+      "bullet-captech-consultant-3",
+      "bullet-captech-intern-1",
+      "project-cleat",
+      "project-mission-control",
+      "values-jay"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "unsure",
+    "notes": "Claude written; some details come from Jay's chats, not artifacts. Agent may use it but Jay should skim.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-strongest-skills",
+    "question": "What are his strongest skills?",
+    "answer": "Python, Go, SQL and TypeScript on the language side. AWS, specifically Lambda, ECS, Fargate and SQS, on the infrastructure side. Databricks and PostgreSQL including pgvector on the data side. And applied AI: RAG pipelines, LLM tool calling, MCP, eval harnesses and safety guardrails, all of which he has built in shipped systems rather than only read about. The through line is that he builds the whole path from data to a running service.",
+    "cites": [
+      "skill-python",
+      "skill-go",
+      "skill-aws",
+      "skill-databricks",
+      "skill-rag",
+      "skill-llm-evals"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "unsure",
+    "notes": "Claude written; some details come from Jay's chats, not artifacts. Agent may use it but Jay should skim.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-biggest-impact",
+    "question": "What has been his biggest impact?",
+    "answer": "The core banking modernization. The platform migration he worked on affected 80% of the organization and cut product launch timelines from 9 months to 1 week, and the data standardization he led is projected to generate $7.8M in annual value. On the efficiency side, 6 months of performance analysis led to ECS and database changes that reduced infrastructure costs by 75%. The launch timeline and 80% figures are program outcomes his services were part of; he personally built Product Lifecycle Management services, led the standardization and built the validation pipelines.",
+    "cites": [
+      "bullet-captech-consultant-1",
+      "bullet-captech-consultant-2",
+      "bullet-captech-consultant-4"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-how-he-works-with-teams",
+    "question": "How does he work with a team?",
+    "answer": "On the bank modernization, which spans more than 35 teams, Jay worked on an end to end testing environment across those teams and led his own team onto the new program wide testing framework. He is also a technical point of contact for the client: he runs technical discovery with stakeholders and delivers monthly briefings to bank leadership. Earlier, at ProCrewz he gathered requirements from business users and trained the team on what he shipped, and at OSU Wexner Medical Center he gathered feedback from clinical staff through iterative testing.",
+    "cites": [
+      "role-captech-consultant",
+      "achievement-testing-framework-rollout",
+      "role-procrewz-salesforce-intern",
+      "role-osu-wexner"
+    ],
+    "audience": "hiring manager",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "Rewritten Oct 19 from the claims Jay confirmed (Q3) only.",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026",
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "as_of": "2026-10-19"
+  },
+  {
+    "id": "faq-ai-agents-workflow",
+    "question": "How does he use AI agents day to day?",
+    "answer": "Jay runs a multi agent AI engineering team on Grok Bot, with specialized roles: an orchestrator, a product and specification agent, a builder, a QA agent and a research agent. GitHub Issues are the backlog, synced to a Projects kanban. Every agent pull request goes through an automated QA gate that merges only when a passing QA result matches the pull request's head commit SHA, so a stale pass cannot slip through, and escalates to the product agent after two failures instead of retrying forever. In one week in October 2026 that workflow produced 45 merged pull requests across Cleat and Mission Control. Separately, he self hosts an OpenClaw agent team on Oracle Cloud and built Mission Control to observe it.",
+    "cites": [
+      "project-mission-control",
+      "achievement-45-prs-one-week",
+      "values-jay"
+    ],
+    "audience": "hiring manager",
+    "featured": true,
+    "confidence": "verified",
+    "notes": "Question is 37 characters.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-mission-control",
+    "question": "What is Mission Control?",
+    "answer": "Built by Jay, a self hosted observability and control plane for the AI agent team he runs on his own Oracle Cloud instance. It covers tasks, agents, approvals, projects, a delivery pipeline, a cron calendar, agent memory, and model usage and spend. The design detail he likes most is the ingest API: agents post to it behind a write token and can self register, and there is an onboarding document the agents read to integrate themselves. It is NestJS, Prisma and PostgreSQL with Socket.IO for live run tracking, 207 test cases across 37 test files, and CI that proves a fresh clone runs on two Node versions.",
+    "cites": [
+      "project-mission-control"
+    ],
+    "audience": "engineer",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "Credit line per Jay (Q7).",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q7)",
+      "Mission-Control README",
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "as_of": "2026-10-19"
+  },
+  {
+    "id": "faq-cleat",
+    "question": "What is Cleat?",
+    "answer": "A trainer and client accountability app built by Jay, with a live demo at cleat-cyan.vercel.app. The core problem was that an AI replying to a client should not answer when it is not sure, because a wrong answer damages the coaching relationship more than silence does. So replies run through a RAG pipeline over the trainer's own knowledge base and then a confidence gate, with safety refusal rules before generation for medical and self harm questions and an audit log recording a reason code for every decision. It is TypeScript end to end: Next.js web, Expo and React Native mobile, Supabase with pgvector, 148 unit tests.",
+    "cites": [
+      "project-cleat"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "Credit line per Jay (Q7): \"built by Jay\", never \"built solo\".",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q7)",
+      "Cleat README",
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "as_of": "2026-10-19"
+  },
+  {
+    "id": "faq-ask-jay",
+    "question": "What is Ask Jay?",
+    "answer": "The assistant you are talking to. It uses Claude tool use with a resume search tool: Claude calls the search tool over Jay's resume and knowledge base and keeps searching until it can answer from the source, and answers cite where each fact came from. The original version is React and Vite on GitHub Pages with a Node and Express backend on Render, deployed through GitHub Actions. The rebuild moves it to a single Vercel project with streaming answers.",
+    "cites": [
+      "project-ask-my-resume"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "Per Jay (Q9): Claude tool use with a resume search tool. Never call it an MCP server.",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q9)",
+      "ask-my-resume repo code",
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "as_of": "2026-10-19"
+  },
+  {
+    "id": "faq-location-relocation",
+    "question": "Where is he based? Will he relocate?",
+    "answer": "Based in Chicago, IL. Open to remote and relocation for the right role.",
+    "cites": [
+      "profile-jay"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "Wording supplied by Jay for his Contact page. Do not embellish it.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-availability",
+    "question": "When is he available to start?",
+    "answer": "Jay is open to new roles. For timing and next steps, email him at jaggys44@gmail.com.",
+    "cites": [
+      "profile-jay"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "Availability approved by Jay Oct 18. Start dates still never promised.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-contact",
+    "question": "How can I contact him?",
+    "answer": "Email jaggys44@gmail.com, LinkedIn at linkedin.com/in/j-singh19, or GitHub at github.com/jaysinghcodes.",
+    "cites": [
+      "profile-jay"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-education",
+    "question": "What is his educational background?",
+    "answer": "A B.S. in Computer Science and Engineering from The Ohio State University, class of 2024. While there he was Secretary of Buckeye Bhangra and an Ambassador for Hack OHI/O and the Sikh Student Association. He also received the International Award for Young People (IAYP) at the Silver and Bronze levels, and worked at OSU's Wexner Medical Center on a clinical research platform during his degree.",
+    "cites": [
+      "education-osu",
+      "role-osu-wexner"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-years-experience",
+    "question": "How much experience does he have?",
+    "answer": "Jay has been a full time software engineer since September 2024, all of it at CapTech Consulting on a core banking modernization for a Top 10 U.S. bank. Before that he held two internships and a student developer role: Salesforce development at ProCrewz, a CapTech engineering internship building React and Spring Boot applications for a major airline client, and a full stack role on a clinical research platform at OSU Wexner Medical Center.",
+    "cites": [
+      "role-captech-consultant",
+      "role-procrewz-salesforce-intern",
+      "role-captech-intern",
+      "role-osu-wexner"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-building-now",
+    "question": "What is he building now?",
+    "answer": "Cleat, a trainer and client accountability app with confidence gated AI replies (live demo), Mission Control, a self hosted control plane for the OpenClaw agent team he runs on Oracle Cloud, and a rebuild of Ask Jay with a deeper knowledge base. In one week in October 2026 his multi agent workflow merged 45 pull requests across Cleat and Mission Control.",
+    "cites": [
+      "project-cleat",
+      "project-mission-control",
+      "project-ask-my-resume",
+      "achievement-45-prs-one-week"
+    ],
+    "audience": "recruiter",
+    "featured": true,
+    "confidence": "verified",
+    "notes": "Refresh periodically.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-growth-area",
+    "question": "What is a growth area for him?",
+    "answer": "A growth area Jay is working on is being able to contribute meaningfully to multiple projects at the same time while still delivering quality work.",
+    "cites": [
+      "profile-jay"
+    ],
+    "audience": "hiring manager",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "Jay's own answer (Q17). Do not expand on it.",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q17)"
+    ],
+    "as_of": "2026-10-19"
+  },
+  {
+    "id": "faq-regulated-industry",
+    "question": "Has he worked in a regulated industry?",
+    "answer": "Yes. Since September 2024 he has worked on a core banking modernization for a Top 10 U.S. bank. That shaped how he builds: he assumes the dangerous failure is the quiet one, which is why he built validation pipelines that reconcile records instead of trusting a job's exit code, and why he spent real time on retries, idempotency and state recovery rather than assuming calls succeed. He also worked on a clinical platform in healthcare.",
+    "cites": [
+      "role-captech-consultant",
+      "bullet-captech-consultant-4",
+      "bullet-captech-consultant-3",
+      "role-osu-wexner"
+    ],
+    "audience": "hiring manager",
+    "featured": false,
+    "confidence": "unsure",
+    "notes": "Claude written; some details come from Jay's chats, not artifacts. Agent may use it but Jay should skim.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-client-facing",
+    "question": "Is he comfortable in front of customers?",
+    "answer": "Yes. On the bank engagement Jay is a technical point of contact for the client: he runs technical discovery with stakeholders and delivers monthly briefings to bank leadership. Client facing work started in his 2023 CapTech internship, where he partnered with a major airline client from requirements gathering through launch and presented design decisions to client stakeholders.",
+    "cites": [
+      "role-captech-consultant",
+      "role-captech-intern",
+      "bullet-captech-intern-1"
+    ],
+    "audience": "hiring manager",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "Rewritten Oct 19 from the claims Jay confirmed (Q3) only.",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026",
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "as_of": "2026-10-19"
+  },
+  {
+    "id": "faq-testing-quality",
+    "question": "How does he think about testing and quality?",
+    "answer": "He treats the test suite as the thing that lets him move fast rather than a tax. Cleat has 148 unit tests across 26 test files plus 5 SQL Row Level Security suites, and an eval harness that fails the run on any single mismatch against a 105 message labeled set. Mission Control has 207 test cases across 37 test files, plus a CI job that proves a fresh clone runs on two Node versions. At work he led his team onto a new program wide testing framework and worked on an end to end testing environment across the program's more than 35 teams. His agent workflow will not merge a pull request unless a passing QA result matches that exact commit.",
+    "cites": [
+      "project-cleat",
+      "project-mission-control",
+      "achievement-testing-framework-rollout",
+      "values-jay"
+    ],
+    "audience": "engineer",
+    "featured": false,
+    "confidence": "unsure",
+    "notes": "Claude written; some details come from Jay's chats, not artifacts. Agent may use it but Jay should skim.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q3)"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-hardest-problem",
+    "question": "What is the hardest problem he has solved?",
+    "answer": "He usually tells one of two. At work: records moving from legacy banking systems into cloud native ones with no reliable way to prove nothing was lost, where the failures were partial rather than loud, a dropped field or a silently coerced type, so jobs exited successfully and reporting looked fine. He built Databricks validation pipelines that reconcile both sides of each transformation. In his words, the hard part was less the code than figuring out what equal meant across two schemas that did not agree. On his own projects: deciding when an AI should not answer a client at all, which became Cleat's confidence gating, layered enforcement and refusal rules.",
+    "cites": [
+      "bullet-captech-consultant-4",
+      "project-cleat",
+      "values-jay"
+    ],
+    "audience": "hiring manager",
+    "featured": false,
+    "confidence": "unsure",
+    "notes": "Claude written; some details come from Jay's chats, not artifacts. Agent may use it but Jay should skim.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-what-kind-of-work",
+    "question": "What kind of engineering work does he want?",
+    "answer": "In his own words: backend work, lately a lot of multi agent workflows where several AI agents each handle part of a task and he builds the system that coordinates them. He has also done DevOps when a project needed it. What he says he likes most is being close to the product and owning it, from design through deployment and what happens after it ships, and what he is least interested in is being handed a ticket and never seeing who uses the result.",
+    "cites": [
+      "values-jay"
+    ],
+    "audience": "hiring manager",
+    "featured": false,
+    "confidence": "unsure",
+    "notes": "Close to verbatim from Jay. Claude written; some details come from Jay's chats, not artifacts. Agent may use it but Jay should skim.",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-side-projects-why",
+    "question": "Why does he build so much outside work?",
+    "answer": "Jay builds personal projects to ship applied AI end to end: Cleat, a trainer and client app with confidence gated AI replies; Mission Control, a control plane for an AI agent team; and Ask Jay. Running a multi agent workflow with an automated QA gate, he merged 45 pull requests across Cleat and Mission Control in one week in October 2026.",
+    "cites": [
+      "project-cleat",
+      "project-mission-control",
+      "project-ask-my-resume",
+      "achievement-45-prs-one-week"
+    ],
+    "audience": "hiring manager",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "Rewritten: Claude's version said his engagement \"can't give him\" AI work, which reads as an opinion about his employer and a reason for leaving (never_say).",
+    "public": true,
+    "source": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "cross checked by Speedy Oct 18"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-databricks-detail",
+    "question": "What has he actually done in Databricks?",
+    "answer": "Two things on the bank program. He built validation pipelines in Python and SQL that detect data loss during transformation. And in the data standardization work, Databricks notebooks did the reconciliation, checking standardized records to confirm incoming records were ingested, while Snowflake was used to look at and monitor the data. The client projects that standardization at $7.8M in annual value.",
+    "cites": [
+      "bullet-captech-consultant-4",
+      "bullet-captech-consultant-2",
+      "skill-databricks"
+    ],
+    "audience": "engineer",
+    "featured": false,
+    "confidence": "verified",
+    "notes": "Rewritten Oct 19 from the resume and Jay's answers (Q2, Q5).",
+    "public": true,
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q2, Q5)"
+    ],
+    "as_of": "2026-10"
+  },
+  {
+    "id": "faq-bank-name",
+    "question": "Which bank is the client?",
+    "answer": "The client is described as a Top 10 U.S. bank. Client names are confidential, so the assistant does not share them.",
+    "cites": [
+      "role-captech-consultant"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "public": true,
+    "source": [
+      "never_say policy"
+    ],
+    "as_of": "2026-10",
+    "notes": "Eval must refuse case."
+  },
+  {
+    "id": "faq-older-details",
+    "question": "Has he done production support?",
+    "answer": "Yes. At CapTech, alongside his engineering work on the bank modernization, he supported production systems using Splunk and New Relic to maintain platform stability, and he debugs integration failures in production.",
+    "cites": [
+      "bullet-captech-consultant-support",
+      "bullet-captech-consultant-3"
+    ],
+    "audience": "hiring manager",
+    "featured": false,
+    "confidence": "verified",
+    "public": true,
+    "source": [
+      "resume_2024 (repo mcp-server/resume.pdf, older resume; Jay approved use on Oct 18)"
+    ],
+    "as_of": "2026-10",
+    "notes": "Added from the older resume Jay approved."
+  },
+  {
+    "id": "faq-work-authorization",
+    "question": "Does he need visa sponsorship? Is he authorized to work in the U.S.?",
+    "answer": "Jay is a U.S. citizen, so he does not need sponsorship.",
+    "cites": [
+      "profile-jay"
+    ],
+    "audience": "recruiter",
+    "featured": false,
+    "confidence": "verified",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q18)"
+    ],
+    "as_of": "2026-10-19",
+    "notes": "Jay's answer (Q18). State it plainly; nothing beyond this."
+  },
+  {
+    "id": "faq-outside-work",
+    "question": "What does he do outside of work?",
+    "answer": "Outside of work, Jay has run a half marathon and has signed up for Hyrox.",
+    "cites": [
+      "achievement-half-marathon",
+      "profile-jay"
+    ],
+    "audience": "anyone",
+    "featured": false,
+    "confidence": "verified",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q14)"
+    ],
+    "as_of": "2026-10-19",
+    "notes": "Jay approved these as activities outside of work (Q14)."
+  }
+]

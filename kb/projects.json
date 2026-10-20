@@ -1,1 +1,330 @@
-[]
+[
+  {
+    "id": "project-cleat",
+    "name": "Cleat",
+    "one_liner": "Trainer and client accountability app with confidence gated AI replies.",
+    "problem": "In a coaching relationship, an AI that answers a client's question when it is not actually sure does more damage than one that stays quiet. A wrong answer about training or nutrition erodes the trust the whole relationship runs on, and some questions should never be answered by an AI at all. So the product problem was not generating a good reply, it was deciding when not to send one.",
+    "what_jay_built": "A full product end to end: a Next.js trainer web app, an Expo and React Native client app for iOS and Android, and a Supabase backend. The AI layer runs a RAG pipeline over each trainer's own knowledge base and gates every generated reply on confidence before it reaches a client.",
+    "architecture": "Trainer knowledge base content is chunked and embedded as 1536 dimension vectors stored in pgvector behind an HNSW cosine index, retrieved through a tenant scoped SQL function so one trainer's content can never surface for another. Replies are generated against retrieved context, then gated: a reply auto sends only above a confidence threshold the trainer sets from 0.60 to 0.95 (new orgs start with auto send off and a 0.85 threshold), with a hard 0.50 floor enforced in three places, application code, a Zod schema and a database check constraint. Safety refusal rules run before generation for emergency, self harm and medical questions, alerting the coach and writing a machine readable reason code to an audit log. An eval harness runs the whole gate against a 105 message labeled set with answer, escalate and refuse labels, and fails the run on any single mismatch. Multi tenant isolation is enforced with Supabase Row Level Security and covered by 5 SQL test suites.",
+    "key_decisions": [
+      "Gate on confidence rather than always answer. The product is more useful when the AI escalates to the human coach than when it guesses.",
+      "Let trainers set their own threshold between 0.60 and 0.95, since how much they want automated is a judgment about their own clients, but enforce a hard 0.50 floor that no trainer can lower.",
+      "Enforce that floor in three independent layers, application code, Zod schema and a database check constraint, so no single missed code path can let an unsafe reply through.",
+      "Run safety refusal rules before generation rather than filtering output, so the model is never asked to produce a reply to a self harm or medical question in the first place.",
+      "Write reason codes to an audit log in a machine readable form so every AI decision can be explained after the fact.",
+      "Build an eval harness over a labeled set and fail the run on any mismatch, so a prompt change that quietly makes gating worse cannot ship."
+    ],
+    "stack": [
+      "TypeScript",
+      "pnpm",
+      "Turborepo",
+      "Next.js 15",
+      "Expo",
+      "React Native",
+      "Supabase",
+      "PostgreSQL",
+      "pgvector",
+      "Row Level Security",
+      "OpenAI (text-embedding-3-small, gpt-4o-mini)",
+      "Zod",
+      "GitHub Actions",
+      "Vercel",
+      "Expo EAS"
+    ],
+    "metrics": [
+      {
+        "label": "Labeled eval set",
+        "value": "105 messages",
+        "source": "resume_2026_10 (resume-2026-10.txt)"
+      },
+      {
+        "label": "Unit tests",
+        "value": "148",
+        "source": "resume_2026_10 (resume-2026-10.txt)"
+      },
+      {
+        "label": "Test files",
+        "value": "26",
+        "source": "resume_brief_2026_10_12 (/workspace/resume-brief/Resume-Brief.md)"
+      },
+      {
+        "label": "SQL Row Level Security test suites",
+        "value": "5",
+        "source": "resume_brief_2026_10_12 (/workspace/resume-brief/Resume-Brief.md)"
+      },
+      {
+        "label": "Database migrations",
+        "value": "8",
+        "source": "resume_brief_2026_10_12 (/workspace/resume-brief/Resume-Brief.md)"
+      },
+      {
+        "label": "Merged pull requests",
+        "value": "21",
+        "source": "resume_brief_2026_10_12 (/workspace/resume-brief/Resume-Brief.md)"
+      },
+      {
+        "label": "Default auto send threshold",
+        "value": "0.85",
+        "source": "Cleat README"
+      }
+    ],
+    "links": [
+      {
+        "label": "Live demo",
+        "url": "https://cleat-cyan.vercel.app"
+      },
+      {
+        "label": "Code",
+        "url": "https://github.com/jaysinghcodes/Cleat"
+      }
+    ],
+    "status": "Live demo",
+    "featured": true,
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Cross checked against resume, brief and repo. Metrics with brief source are as of Oct 12, 2026; refresh before launch.",
+    "built_with_note": {
+      "text": "Jay chose \"built by Jay\", stated plainly, never \"built solo\" (Q7, Oct 19).",
+      "public": false
+    },
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "resume_brief_2026_10_12 (/workspace/resume-brief/Resume-Brief.md)",
+      "Cleat README"
+    ],
+    "credit": "Built by Jay."
+  },
+  {
+    "id": "project-mission-control",
+    "name": "Mission Control",
+    "one_liner": "Self hosted observability and control plane for an AI agent team Jay runs on Oracle Cloud.",
+    "problem": "Jay runs a team of AI agents on his own Oracle Cloud instance that work in parallel on real repositories. Once more than one agent is working unattended, he needed to see what each one was doing, approve anything risky before it ran rather than after, and keep model spend from drifting. There was no view into any of that.",
+    "what_jay_built": "A dashboard and control plane covering tasks, agents, approvals, projects, a delivery pipeline, a cron calendar, agent memory, and model usage and spend. It includes an ingest API that agents post to, protected by a write token, with self registration so a new agent can join without Jay wiring it up, and an onboarding document the agents read to integrate themselves.",
+    "architecture": "A React, Vite and Tailwind frontend against a NestJS API with Prisma over PostgreSQL, with Socket.IO for live run tracking and a Python bridge to the agent runtime. Runs under Docker Compose. CI proves a fresh clone runs on Node 20 and Node 22, so the project stays reproducible rather than only working on Jay's machine. Agents authenticate to the ingest API with a write token and can self register.",
+    "key_decisions": [
+      "Make agents push to an ingest API rather than having the dashboard poll them, so the control plane does not need to know what exists in advance.",
+      "Allow self registration behind a write token, so adding an agent is not a manual configuration step.",
+      "Write an onboarding document the agents read to integrate themselves, which removed the setup work that was blocking adoption of the dashboard.",
+      "Put approvals in front of risky actions rather than reviewing them after the fact.",
+      "Make CI prove a fresh clone runs on two Node versions, so the project does not quietly become machine specific.",
+      "Track model usage and spend in the same place as the work, since cost is a real constraint when agents run unattended overnight."
+    ],
+    "stack": [
+      "TypeScript",
+      "React",
+      "Vite",
+      "Tailwind",
+      "NestJS",
+      "Prisma",
+      "PostgreSQL",
+      "Socket.IO",
+      "Python",
+      "Docker Compose",
+      "GitHub Actions",
+      "Oracle Cloud"
+    ],
+    "metrics": [
+      {
+        "label": "Test cases",
+        "value": "207",
+        "source": "resume_2026_10 (resume-2026-10.txt)"
+      },
+      {
+        "label": "Test files",
+        "value": "37",
+        "source": "resume_2026_10 (resume-2026-10.txt)"
+      },
+      {
+        "label": "Python bridge test suites",
+        "value": "5",
+        "source": "resume_brief_2026_10_12 (/workspace/resume-brief/Resume-Brief.md)"
+      },
+      {
+        "label": "Merged pull requests",
+        "value": "43",
+        "source": "resume_brief_2026_10_12 (/workspace/resume-brief/Resume-Brief.md)"
+      },
+      {
+        "label": "Database migrations",
+        "value": "10",
+        "source": "resume_brief_2026_10_12 (/workspace/resume-brief/Resume-Brief.md)"
+      }
+    ],
+    "links": [
+      {
+        "label": "Code",
+        "url": "https://github.com/jaysinghcodes/Mission-Control"
+      }
+    ],
+    "status": "Self hosted; Jay runs it for his own OpenClaw agent team on Oracle Cloud",
+    "featured": true,
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Cross checked against resume, brief and repo. Metrics with brief source are as of Oct 12, 2026; refresh before launch.",
+    "private_notes": {
+      "text": "No public link, since it is self hosted. The underlying agent runtime is OpenClaw, running on an Oracle Cloud free tier Ubuntu instance with 1 CPU and 4 GB RAM, with DeepSeek as the primary model and GLM as a fallback, targeting under $40 a month. Those hosting details are accurate but may be more than a recruiter needs.",
+      "public": false
+    },
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "resume_brief_2026_10_12 (/workspace/resume-brief/Resume-Brief.md)",
+      "Mission-Control README"
+    ],
+    "credit": "Built by Jay."
+  },
+  {
+    "id": "project-ask-my-resume",
+    "name": "Ask Jay",
+    "one_liner": "Chat assistant that answers questions about Jay's experience using Claude tool use with a resume search tool, so every answer is grounded in the source.",
+    "problem": "A resume is a static document and a recruiter's actual question is usually more specific than anything on it. A chatbot pointed at a resume will happily make things up, which is worse than useless when the subject is your own professional history.",
+    "what_jay_built": "Claude tool use with a resume search tool: Claude calls the search tool against Jay's resume and keeps calling it until it can produce a final answer grounded in the source. Jay built the frontend, the backend, the tool layer and the deployment.",
+    "architecture": "Today: a React and Vite frontend on GitHub Pages and a Node and Express backend on Render. The backend runs a Claude tool use loop with one tool, search_resume, which returns the resume text; Claude calls it until it can answer from the source. Frontend deploys run through GitHub Actions. Planned: one Vercel project with streaming, a structured knowledge base and cited answers.",
+    "key_decisions": [
+      "Use a tool use loop so the model has to fetch the source before it answers.",
+      "Let the model call the tool repeatedly until it has what it needs.",
+      "Keep it free to run on GitHub Pages and Render, moving to Vercel Hobby in the rebuild."
+    ],
+    "stack": [
+      "React",
+      "Vite",
+      "Node.js",
+      "Express",
+      "Claude API (Anthropic SDK)",
+      "GitHub Actions",
+      "GitHub Pages",
+      "Render"
+    ],
+    "metrics": [],
+    "links": [
+      {
+        "label": "Live demo",
+        "url": "https://jaysinghcodes.github.io/ask-my-resume/"
+      },
+      {
+        "label": "Code",
+        "url": "https://github.com/jaysinghcodes/ask-my-resume"
+      }
+    ],
+    "status": "Live; being rebuilt with a deeper knowledge base and moving to Vercel",
+    "featured": true,
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Cross checked against resume and repo. Oct 19: described as Claude tool use with a resume search tool, not an MCP server (Q9). A retrieval service claim Jay does not recognize was removed (Q8).",
+    "repo_name": "ask-my-resume",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "ask-my-resume repo code and README"
+    ]
+  },
+  {
+    "id": "project-dermai",
+    "name": "DermAI",
+    "kind": "earlier project",
+    "one_liner": "Earlier team hackathon project: an app that scans a picture of a skin lesion and estimates the probability that it is one of several types of skin cancer.",
+    "problem": "",
+    "what_jay_built": "DermAI was a 2022 Make OHIO hackathon team project; the repo does not show which parts Jay built himself. The repo README describes it as an application to scan a picture and detect the probability of a certain type of one of the seven skin cancers. The code includes Python notebooks that train TensorFlow and Keras convolutional neural networks on public skin lesion image datasets (HAM10000 with 7 classes, and an ISIC set with 9 classes), a SwiftUI iOS app that takes a photo from the camera or photo library, and an Expo and React Native camera prototype. The trained model was also exported to TensorFlow.js.",
+    "architecture": "Python notebooks train convolutional neural networks with TensorFlow and Keras, using Pandas for the dataset metadata and image augmentation for training. The models are saved in Keras format and exported to TensorFlow.js, with a Core ML conversion step in one notebook. The mobile side is a SwiftUI iOS app with a camera and photo library picker, plus an Expo and React Native camera prototype.",
+    "key_decisions": [],
+    "stack": [
+      "Python",
+      "TensorFlow",
+      "Keras",
+      "Pandas",
+      "Jupyter",
+      "Swift",
+      "SwiftUI",
+      "React Native",
+      "Expo",
+      "TensorFlow.js"
+    ],
+    "metrics": [],
+    "links": [
+      {
+        "label": "Code",
+        "url": "https://github.com/jaysinghcodes/DermAI"
+      }
+    ],
+    "status": "Earlier project (2022 hackathon, team project)",
+    "featured": false,
+    "confidence": "verified",
+    "source": [
+      "GitHub repo jaysinghcodes/DermAI, README and code on the main, dermai, develop, mobile and swift_app branches (read Oct 19 2026)",
+      "resume_2024 (repo mcp-server/resume.pdf, older resume; Jay approved use on Oct 18)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q10, Q11)"
+    ],
+    "as_of": "2022",
+    "public": true,
+    "notes": "Oct 19: Jay asked us to read the repo. Facts come from the README and code only. The README on main says seven skin cancers; the other branches say nine, and the notebooks train a 7 class (HAM10000) and a 9 class (ISIC) model. Repo commits show teammates wrote the model notebooks and the Swift app; Jay's own commits are the initial commit and README edits, so the assistant should call it a team project and not claim individual ownership of parts. The README states no accuracy, so no metric is published.",
+    "private_notes": {
+      "public": false,
+      "text": "Notebook outputs, not stated in the README and not published: the 7 class HAM10000 notebook prints 0.74 accuracy on a 201 image held out split; the 9 class ISIC notebook prints 27.97% test accuracy on 118 images. The 7 class model is the one exported to TensorFlow.js; the 9 class model is the one with the Core ML step. Jay should decide whether any accuracy is published."
+    }
+  },
+  {
+    "id": "project-donor-outreach",
+    "name": "Donor Outreach",
+    "kind": "case study",
+    "one_liner": "Case study that rebuilds a charity donor outreach AI skill so the model writes and the code decides.",
+    "problem": "The original skill asked one model pass to read donor data, calculate a suggested ask, choose a tone, and write a letter. Donor records were hardcoded into the instructions, and there were no compliance safeguards. The public README describes the original draft as written for the ASPCA (American Society for the Prevention of Cruelty to Animals).",
+    "what_jay_built": "A public case study and a rebuilt skill package. A small Python script computes the ask amount, the tier and channel logic, and the compliance footer. The model only writes the parts of the letter that benefit from natural language. Donor data lives in an external file, and a record missing required fields is skipped and logged.",
+    "architecture": "The repository holds the write up and the skill package. The deterministic engine reads a donor file and staff editable rules, then writes one letter per eligible donor plus a manifest, an exceptions file, and a suppression file. It uses the Python standard library only.",
+    "key_decisions": [
+      "The model writes and the code decides. Amounts, tier and channel logic, and the compliance footer are computed by code, not generated in prose.",
+      "Donor data stays in an external file instead of being hardcoded into the skill.",
+      "A record missing required fields is skipped and logged rather than filled in with a guess."
+    ],
+    "stack": [
+      "Python"
+    ],
+    "metrics": [],
+    "links": [
+      {
+        "label": "Code",
+        "url": "https://github.com/jaysinghcodes/Charity-Donor-Outreach-AI-Product-Lead-Case-Study"
+      }
+    ],
+    "status": "Case study",
+    "featured": false,
+    "confidence": "verified",
+    "public": true,
+    "source": "GitHub repo jaysinghcodes/Charity-Donor-Outreach-AI-Product-Lead-Case-Study README, read Oct 20 2026",
+    "as_of": "2026-10-20",
+    "notes": "Facts from the public README only. Dollar thresholds in the repo are exercise defaults, not a real fundraising target. Teammate names are not in that README.",
+    "repo_name": "Charity-Donor-Outreach-AI-Product-Lead-Case-Study",
+    "credit": "Built by Jay."
+  },
+  {
+    "id": "project-osu-cse-catalog",
+    "name": "OSU CSE catalog",
+    "kind": "class project",
+    "one_liner": "Rails course catalog for Ohio State students, instructors, and administrators.",
+    "problem": "Students, instructors, and administrators need different views of the Ohio State course and section catalog.",
+    "what_jay_built": "A team class project. The public README lists Jagteshwar Singh as project manager. The app is a Rails application on SQLite that uses the OSU course API so people can browse and search courses and sections.",
+    "architecture": "Devise handles registration and login for students, instructors, and administrators. Students can browse courses and sections and submit grader interest. Instructors can recommend students and leave grader evaluations. Administrators can add, edit, or delete courses and sections, approve accounts, and reload the course database from the API.",
+    "key_decisions": [],
+    "stack": [
+      "Ruby on Rails",
+      "SQLite",
+      "Devise"
+    ],
+    "metrics": [],
+    "links": [
+      {
+        "label": "Code",
+        "url": "https://github.com/jaysinghcodes/osuCseCatalog"
+      }
+    ],
+    "status": "Earlier class project",
+    "featured": false,
+    "confidence": "verified",
+    "public": true,
+    "source": "GitHub repo jaysinghcodes/osuCseCatalog README, read Oct 20 2026",
+    "as_of": "2026-10-20",
+    "notes": "Facts from the public README only. Classmate names and the seeded admin password in that README are omitted.",
+    "repo_name": "osuCseCatalog",
+    "credit": "Team class project. Jay was the project manager."
+  }
+]

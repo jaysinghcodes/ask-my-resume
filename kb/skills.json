@@ -1,1 +1,796 @@
-[]
+[
+  {
+    "id": "skill-python",
+    "group": "Languages",
+    "name": "Python",
+    "evidence_ids": [
+      "bullet-captech-consultant-3",
+      "bullet-captech-consultant-4",
+      "bullet-captech-consultant-2"
+    ],
+    "confidence": "verified",
+    "notes": "Python was used for the Databricks notebooks, including the reconciliation and validation work (Jay, Q6), plus Ask Jay tooling and data analysis notebooks.",
+    "on_resume": true,
+    "level_internal": "expert",
+    "level_public": false,
+    "display_name": "Python",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q6)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-go",
+    "group": "Languages",
+    "name": "Go",
+    "evidence_ids": [
+      "bullet-captech-consultant-3",
+      "bullet-captech-consultant-1"
+    ],
+    "confidence": "verified",
+    "notes": "Go was used for the production Lambdas at a Top 10 U.S. bank (Jay, Q6). Do not call Go his primary focus.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "Go",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q6, Q12)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-typescript",
+    "group": "Languages",
+    "name": "TypeScript",
+    "evidence_ids": [
+      "project-cleat",
+      "project-mission-control"
+    ],
+    "confidence": "verified",
+    "notes": "Both major side projects are TypeScript end to end.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "TypeScript",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-sql",
+    "group": "Languages",
+    "name": "SQL",
+    "evidence_ids": [
+      "bullet-captech-consultant-4",
+      "bullet-captech-consultant-2",
+      "project-cleat"
+    ],
+    "confidence": "verified",
+    "notes": "Validation pipelines, standardization work, and the tenant scoped retrieval function in Cleat.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "SQL",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-java",
+    "group": "Languages",
+    "name": "Java",
+    "evidence_ids": [
+      "bullet-captech-intern-1"
+    ],
+    "confidence": "verified",
+    "notes": "Spring Boot APIs during the 2023 internship. Not his current day to day.",
+    "on_resume": true,
+    "level_internal": "working",
+    "level_public": false,
+    "display_name": "Java",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-javascript",
+    "group": "Languages",
+    "name": "JavaScript",
+    "evidence_ids": [
+      "project-ask-my-resume",
+      "bullet-captech-intern-1"
+    ],
+    "confidence": "verified",
+    "notes": "",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "JavaScript",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-html-css",
+    "group": "Languages",
+    "name": "HTML and CSS",
+    "evidence_ids": [
+      "project-cleat",
+      "project-ask-my-resume"
+    ],
+    "confidence": "verified",
+    "notes": "",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "HTML and CSS",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-yaml",
+    "group": "Languages",
+    "name": "YAML",
+    "evidence_ids": [
+      "project-mission-control",
+      "project-cleat"
+    ],
+    "confidence": "verified",
+    "notes": "CI pipelines and infrastructure configuration.",
+    "on_resume": true,
+    "level_internal": "working",
+    "level_public": false,
+    "display_name": "YAML",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-c",
+    "group": "Languages",
+    "name": "C",
+    "evidence_ids": [],
+    "confidence": "unsure",
+    "notes": "Jay said C was used in his Python notebooks (Q13). No knowledge base record names that work, so this skill is unsure and is not shown.",
+    "on_resume": true,
+    "level_internal": "working",
+    "level_public": false,
+    "display_name": "C",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q13)"
+    ],
+    "public": true,
+    "as_of": "2026-10-19",
+    "evidence_note": "Used in his Python notebooks."
+  },
+  {
+    "id": "skill-claude-api",
+    "group": "AI and data",
+    "name": "Claude API (Anthropic SDK)",
+    "evidence_ids": [
+      "project-ask-my-resume"
+    ],
+    "confidence": "verified",
+    "notes": "Agentic tool use loop in production.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "Claude API (Anthropic SDK)",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-openai-api",
+    "group": "AI and data",
+    "name": "OpenAI API",
+    "evidence_ids": [
+      "project-cleat"
+    ],
+    "confidence": "verified",
+    "notes": "Embeddings and generation in Cleat.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "OpenAI API",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-mcp",
+    "group": "AI and data",
+    "name": "MCP (Model Context Protocol)",
+    "evidence_ids": [
+      "source-resume-2026-10"
+    ],
+    "confidence": "verified",
+    "notes": "Evidence is the Oct 2026 resume only. No project is named.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "MCP (Model Context Protocol)",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q9 follow up)"
+    ],
+    "public": true,
+    "as_of": "2026-10-19",
+    "evidence_note": "Listed on the Oct 2026 resume."
+  },
+  {
+    "id": "skill-rag",
+    "group": "AI and data",
+    "name": "RAG",
+    "evidence_ids": [
+      "project-cleat"
+    ],
+    "confidence": "verified",
+    "notes": "Full pipeline in Cleat: chunking, embedding, vector index, tenant scoped retrieval.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "RAG",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-vector-embeddings",
+    "group": "AI and data",
+    "name": "Vector embeddings",
+    "evidence_ids": [
+      "project-cleat"
+    ],
+    "confidence": "verified",
+    "notes": "1536 dimension embeddings in Cleat.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "Vector embeddings",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-pgvector",
+    "group": "AI and data",
+    "name": "pgvector",
+    "evidence_ids": [
+      "project-cleat"
+    ],
+    "confidence": "verified",
+    "notes": "HNSW cosine index behind a tenant scoped SQL retrieval function.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "pgvector",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-llm-evals",
+    "group": "AI and data",
+    "name": "LLM evals",
+    "evidence_ids": [
+      "project-cleat"
+    ],
+    "confidence": "verified",
+    "notes": "Eval harness over a 105 message labeled set with answer, escalate and refuse labels, failing the run on any mismatch.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "LLM evals",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-agentic-workflows",
+    "group": "AI and data",
+    "name": "Agentic workflows",
+    "evidence_ids": [
+      "project-ask-my-resume",
+      "project-mission-control"
+    ],
+    "confidence": "verified",
+    "notes": "Both a tool use loop in production and a multi agent engineering workflow with an automated QA gate.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "Agentic workflows",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-ai-safety-guardrails",
+    "group": "AI and data",
+    "name": "AI safety guardrails",
+    "evidence_ids": [
+      "project-cleat"
+    ],
+    "confidence": "verified",
+    "notes": "Not on the resume skills line verbatim but demonstrated concretely in Cleat.",
+    "on_resume": false,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "AI safety guardrails",
+    "source": [
+      "resume_brief_2026_10_12 (/workspace/resume-brief/Resume-Brief.md)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-databricks",
+    "group": "AI and data",
+    "name": "Databricks",
+    "evidence_ids": [
+      "bullet-captech-consultant-4",
+      "bullet-captech-consultant-2"
+    ],
+    "confidence": "verified",
+    "notes": "Databricks notebooks did the reconciliation in the standardization work, checking standardized records to confirm incoming records were ingested (Jay, Q5), plus validation pipelines that detect data loss during transformation.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "Databricks",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q5)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-snowflake",
+    "group": "AI and data",
+    "name": "Snowflake",
+    "evidence_ids": [
+      "bullet-captech-consultant-2"
+    ],
+    "confidence": "verified",
+    "notes": "Used to look at and monitor data in the standardization work (Jay, Q5).",
+    "on_resume": true,
+    "level_internal": "working",
+    "level_public": false,
+    "display_name": "Snowflake",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q5)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-postgresql",
+    "group": "AI and data",
+    "name": "PostgreSQL",
+    "evidence_ids": [
+      "project-cleat",
+      "project-mission-control",
+      "bullet-osu-wexner-2"
+    ],
+    "confidence": "verified",
+    "notes": "Including Row Level Security, check constraints and pgvector.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "PostgreSQL",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-pandas",
+    "group": "AI and data",
+    "name": "Pandas",
+    "evidence_ids": [
+      "project-dermai"
+    ],
+    "confidence": "verified",
+    "notes": "Jay said Pandas was used in his Python notebooks (Q13). The notebooks on the dermai branch import Pandas.",
+    "on_resume": true,
+    "level_internal": "working",
+    "level_public": false,
+    "display_name": "Pandas",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q13)"
+    ],
+    "public": true,
+    "as_of": "2026-10-19",
+    "evidence_note": "Used in his Python notebooks."
+  },
+  {
+    "id": "skill-pytorch",
+    "group": "AI and data",
+    "name": "PyTorch",
+    "evidence_ids": [],
+    "confidence": "unsure",
+    "notes": "Jay said PyTorch was used in his Python notebooks (Q13). No knowledge base record names that work, so this skill is unsure and is not shown.",
+    "on_resume": true,
+    "level_internal": "working",
+    "level_public": false,
+    "display_name": "PyTorch",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q13)"
+    ],
+    "public": true,
+    "as_of": "2026-10-19",
+    "evidence_note": "Used in his Python notebooks."
+  },
+  {
+    "id": "skill-aws",
+    "group": "Cloud and frameworks",
+    "name": "AWS (Lambda, Fargate, ECS, SQS, SNS, RDS)",
+    "evidence_ids": [
+      "bullet-captech-consultant-1",
+      "bullet-captech-consultant-3",
+      "bullet-captech-consultant-4",
+      "bullet-captech-intern-2"
+    ],
+    "confidence": "verified",
+    "notes": "Production AWS since Sep 2024 at a Top 10 U.S. bank, plus EC2 in the 2023 internship.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "AWS (Lambda, Fargate, ECS, SQS, SNS, RDS)",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-docker",
+    "group": "Cloud and frameworks",
+    "name": "Docker",
+    "evidence_ids": [
+      "project-mission-control"
+    ],
+    "confidence": "verified",
+    "notes": "Docker Compose for the self hosted control plane.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "Docker",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-github-actions",
+    "group": "Cloud and frameworks",
+    "name": "GitHub Actions",
+    "evidence_ids": [
+      "project-cleat",
+      "project-mission-control",
+      "project-ask-my-resume"
+    ],
+    "confidence": "verified",
+    "notes": "CI and deployment across all three projects, including a CI job that proves a fresh clone runs on two Node versions.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "GitHub Actions",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-vercel",
+    "group": "Cloud and frameworks",
+    "name": "Vercel",
+    "evidence_ids": [
+      "project-cleat"
+    ],
+    "confidence": "verified",
+    "notes": "",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "Vercel",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-supabase",
+    "group": "Cloud and frameworks",
+    "name": "Supabase",
+    "evidence_ids": [
+      "project-cleat"
+    ],
+    "confidence": "verified",
+    "notes": "Postgres, Auth, Row Level Security and pgvector.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "Supabase",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-react",
+    "group": "Cloud and frameworks",
+    "name": "React",
+    "evidence_ids": [
+      "bullet-captech-intern-1",
+      "bullet-osu-wexner-1",
+      "project-ask-my-resume",
+      "project-mission-control"
+    ],
+    "confidence": "verified",
+    "notes": "",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "React",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-nextjs",
+    "group": "Cloud and frameworks",
+    "name": "Next.js",
+    "evidence_ids": [
+      "project-cleat"
+    ],
+    "confidence": "verified",
+    "notes": "Next.js 15 for the Cleat web app.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "Next.js",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-react-native",
+    "group": "Cloud and frameworks",
+    "name": "React Native",
+    "evidence_ids": [
+      "project-cleat"
+    ],
+    "confidence": "verified",
+    "notes": "Expo and React Native mobile app shipped for iOS and Android.",
+    "on_resume": true,
+    "level_internal": "working",
+    "level_public": false,
+    "display_name": "React Native",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-nodejs",
+    "group": "Cloud and frameworks",
+    "name": "Node.js",
+    "evidence_ids": [
+      "project-ask-my-resume",
+      "project-mission-control"
+    ],
+    "confidence": "verified",
+    "notes": "",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "Node.js",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-nestjs",
+    "group": "Cloud and frameworks",
+    "name": "NestJS",
+    "evidence_ids": [
+      "project-mission-control"
+    ],
+    "confidence": "verified",
+    "notes": "",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "NestJS",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-express",
+    "group": "Cloud and frameworks",
+    "name": "Express",
+    "evidence_ids": [
+      "project-ask-my-resume"
+    ],
+    "confidence": "verified",
+    "notes": "",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "Express",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-prisma",
+    "group": "Cloud and frameworks",
+    "name": "Prisma",
+    "evidence_ids": [
+      "project-mission-control",
+      "bullet-osu-wexner-2"
+    ],
+    "confidence": "verified",
+    "notes": "Including 10 database migrations on Mission Control.",
+    "on_resume": true,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "Prisma",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-spring-boot",
+    "group": "Cloud and frameworks",
+    "name": "Spring Boot",
+    "evidence_ids": [
+      "bullet-captech-intern-1"
+    ],
+    "confidence": "verified",
+    "notes": "2023 internship. Not current.",
+    "on_resume": true,
+    "level_internal": "working",
+    "level_public": false,
+    "display_name": "Spring Boot",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-graphql",
+    "group": "Cloud and frameworks",
+    "name": "GraphQL",
+    "evidence_ids": [
+      "bullet-osu-wexner-2"
+    ],
+    "confidence": "verified",
+    "notes": "Designed the GraphQL layer and data models with Prisma and Apollo at Wexner.",
+    "on_resume": true,
+    "level_internal": "working",
+    "level_public": false,
+    "display_name": "GraphQL",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-new-relic",
+    "group": "Cloud and frameworks",
+    "name": "New Relic",
+    "evidence_ids": [
+      "bullet-captech-consultant-4",
+      "bullet-captech-consultant-3"
+    ],
+    "confidence": "verified",
+    "notes": "6 months of performance analysis plus production debugging.",
+    "on_resume": false,
+    "level_internal": "strong",
+    "level_public": false,
+    "display_name": "New Relic",
+    "source": [
+      "resume_2024 (repo mcp-server/resume.pdf, older resume; Jay approved use on Oct 18)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-splunk",
+    "group": "Cloud and frameworks",
+    "name": "Splunk",
+    "evidence_ids": [
+      "bullet-captech-consultant-3"
+    ],
+    "confidence": "verified",
+    "notes": "Production support and debugging. Not on the current resume skills line.",
+    "on_resume": false,
+    "level_internal": "working",
+    "level_public": false,
+    "display_name": "Splunk",
+    "source": [
+      "resume_2024 (repo mcp-server/resume.pdf, older resume; Jay approved use on Oct 18)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  },
+  {
+    "id": "skill-salesforce",
+    "group": "Cloud and frameworks",
+    "name": "Salesforce and Apex",
+    "evidence_ids": [
+      "bullet-procrewz-1",
+      "bullet-procrewz-2",
+      "bullet-procrewz-3"
+    ],
+    "confidence": "verified",
+    "notes": "Full internship of platform development. Not on the current resume skills line but real experience.",
+    "on_resume": false,
+    "level_internal": "working",
+    "level_public": false,
+    "display_name": "Salesforce and Apex",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "public": true,
+    "as_of": "2026-10"
+  }
+]

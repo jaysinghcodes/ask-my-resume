@@ -1,0 +1,80 @@
+[
+  {
+    "id": "doc-mission-control-stack-stack",
+    "project": "Mission Control",
+    "title": "Stack",
+    "heading": "Stack",
+    "text": "Mission Control is an npm workspace. `packageManager` is `npm@11.17.0`. This repo does not use pnpm. The short table is on the README. This file is the inventory.\n\n| Piece | Path | What it is |\n| --- | --- | --- |\n| `web` | `apps/web` | React 19, Vite 8, Tailwind CSS v4, React Router hash routes, Socket.IO client |\n| `api` | `apps/api` | NestJS 11, Socket.IO, Prisma 7.9, Postgres 16 |\n| `bridge` | `bridge` | Optional Python 3 standard library sync from the OpenClaw CLI |\n| workspaces | repo root | npm workspaces and Turbo 2 |\n\nPrisma models, 14 counted in `apps/api/prisma/schema.prisma`: `Agent`, `Run`, `Project`, `Ticket`, `Session`, `CronJob`, `UsageBucket`, `ActivityEvent`, `Approval`, `MemoryEntry`, `ModelConfig`, `Setting`, `Device`, `CustomTool`.\n\nThe API has 21 controllers (`@Controller` in `apps/api/src`). `team.controller.ts` registers two of them, `mission` and `devices`. The others are sessions, runs, activity, logs, calendar, models, approvals, custom tools, projects, search, usage, events, tickets, docs, health, memory, agents, the root app controller, and system.\n\nSchema changes stay human reviewed. On boot the API runs `prisma migrate deploy`, which applies those reviewed migrations. It does not create new ones. That includes `npm run dev` and `node dist/main.js`.\n\nThe web app uses hash routes. A page looks like `http://localhost:5173/#/tasks`. A path with no hash, such as `/tasks`, is not a client route. Overview is not a route. `/` redirects to `/tasks`.\n\nThe sidebar order is Tasks, Agents, Approvals, Projects, Office, Pipeline, then Calendar, Memory, Docs, Team, Usage, System.",
+    "url": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
+    "source": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
+    "as_of": "2026-10-20",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Mission-Control docs/STACK.md at 7f1c19038f46e9ffd43147afbe705fc4da7c74d5."
+  },
+  {
+    "id": "doc-mission-control-stack-pages",
+    "project": "Mission Control",
+    "title": "Stack",
+    "heading": "Pages",
+    "text": "| Route | Screen |\n| --- | --- |\n| `/#/tasks` | Task board. Home. |\n| `/#/tasks?view=backlog` | Backlog list for the same tickets |\n| `/#/agents` | Agent cards |\n| `/#/approvals` | Pending and decided approvals |\n| `/#/projects` | Project list |\n| `/#/projects/<id>` | One project and its tickets |\n| `/#/office` | Full bleed Office. Live rooms are Build, QA, Ship, Deploy, and Commons |\n| `/#/pipeline` | The same tickets as Build, QA, Ship, Deploy |\n| `/#/calendar` | Cron jobs for the week |\n| `/#/memory` | Memory notes |\n| `/#/usage` | Cost so far, by day, bot, and model |\n| `/#/docs` | Markdown library from `DOCS_ROOT` |\n| `/#/team` | Mission, people, devices |\n| `/#/system` | Health, provider and model per agent, versions, spend, links to the panels below |\n| `/#/system/logs` | Gateway log tail, or an empty state |\n| `/#/system/sessions` | Sessions from `sessions.snapshot` |\n| `/#/system/settings` | Connection and log out |\n| `/#/system/connection` | How this browser reaches the API |\n| `/#/system/tools` | Experimental custom tools |\n| `/#/connect` | Setup sheet (no sidebar) |\n\nThese paths are redirects, not pages: `/tickets` to `/tasks`, `/backlog` to `/tasks?view=backlog`, `/factory` and `/activity` to `/office`, `/health` to `/system`, `/logs` to `/system/logs`, `/sessions` to `/system/sessions`, `/settings` to `/system/settings`.",
+    "url": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
+    "source": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
+    "as_of": "2026-10-20",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Mission-Control docs/STACK.md at 7f1c19038f46e9ffd43147afbe705fc4da7c74d5."
+  },
+  {
+    "id": "doc-mission-control-stack-scripts",
+    "project": "Mission Control",
+    "title": "Stack",
+    "heading": "Scripts",
+    "text": "There is no separate `typecheck` script. `npm run build` typechecks both apps (`tsc -b` in web, `nest build` in api).\n\nGenerate the Prisma client first. npm 11.17.0 does not run the Prisma install scripts, so `npm test` and `npm run build` cannot see `.prisma/client` until you do:\n\n```bash\n(cd apps/api && npx prisma generate)\nnpm test\nnpm run build\n```\n\n`npm run lint` checks the web app with oxlint and the API with eslint. It only reads files. `npm run lint:fix` runs the same checks and applies their automatic fixes. Commit the result only after you review the diff. `npm test` for the API needs Postgres. It uses `TEST_DATABASE_URL` when that is set, and otherwise creates a throwaway database named `mc_test_<random>` so it never migrates the database named by `DATABASE_URL`. If creating a database is not permitted, setup uses a throwaway schema and drops it afterward. Before any write, when both URLs are set, setup connects to each one and compares server identity. If `TEST_DATABASE_URL` reaches the same database as `DATABASE_URL`, including another host name or socket, the run refuses before it writes. If `DATABASE_URL` is unset or cannot be reached, that check is skipped. Web tests do not use Postgres. `npm run test:e2e` uses `DATABASE_URL`. `npm run doctor` prints one line per check. The order is in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).",
+    "url": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
+    "source": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
+    "as_of": "2026-10-20",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Mission-Control docs/STACK.md at 7f1c19038f46e9ffd43147afbe705fc4da7c74d5."
+  },
+  {
+    "id": "doc-mission-control-stack-what-works-without-openclaw",
+    "project": "Mission Control",
+    "title": "Stack",
+    "heading": "What works without OpenClaw",
+    "text": "On the Compose path, run `npm ci` in the checkout before `npm run seed:demo` or `npm run seed:clear`. Without that install, prisma is not found and the seed command fails. `npm run seed:demo` fills the dashboard with no bridge and no OpenClaw CLI. Nothing seeds that data for you. `npm run seed:clear` removes it again and leaves live rows in place.\n\n* Tasks and the backlog view, from seeded tickets.\n* Projects, including ticket counts, from seeded projects.\n* Pipeline, the same tickets as Build, QA, Ship, Deploy.\n* Memory notes, from seeded rows. Docs do not use the bridge. The seed writes sample markdown under `data/docs`.\n* Team mission, from `GET /mission`. People come from the seeded roster and show a Sample tag until a real bot is registered. Devices come from the seed until `devices.snapshot` replaces them. There is no dashboard form that adds a device.\n* Custom tools, one seeded tool on `/#/system/tools`.\n* Office, Calendar, Approvals, and Usage for Today, the last 7 days, and the month. The seed writes 30 days of tokens. Dollars are computed on read from `config/prices.json`. Office seats each demo bot by agent id.\n\nSessions and gateway logs stay empty until a real bridge posts them.",
+    "url": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
+    "source": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
+    "as_of": "2026-10-20",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Mission-Control docs/STACK.md at 7f1c19038f46e9ffd43147afbe705fc4da7c74d5."
+  },
+  {
+    "id": "doc-mission-control-stack-roster-marks",
+    "project": "Mission Control",
+    "title": "Stack",
+    "heading": "Roster marks",
+    "text": "Once any registered or snapshot bot exists, unclaimed defaults hide on Agents, Office, and Team. The rows stay in the database. Turn on Show sample bots on System to bring them back. They show the Sample tag. The switch is saved in this browser and stays on after a reload. Delete every real bot and the defaults show again on their own. A bridge snapshot never removes a registered bot.\n\nA registered bot with no heartbeat for 10 minutes shows Offline. The label uses the existing idle robot, dimmed. The row is not deleted.",
+    "url": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
+    "source": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
+    "as_of": "2026-10-20",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Mission-Control docs/STACK.md at 7f1c19038f46e9ffd43147afbe705fc4da7c74d5."
+  },
+  {
+    "id": "doc-mission-control-stack-layout",
+    "project": "Mission Control",
+    "title": "Stack",
+    "heading": "Layout",
+    "text": "```\napps/web/                     React dashboard\napps/api/                     NestJS API, Prisma schema, seed script\nbridge/                       Optional OpenClaw sync\ndocs/                         Install, security, API, remote access\ndocs/screenshots/             README hero GIF and stills\nwireframes/                   Static wireframe art, not the running UI\nLOG.md                        Change log\nONBOARDING.md                 Human install steps for an agent to walk through\n```\n\nThe running UI is `apps/web`. `wireframes/` is the drawing set. `design/` is older reference art and is not the screenshot source.",
+    "url": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
+    "source": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
+    "as_of": "2026-10-20",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Mission-Control docs/STACK.md at 7f1c19038f46e9ffd43147afbe705fc4da7c74d5."
+  }
+]
