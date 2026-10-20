@@ -4,7 +4,6 @@ Version 1.2.3 and v16.14.0 and 7.3.8.
 Cleat SHA 43aff81936cc627f6e3959879246fa6d0e1ca171
 UUID 550e8400-e29b-41d4-a716-446655440000
 Short +1234567
-Sixteen digits 9999999999999999
 Email test@example.com
 Build date 20241020
 IP 192.168.1.1
