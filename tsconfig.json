@@ -22,7 +22,6 @@
     "types/**/*.d.ts",
     "frontend/src/**/*.js",
     "frontend/src/**/*.jsx",
-    "frontend/src/vite-env.d.ts",
     "frontend/vite.config.js"
   ]
 }
