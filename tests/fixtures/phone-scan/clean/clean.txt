@@ -1,0 +1,13 @@
+Year 2024 and year 2026 and 1999.
+Date 2024-10-20 and 10/20/2026 and 2026.10.20.
+Version 1.2.3 and v16.14.0 and ^11.14.0 and 7.3.8.
+SHA a4693fb2198fb28946eca6173bffdeadbeefc0ffee
+Long id 123456789012345678901234567890
+Twelve digits 123456789012
+Hyphenated id 1234-5678-9012
+IP 192.168.1.1 and 10.255.255.255
+Short +1234567
+Plus too long +9155555501235551
+Email test@example.com
+Build date 20241020
+Eleven digits without a leading one 55555550123
