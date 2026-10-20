@@ -10,7 +10,8 @@ import {
   checkJdFitAnswer,
   parseJdFitAnswer,
 } from "../lib/jd-fit.js";
-import { JD_FIT_SECTIONS as PAGE_SECTIONS } from "../frontend/src/ask/askModel.js";
+import { JD_FIT_SECTIONS as PAGE_SECTIONS, layoutAnswer, normalizeSources } from "../frontend/src/ask/askModel.js";
+import { allowedJdHeading, reportsMissing } from "../lib/jd-fit-rules.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cases = JSON.parse(fs.readFileSync(path.join(root, "evals/jd-fit.cases.json"), "utf8")).cases;
@@ -65,6 +66,73 @@ describe("JD fit evals", () => {
       }
     });
   }
+
+  it("Sentinel r2 probes: each bad case is flagged for the right reason", () => {
+    const opts = { sourceIds, omit: ["CPA", "Certified public accountant"] };
+    const C4 = "[bullet-captech-consultant-4]";
+    /** @type {[string, string][]} */
+    const expected = [
+      [`Strong matches\n- AWS ${C4}\n\nGaps\n- Kafka`, 'unexpected section "Gaps"'],
+      [`## Strong matches\n- AWS ${C4}\n\n## Gaps:\n- Kafka`, 'unexpected section "Gaps"'],
+      [`**Strong matches**\n- AWS ${C4}\n**Gaps:** Kafka, Rust`, 'unexpected section "Gaps"'],
+      [`Strong matches\n- AWS ${C4}\nGaps.\n- Kafka ${C4}`, 'unexpected section "Gaps"'],
+      [`Strong matches\n- AWS ${C4}\n\nGap analysis\n- Kafka\n- Rust`, 'unexpected section "Gap analysis"'],
+      [`Strong matches\n- AWS ${C4}\n\nWeaknesses\n- Kafka`, 'unexpected section "Weaknesses"'],
+      [`Strong matches\n- AWS ${C4}\n\nweakness\n- Kafka ${C4}`, 'unexpected section "weakness"'],
+      [`Strong matches\n- AWS ${C4}\n\nAreas to grow\n- Kafka ${C4}`, 'unexpected section "Areas to grow"'],
+      [`Strong matches\n- AWS ${C4}\n\nDevelopment areas\n- Kafka ${C4}`, 'unexpected section "Development areas"'],
+      [`Strong matches\n- AWS ${C4}\n\nMissing skills\n- Kafka ${C4}`, 'unexpected section "Missing skills"'],
+      [`Strong matches\n- AWS ${C4}\n\nNot a fit\n- Kafka ${C4}`, 'unexpected section "Not a fit"'],
+      ["Strong matches\n- Kafka\n- Rust", "uncited item in Strong matches"],
+      [`Partial matches\n- Go ${C4}\n- Rust`, "uncited item in Partial matches"],
+      [`Partial matches\n- He has never used Kafka ${C4}`, "gap or missing wording"],
+      [`Partial matches\n- Not familiar with Kafka yet ${C4}`, "gap or missing wording"],
+      [`Partial matches\n- Without Kafka experience, he used AWS SQS ${C4}`, "gap or missing wording"],
+      [`Partial matches\n- Kafka is not listed in his experience ${C4}`, "gap or missing wording"],
+      [`Partial matches\n- Kafka is absent from his background ${C4}`, "gap or missing wording"],
+      [`Closest experience\n- Kafka: none ${C4}`, "gap or missing wording"],
+      [`Closest experience\n- Kafka: N/A ${C4}`, "gap or missing wording"],
+      [`Closest experience\n- None ${C4}`, "gap or missing wording"],
+      [`Closest experience\n- N/A ${C4}`, "gap or missing wording"],
+      ["", "empty answer"],
+      ["Strong matches\n\nClosest experience", "empty answer"],
+      ["Strong matches\n- AWS [docs](https://example.com)", "uncited item in Strong matches"],
+      ["Strong matches\n- AWS (bullet-captech-consultant-4)", "uncited item in Strong matches"],
+      ["Strong matches\n- AWS [bullet-captech-consultant-99]", "unknown source bullet-captech-consultant-99"],
+    ];
+    for (const [text, problem] of expected) expect(checkJdFitAnswer(text, opts), text).toContain(problem);
+    for (const good of [
+      "Strong matches\n1. AWS Lambda [bullet-captech-consultant-3]",
+      "### Strong matches:\n- AWS [bullet-captech-consultant-3]",
+      "Strong matches\nAWS Lambda services in Python and Go [bullet-captech-consultant-3]",
+    ]) {
+      expect(checkJdFitAnswer(good, opts), good).toEqual([]);
+    }
+  });
+
+  it("shares one rules module with the page", () => {
+    expect(fs.readFileSync(path.join(root, "lib/jd-fit.js"), "utf8")).toContain('from "./jd-fit-rules.js"');
+    expect(fs.readFileSync(path.join(root, "frontend/src/ask/askModel.js"), "utf8")).toContain('from "../../../lib/jd-fit-rules.js"');
+    expect(reportsMissing("Kafka: N/A")).toBe(true);
+    expect(reportsMissing("Kubernetes: container orchestration with AWS ECS")).toBe(false);
+    expect(allowedJdHeading("### closest experience:")).toBe("Closest experience");
+    expect(allowedJdHeading("Gap analysis")).toBe(null);
+  });
+
+  it("renders no bad eval answer with an unknown heading or an uncited item", () => {
+    const page = normalizeSources(sourceIds.map((id) => ({ id, label: id, href: "#x" })));
+    for (const evalCase of cases) {
+      for (const bad of evalCase.bad_answers) {
+        const { blocks } = layoutAnswer(bad, page, { jdFit: true });
+        for (const block of blocks) {
+          if (block.type === "heading") expect(JD_FIT_SECTIONS, bad).toContain(block.inline.map((p) => ("text" in p ? p.text : "")).join(""));
+          const groups = "items" in block ? block.items : block.type === "heading" ? [] : [block.inline];
+          for (const parts of groups) expect(parts.some((p) => p.type === "cite"), bad).toBe(true);
+        }
+        expect(JSON.stringify(blocks), bad).not.toMatch(/gap|weakness|areas to grow|development areas|missing|not a fit/i);
+      }
+    }
+  });
 
   it("flags gap wording, uncited items, invented sources and unrelated requirements", () => {
     const opts = { sourceIds, omit: ["CPA"] };

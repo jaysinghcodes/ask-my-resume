@@ -3,6 +3,10 @@
  * Nothing here touches the DOM, so the tests can cover it directly.
  */
 
+import { JD_FIT_SECTIONS, allowedJdHeading, reportsMissing } from "../../../lib/jd-fit-rules.js";
+
+export { JD_FIT_SECTIONS };
+
 /** Messages on screen before the input is replaced by "Start a new conversation". */
 export const MAX_THREAD_MESSAGES = 12;
 
@@ -174,7 +178,7 @@ const CITE = "\u0000";
  * While streaming, a half received marker at the end is hidden.
  * @param {string} text
  * @param {Source[] | null} sources `null` while the sources event has not arrived.
- * @param {{ streaming?: boolean, jdFit?: boolean }} [options] `jdFit` applies the JD fit rules (see jdFitBlocks).
+ * @param {{ streaming?: boolean, jdFit?: boolean }} [options] `jdFit` applies the JD fit rules (see jdFitText).
  * @returns {{ blocks: Block[], sources: NumberedSource[] }}
  */
 export function layoutAnswer(text, sources, options = {}) {
@@ -218,9 +222,25 @@ export function layoutAnswer(text, sources, options = {}) {
   });
 
   // Only cited sources are listed, numbered by first citation so they match the superscripts.
-  const attached = attachCites(tidy(marked));
-  const blocks = toBlocks(attached);
-  return { blocks: options.jdFit ? jdFitBlocks(blocks) : blocks, sources: list };
+  let attached = attachCites(tidy(marked));
+  let sourcesOut = list;
+  if (options.jdFit) {
+    // Drop what the JD fit rules drop, then renumber what is left by first citation.
+    attached = jdFitText(attached);
+    /** @type {Map<number, number>} */
+    const renumber = new Map();
+    attached = attached.replace(CITE_ONE, (_match, n) => {
+      const old = Number(n);
+      if (!renumber.has(old)) renumber.set(old, renumber.size + 1);
+      return `${CITE}${renumber.get(old)}${CITE}`;
+    });
+    sourcesOut = [];
+    for (const [old, n] of renumber) {
+      const source = list.find((item) => item.n === old);
+      if (source) sourcesOut.push({ ...source, n });
+    }
+  }
+  return { blocks: toBlocks(attached), sources: sourcesOut };
 }
 
 /**
@@ -248,19 +268,12 @@ function attachCites(text) {
   return text.replace(CITE_RUN, (_match, cites, punct) => `${punct}${cites.replace(/[ \t]+/g, "")}`);
 }
 
+const CITE_ONE = new RegExp(`${CITE}(\\d+)${CITE}`, "g");
 const CITE_RUN = new RegExp(`[ \\t]*((?:[ \\t]*${CITE}\\d+${CITE})+)([.,;:!?]*)`, "g");
 
 const HEADING = /^(?:#{1,4}\s+)?(?:\*\*)?([^*\n]{1,60}?)(?:\*\*)?:?$/;
-const JD_HEADINGS = /^(strong matches|partial matches|closest experience|gaps|missing skills?|missing)$/i;
+const JD_HEADINGS = /^(strong matches|partial matches|closest experience)$/i;
 
-/** The JD fit sections, in order. Jay's ruling: never a Gaps section. */
-export const JD_FIT_SECTIONS = ["Strong matches", "Partial matches", "Closest experience"];
-
-/** A heading that reports gaps or missing skills. Its whole section is dropped. */
-const GAP_HEADING = /\b(gaps?|missing|lacking|not (?:a )?match(?:ed)?|not covered|weak(?:nesses)?)\b/i;
-/** Wording that reports a missing skill. A line or item with it is dropped. */
-const GAP_WORDING =
-  /\b(gaps?|missing|lacks?|lacking|no (?:direct )?experience|not (?:in|on) (?:the |his )?(?:knowledge base|kb|resume)|does(?:n't| not) have|has(?:n't| not) (?:used|worked))\b/i;
 const BULLET = /^\s*[-*\u2022]\s+(.*)$/;
 const NUMBERED = /^\s*\d+[.)]\s+(.*)$/;
 
@@ -277,47 +290,50 @@ function headingText(line) {
 }
 
 /**
- * JD fit answers never show gaps (Jay's ruling for #30):
- *   a Gaps or Missing section is dropped with everything under it,
- *   any paragraph or item that reports a missing skill is dropped,
- *   under "Closest experience" an item without a citation is dropped, since each one
- *   must name a real, cited skill. A heading left with nothing under it is dropped too.
- * @param {Block[]} blocks
- * @returns {Block[]}
+ * The JD fit allowlist (Atlas's ruling, Oct 20 2026), applied line by line before layout:
+ *   only Strong matches, Partial matches and Closest experience headings render,
+ *     written out in their canonical form;
+ *   any other heading, in any form ("Gaps.", "Gap analysis", "**Weaknesses:** Kafka"),
+ *     is dropped with everything under it until the next allowed heading;
+ *   a line without a cite is dropped in every section; a line with no cite that is not
+ *     a bullet counts as an unknown heading, so its bullets go too;
+ *   a line that reports a missing skill is dropped (shared list in lib/jd-fit-rules.js);
+ *   an allowed heading left with nothing under it is dropped.
+ * Cited lines before the first heading stay.
+ * @param {string} text the answer with cite markers in place
+ * @returns {string}
  */
-export function jdFitBlocks(blocks) {
-  /** @type {Block[]} */
+export function jdFitText(text) {
+  /** @type {string[]} */
   const out = [];
-  let section = "";
+  /** @type {string | null} */
+  let pending = null;
   let skipping = false;
-  for (const block of blocks) {
-    if (block.type === "heading") {
-      section = inlineText(block.inline).trim().toLowerCase();
-      skipping = GAP_HEADING.test(section);
-      if (!skipping) out.push(block);
+  for (const raw of String(text).split("\n")) {
+    const line = raw.trim();
+    if (!line) continue;
+    const heading = allowedJdHeading(line);
+    if (heading) {
+      pending = heading;
+      skipping = false;
       continue;
     }
-    if (skipping) continue;
-    if (block.type === "ul" || block.type === "ol") {
-      const items = block.items.filter((item) => {
-        if (GAP_WORDING.test(inlineText(item))) return false;
-        if (section === "closest experience" && !item.some((part) => part.type === "cite")) return false;
-        return true;
-      });
-      if (items.length) out.push({ type: block.type, items });
+    const isItem = BULLET.test(line) || NUMBERED.test(line);
+    const cited = line.includes(CITE);
+    const plain = line.split(CITE).filter((_part, index) => index % 2 === 0).join("");
+    const label = /^\s*(?:[-*\u2022]\s+)?\*\*([^*]+)\*\*/.exec(line);
+    if (!isItem && (!cited || /^#{1,6}\s/.test(line) || (label && !allowedJdHeading(label[1])))) {
+      skipping = true;
       continue;
     }
-    if ("inline" in block && GAP_WORDING.test(inlineText(block.inline))) continue;
-    out.push(block);
+    if (skipping || !cited || reportsMissing(plain.replace(/^\s*(?:[-*\u2022]|\d+[.)])\s+/, ""))) continue;
+    if (pending) {
+      out.push("", pending, "");
+      pending = null;
+    }
+    out.push(line);
   }
-  return out.filter((block, index) => block.type !== "heading" || (out[index + 1] && out[index + 1].type !== "heading"));
-}
-
-/**
- * @param {Inline[]} parts
- */
-function inlineText(parts) {
-  return parts.map((part) => (part.type === "cite" ? "" : part.text)).join("");
+  return out.join("\n");
 }
 
 /**

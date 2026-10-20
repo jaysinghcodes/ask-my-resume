@@ -10,7 +10,7 @@ import {
   ASK_COPY,
   FRIENDLY,
   JD_FIT_SECTIONS,
-  jdFitBlocks,
+  jdFitText,
   JD_MAX_CHARS,
   MAX_THREAD_MESSAGES,
   askTarget,
@@ -185,14 +185,106 @@ describe("citations and sources", () => {
   });
 
   it("drops a heading left empty after the JD fit rules", () => {
-    const blocks = jdFitBlocks(layoutAnswer("Closest experience\n- Kafka: event streaming\n\nStrong matches\n- AWS [1]", normalizeSources(sources)).blocks);
-    expect(blocks.map((b) => b.type)).toEqual(["heading", "ul"]);
-    expect(loose(blocks[0]).inline[0].text).toBe("Strong matches");
+    const layout = layoutAnswer("Closest experience\n- Kafka: event streaming\n\nStrong matches\n- AWS [1]", normalizeSources(sources), { jdFit: true });
+    expect(layout.blocks.map((b) => b.type)).toEqual(["heading", "ul"]);
+    expect(loose(layout.blocks[0]).inline[0].text).toBe("Strong matches");
   });
 
   it("leaves normal answers alone", () => {
     const layout = layoutAnswer("Gaps\n- none [1]", normalizeSources(sources));
-    expect(layout.blocks.map((b) => b.type)).toEqual(["heading", "ul"]);
+    expect(layout.blocks.map((b) => b.type)).toEqual(["p", "ul"]);
+    expect(jdFitText("Strong matches")).toBe("");
+  });
+
+  describe("JD fit allowlist (Atlas ruling, Oct 20 2026) with Sentinel's r2 probes", () => {
+    const probeSources = normalizeSources([
+      { id: "bullet-captech-consultant-4", label: "A bullet 4", href: "#role-captech-consultant" },
+      { id: "project-cleat", label: "B cleat", href: "https://github.com/jaysinghcodes/Cleat" },
+      { id: "role-osu-wexner", label: "C wexner", href: "#role-osu-wexner" },
+      { id: "bullet-captech-consultant-3", label: "D bullet 3", href: "#role-captech-consultant" },
+    ]);
+    /** @param {string} text */
+    const flat = (text) =>
+      layoutAnswer(text, probeSources, { jdFit: true })
+        .blocks.map((b) =>
+          b.type === "heading"
+            ? `# ${loose(b).inline.map((p) => p.text).join("")}`
+            : "items" in b
+              ? `${b.type}: ${b.items.map((i) => i.map((p) => (p.type === "cite" ? `^${p.n}` : p.text)).join("")).join(" | ")}`
+              : `P: ${b.inline.map((p) => (p.type === "cite" ? `^${p.n}` : p.text)).join("")}`,
+        )
+        .join("\n");
+    const C4 = "[bullet-captech-consultant-4]";
+
+    // r2 F1: unknown headings, in any form, are dropped with all their bullets.
+    const unknownHeadings = {
+      gap_analysis: `Strong matches\n- AWS serverless work on a banking platform ${C4}\n\nGap analysis\n- Kafka\n- Rust\n\nWeaknesses\n- Scala`,
+      gaps_plain: `Strong matches\n- AWS ${C4}\n\nGaps\n- Kafka`,
+      gaps_md: `## Strong matches\n- AWS ${C4}\n\n## Gaps:\n- Kafka`,
+      gaps_bold_colon: `**Strong matches**\n- AWS ${C4}\n**Gaps:** Kafka, Rust`,
+      gaps_period: `Strong matches\n- AWS ${C4}\nGaps.\n- Kafka ${C4}`,
+      areas_to_grow: `Strong matches\n- AWS ${C4}\n\nAreas to grow\n- Kafka ${C4}`,
+      development_areas: `Strong matches\n- AWS ${C4}\n\nDevelopment areas\n- Kafka ${C4}`,
+      weaknesses_heading: `Strong matches\n- AWS ${C4}\n\nWeaknesses\n- Kafka\n- Rust`,
+      weakness_lower: `Strong matches\n- AWS ${C4}\n\nweakness\n- Kafka ${C4}`,
+      missing_skills: `Strong matches\n- AWS ${C4}\n\nMissing skills\n- Kafka ${C4}`,
+      not_a_fit: `Strong matches\n- AWS ${C4}\n\nNot a fit\n- Kafka ${C4}\n- Rust ${C4}`,
+      gap_analysis_para: `Strong matches\n- AWS ${C4}\n\nGap analysis\n- Kafka\n- Rust`,
+    };
+    for (const [name, text] of Object.entries(unknownHeadings)) {
+      it(`a response with an unknown heading renders none of that heading or its bullets: ${name}`, () => {
+        expect(flat(text)).toBe("# Strong matches\nul: AWS" + (name === "gap_analysis" ? " serverless work on a banking platform^1" : "^1"));
+      });
+    }
+
+    it("renders only the three allowed headings, in their canonical form", () => {
+      expect(flat(`### Strong matches:\n- AWS ${C4}\n\n**Partial matches**\n- Go ${C4}\n\nclosest experience.\n- Kubernetes: AWS ECS ${C4}`)).toBe(
+        "# Strong matches\nul: AWS^1\n# Partial matches\nul: Go^1\n# Closest experience\nul: Kubernetes: AWS ECS^1",
+      );
+      expect(flat(`Areas to grow\n- Go [project-cleat]\n\nPartial matches\n- Go ${C4}`)).toBe("# Partial matches\nul: Go^1");
+    });
+
+    it("an uncited item in Strong matches or Partial matches is not rendered", () => {
+      expect(flat("Strong matches\n- Kafka\n- Rust")).toBe("");
+      expect(flat(`Partial matches\n- Go ${C4}\n- Rust`)).toBe("# Partial matches\nul: Go^1");
+      expect(flat(`Partial matches\n- Go ${C4}\n\nAreas to grow\n- Kafka\n- Rust`)).toBe("# Partial matches\nul: Go^1");
+      expect(flat("Strong matches\n- AWS [docs](https://example.com)")).toBe("");
+      expect(flat("Strong matches\n- AWS [ bullet-captech-consultant-4 ]")).toBe("");
+      expect(flat("Strong matches\n- AWS (bullet-captech-consultant-4)")).toBe("");
+      expect(flat("Strong matches\n- AWS [bullet-captech-consultant-99]")).toBe("");
+    });
+
+    // r2 F2: missing skill wording, kept as an extra filter on the shared list.
+    const missing = {
+      missing_hasnt: `Partial matches\n- He hasn't used Kafka, but did AWS ${C4}`,
+      missing_never: `Partial matches\n- He has never used Kafka ${C4}`,
+      missing_not_familiar: `Partial matches\n- Not familiar with Kafka yet ${C4}`,
+      missing_absent: `Partial matches\n- Kafka is absent from his background ${C4}`,
+      missing_none: `Closest experience\n- Kafka: none ${C4}`,
+      missing_na: `Closest experience\n- Kafka: N/A ${C4}`,
+      missing_only_none: `Closest experience\n- None ${C4}`,
+      missing_only_na: `Closest experience\n- N/A ${C4}`,
+      missing_without: `Partial matches\n- Without Kafka experience, he used AWS SQS ${C4}`,
+      missing_not_listed: `Partial matches\n- Kafka is not listed in his experience ${C4}`,
+    };
+    for (const [name, text] of Object.entries(missing)) {
+      it(`drops missing skill wording: ${name}`, () => {
+        expect(flat(text)).toBe("");
+      });
+    }
+
+    it("keeps the good answers and renumbers Sources after dropping", () => {
+      expect(flat(`Strong matches\n- AWS Lambda services in Python and Go [bullet-captech-consultant-3]\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS ${C4}`)).toBe(
+        "# Strong matches\nul: AWS Lambda services in Python and Go^1\n# Closest experience\nul: Kubernetes: container orchestration with AWS ECS^2",
+      );
+      expect(flat("Strong matches\n1. AWS Lambda [bullet-captech-consultant-3]")).toBe("# Strong matches\nol: AWS Lambda^1");
+      expect(flat("Strong matches\nAWS Lambda services in Python and Go [bullet-captech-consultant-3]")).toBe(
+        "# Strong matches\nP: AWS Lambda services in Python and Go^1",
+      );
+      const layout = layoutAnswer(`Gaps\n- Kafka [project-cleat]\n\nStrong matches\n- AWS ${C4}`, probeSources, { jdFit: true });
+      expect(layout.sources.map((source) => [source.n, source.label])).toEqual([[1, "A bullet 4"]]);
+      expect(flat("")).toBe("");
+    });
   });
 
   it("lists only cited sources, numbered by first citation", () => {

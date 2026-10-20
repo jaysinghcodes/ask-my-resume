@@ -5,9 +5,17 @@
       "id": "jd-cloud-backend",
       "job_description": "Backend engineer. Requirements: AWS, Python, Go, Kubernetes, Kafka, a CPA license.",
       "expect": {
-        "sections_allowed": ["Strong matches", "Partial matches", "Closest experience"],
-        "closest": { "Kubernetes": "bullet-captech-consultant-4" },
-        "omit": ["CPA"]
+        "sections_allowed": [
+          "Strong matches",
+          "Partial matches",
+          "Closest experience"
+        ],
+        "closest": {
+          "Kubernetes": "bullet-captech-consultant-4"
+        },
+        "omit": [
+          "CPA"
+        ]
       },
       "good_answer": "Strong matches\n- AWS Lambda services in Python and Go.[bullet-captech-consultant-3]\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS.[bullet-captech-consultant-4]",
       "bad_answers": [
@@ -21,14 +29,78 @@
       "id": "jd-data-platform",
       "job_description": "Data engineer. Requirements: Snowflake, Databricks, SQL, Airflow, fluent Japanese.",
       "expect": {
-        "sections_allowed": ["Strong matches", "Partial matches", "Closest experience"],
-        "closest": { "Airflow": "bullet-captech-consultant-4" },
-        "omit": ["Japanese"]
+        "sections_allowed": [
+          "Strong matches",
+          "Partial matches",
+          "Closest experience"
+        ],
+        "closest": {
+          "Airflow": "bullet-captech-consultant-4"
+        },
+        "omit": [
+          "Japanese"
+        ]
       },
       "good_answer": "Strong matches\n- Data standardization with Databricks and Snowflake.[bullet-captech-consultant-2]\n- Validation pipelines in Python and SQL.[bullet-captech-consultant-4]\n\nClosest experience\n- Airflow: Databricks validation pipelines that run the data checks.[bullet-captech-consultant-4]",
       "bad_answers": [
         "Strong matches\n- Databricks and Snowflake.[bullet-captech-consultant-2]\n\nClosest experience\n- Japanese: no experience.[bullet-captech-consultant-2]",
         "Strong matches\n- Databricks and Snowflake.[bullet-captech-consultant-2]\n\nMissing skills\n- Airflow\n- Japanese"
+      ]
+    },
+    {
+      "id": "sentinel-r2-probes",
+      "note": "Every bad case from Sentinel's PR #30 r2 probe (unknown headings in any form, uncited items in every section, missing skill wording, bad cites, unrelated requirements, empty). An invented claim with a real cite is left to the T8 grounding eval (Atlas ruling Oct 20 2026, point 3).",
+      "job_description": "Backend engineer. Requirements: AWS, Kafka, Rust, Scala, Terraform, Kubernetes, a CPA license.",
+      "expect": {
+        "sections_allowed": [
+          "Strong matches",
+          "Partial matches",
+          "Closest experience"
+        ],
+        "omit": [
+          "CPA",
+          "Certified public accountant"
+        ],
+        "closest": {
+          "Kubernetes": "bullet-captech-consultant-4"
+        }
+      },
+      "good_answer": "Strong matches\n- AWS Lambda services in Python and Go [bullet-captech-consultant-3]\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS [bullet-captech-consultant-4]",
+      "bad_answers": [
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nGaps\n- Kafka",
+        "## Strong matches\n- AWS [bullet-captech-consultant-4]\n\n## Gaps:\n- Kafka",
+        "**Strong matches**\n- AWS [bullet-captech-consultant-4]\n**Gaps:** Kafka, Rust",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\nGaps.\n- Kafka [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nAreas to grow\n- Kafka [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nDevelopment areas\n- Kafka [bullet-captech-consultant-4]",
+        "Strong matches\n- Ran Kafka clusters [kafka-expert-1]",
+        "Partial matches\n- He hasn't used Kafka, but did AWS [bullet-captech-consultant-4]",
+        "Partial matches\n- He has never used Kafka [bullet-captech-consultant-4]",
+        "Partial matches\n- Not familiar with Kafka yet [bullet-captech-consultant-4]",
+        "Partial matches\n- Kafka is absent from his background [bullet-captech-consultant-4]",
+        "Closest experience\n- Kafka: none [bullet-captech-consultant-4]",
+        "Closest experience\n- Kafka: N/A [bullet-captech-consultant-4]",
+        "Partial matches\n- Without Kafka experience, he used AWS SQS [bullet-captech-consultant-4]",
+        "Partial matches\n- Kafka is not listed in his experience [bullet-captech-consultant-4]",
+        "Closest experience\n- CPA license: financial reporting dashboards [bullet-captech-consultant-2]",
+        "Closest experience\n- Certified public accountant: finance dashboards [bullet-captech-consultant-2]",
+        "Strong matches\n- AWS [bullet-captech-consultant-99]",
+        "Strong matches\n- AWS [1]",
+        "Strong matches\n- AWS [docs](https://example.com)",
+        "Strong matches\n- AWS [ bullet-captech-consultant-4 ]",
+        "Strong matches\n- AWS (bullet-captech-consultant-4)",
+        "Closest experience\n- Kubernetes - ECS [bullet-captech-consultant-4]",
+        "Closest experience\n- ECS for Kubernetes [bullet-captech-consultant-4]",
+        "",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nGap analysis\n- Kafka\n- Rust",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nWeaknesses\n- Kafka\n- Rust",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nweakness\n- Kafka [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nMissing skills\n- Kafka [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nNot a fit\n- Kafka [bullet-captech-consultant-4]",
+        "Partial matches\n- Go [bullet-captech-consultant-4]\n\nAreas to grow\n- Kafka\n- Rust",
+        "Strong matches\n- Kafka\n- Rust",
+        "Closest experience\n- None [bullet-captech-consultant-4]",
+        "Closest experience\n- N/A [bullet-captech-consultant-4]"
       ]
     }
   ]
