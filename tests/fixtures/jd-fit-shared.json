@@ -1,5 +1,5 @@
 {
-  "about": "Shared JD fit fixtures (Atlas ruling, PR #30 r4, point 4). tests/ask.test.jsx runs each one through the page (layoutAnswer) and tests/jd-fit.test.js through the checker (renderedJdFit and checkJdFitAnswer); both must give exactly these sections and items. {A} {B} {W} {C3} stand for KB source ids.",
+  "about": "Shared JD fit fixtures (Atlas ruling, PR #30 r4 point 4 and the r5 Clarification). tests/ask.test.jsx runs each one through the page (layoutAnswer) and tests/jd-fit.test.js through the checker (renderedJdFit and checkJdFitAnswer); both must give exactly these sections and items. {A} {B} {W} {C3} stand for KB source ids.",
   "ids": {
     "A": "bullet-captech-consultant-4",
     "B": "project-cleat",
@@ -499,6 +499,167 @@
           "heading": "Closest experience",
           "items": [
             "Kubernetes: container orchestration with AWS ECS"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "r6_f1_blockquote_heading",
+      "rule": "r5 F1: a closer whose name strips to an allowed heading drops its bullets, and the checker flags them",
+      "text": "> Strong matches\n- AWS {A}",
+      "sections": [],
+      "checker": "fail"
+    },
+    {
+      "id": "r6_f1_blockquote_bold",
+      "rule": "r5 F1: a closer whose name strips to an allowed heading drops its bullets, and the checker flags them",
+      "text": "> **Strong matches**\n- AWS {A}\n- Go {B}",
+      "sections": [],
+      "checker": "fail"
+    },
+    {
+      "id": "r6_f1_seven_hashes",
+      "rule": "r5 F1: a closer whose name strips to an allowed heading drops its bullets, and the checker flags them",
+      "text": "####### Strong matches\n- AWS {A}",
+      "sections": [],
+      "checker": "fail"
+    },
+    {
+      "id": "r6_f1_blockquote_partial_colon_mid",
+      "rule": "r5 F1: a closer whose name strips to an allowed heading drops its bullets, and the checker flags them",
+      "text": "Strong matches\n- AWS {A}\n\n> Partial matches:\n- Kafka: used SQS instead {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r6_f1_blockquote_closest_mid",
+      "rule": "r5 F1: a closer whose name strips to an allowed heading drops its bullets, and the checker flags them",
+      "text": "Strong matches\n- AWS {A}\n\n> Closest experience\n- Kubernetes: container orchestration with AWS ECS {A}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r6_f1_seven_hashes_partial_mid",
+      "rule": "r5 F1: a closer whose name strips to an allowed heading drops its bullets, and the checker flags them",
+      "text": "Strong matches\n- AWS {A}\n\n####### Partial matches\n- Go services {B}\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS {A}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        },
+        {
+          "heading": "Closest experience",
+          "items": [
+            "Kubernetes: container orchestration with AWS ECS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r6_nested_numbered_cited",
+      "rule": "r5 Clarification (r6 ruling 1): a line with nested items, bullets or numbered, is a heading and drops with them",
+      "text": "Strong matches\n- AWS {A}\n\n1. Not a fit {W}\n   1. Kafka: SQS {B}\n\nPartial matches\n- Go services {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        },
+        {
+          "heading": "Partial matches",
+          "items": [
+            "Go services"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r6_nested_numbered_uncited",
+      "rule": "r5 Clarification (r6 ruling 1): a line with nested items, bullets or numbered, is a heading and drops with them",
+      "text": "Strong matches\n- AWS {A}\n\n1. Not a fit\n   1. Kafka: SQS {B}\n   2. Scala jobs {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r6_nested_bullet_cited",
+      "rule": "r5 Clarification (r6 ruling 1): a line with nested items, bullets or numbered, is a heading and drops with them",
+      "text": "Strong matches\n- AWS {A}\n1. Cloud work {A}\n   - Lambda functions {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r6_nested_bullet_uncited",
+      "rule": "r5 Clarification (r6 ruling 1): a line with nested items, bullets or numbered, is a heading and drops with them",
+      "text": "Strong matches\n- AWS {A}\n1. Cloud work\n   - Lambda functions {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r6_flat_numbered_list_kept",
+      "rule": "r4 point 1: a flat numbered list with no nested items is a list of items",
+      "text": "Strong matches\n1. AWS {A}\n2. Go services {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS",
+            "Go services"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "r6_inline_not_a_fit_locked",
+      "rule": "r5 Clarification (r6 ruling 2): \"Strong matches: Not a fit [id]\" renders \"Not a fit\" as an inline item, which is acceptable",
+      "text": "Strong matches: Not a fit {W}\n- AWS {A}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "Not a fit",
+            "AWS"
           ]
         }
       ],

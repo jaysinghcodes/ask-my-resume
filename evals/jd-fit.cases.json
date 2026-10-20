@@ -105,7 +105,7 @@
     },
     {
       "id": "atlas-r3",
-      "note": "Atlas ruling, PR #30 r3: a cited line that starts a block is still an unknown heading; a bare number is not a cite; heading matching ignores case, level, bold, a trailing colon and a trailing count; an uncited intro line drops only itself. The bad answers include Sentinel's r3 cited heading probes. Update r5 adds the r4 fail forms (cited and uncited numbered and setext headings) and the r4 ruling lines (fail closed).",
+      "note": "Atlas ruling, PR #30 r3: a cited line that starts a block is still an unknown heading; a bare number is not a cite; heading matching ignores case, level, bold, a trailing colon and a trailing count; an uncited intro line drops only itself. The bad answers include Sentinel's r3 cited heading probes. Update r5 adds the r4 fail forms (cited and uncited numbered and setext headings) and the r4 ruling lines (fail closed). Update r6 adds Sentinel's r5 F1 repros (a blockquote or seven hash closer named like an allowed heading, at the start and in the middle of an answer; the checker must flag the bullets the page drops) and the r5 Clarification nested numbered sub item forms, cited and uncited.",
       "job_description": "Backend engineer. Requirements: AWS, Python, Go, Kubernetes, Kafka.",
       "expect": {
         "sections_allowed": [
@@ -136,7 +136,15 @@
         "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nNot a fit [role-osu-wexner]\nKafka: used SQS instead [project-cleat]",
         "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nWhere he would need to ramp up:\n- Kafka: used SQS queues instead [project-cleat]",
         "Strong matches\n- AWS [bullet-captech-consultant-4]\nHere are the requirements he has not met yet\n- Kafka: used SQS queues instead [project-cleat]",
-        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nKey highlights:\n- Cost cut 75% [bullet-captech-consultant-4]"
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nKey highlights:\n- Cost cut 75% [bullet-captech-consultant-4]",
+        "> Strong matches\n- AWS [bullet-captech-consultant-4]",
+        "> **Strong matches**\n- AWS [bullet-captech-consultant-4]\n- Go [project-cleat]",
+        "####### Strong matches\n- AWS [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\n> Partial matches:\n- Kafka: used SQS instead [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\n> Closest experience\n- Kubernetes: container orchestration with AWS ECS [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\n####### Partial matches\n- Go services [project-cleat]\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\n1. Not a fit [role-osu-wexner]\n   1. Kafka: SQS [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\n1. Not a fit\n   1. Kafka: SQS [project-cleat]\n   2. Scala jobs [project-cleat]"
       ]
     }
   ]
