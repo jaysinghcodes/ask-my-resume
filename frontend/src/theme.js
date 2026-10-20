@@ -74,14 +74,14 @@ export const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         html: {
-          overflowX: "hidden",
+          overflowX: "clip",
           WebkitTextSizeAdjust: "100%",
         },
         body: {
           backgroundColor: bg,
           color: text,
           fontFamily: serif,
-          overflowX: "hidden",
+          overflowX: "clip",
           minWidth: 0,
         },
       },
