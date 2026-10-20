@@ -216,6 +216,7 @@ test("repo scan skips fixtures, lockfiles, and node_modules", () => {
   assert.equal(shouldSkipRepoPath("mcp-server/node_modules/express/index.js"), true);
   assert.equal(shouldSkipRepoPath("frontend/public/Jay-Singh-Resume-Oct-2026.pdf"), false);
   assert.equal(shouldSkipRepoPath("scripts/unicode/DerivedNumericValues.txt"), true);
+  assert.equal(shouldSkipRepoPath("scripts/unicode/notes.txt"), false);
   assert.equal(
     shouldSkipRepoPath("tests/fixtures/phone-scan/bad/numbers.txt", { explicit: true }),
     false,
@@ -253,11 +254,30 @@ test("digit groups on consecutive lines do not fail", () => {
   const groups = ["555", "555", "0123"];
   assertClean(groups.join("\n"));
   assertClean(groups.join("\r\n"));
-  assertClean(groups.join("\u2028"));
-  assertClean(groups.join("\u2029"));
+  assertClean(groups.join("\r"));
+  assertHit(groups.join("\u2028"));
+  assertHit(groups.join("\u2029"));
   const result = runScan([path.join(fixtures, "clean/line-breaks.txt")]);
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /no phone numbers/);
+});
+
+test("a line separator before a hit keeps the reported line", () => {
+  const call = ["555", "555", "0123"].join(" ");
+  const cases = [
+    `intro\u2028still line one\nCall ${call}\n`,
+    `intro\u2029still line one\nCall ${call}\n`,
+    `intro\u2028mid\u2029tail\nCall ${call}\n`,
+  ];
+  cases.forEach((text, index) => {
+    const file = path.join(os.tmpdir(), `phone-scan-line-${index}.txt`);
+    fs.writeFileSync(file, text);
+    const result = runScan([file]);
+    const base = path.basename(file);
+    assert.match(result.stdout, new RegExp(`${base}:2\\n`));
+    assert.doesNotMatch(result.stdout, new RegExp(`${base}:3`));
+    assert.doesNotMatch(`${result.stdout}\n${result.stderr}`, /555/);
+  });
 });
 
 test("utf-16 and utf-8 bom fixtures fail the scan", () => {
@@ -278,14 +298,35 @@ test("a binary file without a bom is skipped", () => {
   assert.match(result.stdout, /no phone numbers/);
 });
 
+function nationalNumbers(digits) {
+  /** @type {string[]} */
+  const found = [];
+  if (digits.length >= 10) found.push(digits.slice(0, 10));
+  if (digits.startsWith("1") && digits.length >= 11) found.push(digits.slice(1, 11));
+  if (digits.startsWith("44") && digits.length >= 12) found.push(digits.slice(2, 12));
+  if (digits.startsWith("91") && digits.length >= 12) found.push(digits.slice(2, 12));
+  return found;
+}
+
 function isFictionalPhone(digits) {
-  if (digits.includes("555")) return true;
+  if (nationalNumbers(digits).some((national) => national.slice(3, 6) === "555")) return true;
   if (/^01632\d{6}$/.test(digits)) return true;
   if (/^4401632\d{6}$/.test(digits)) return true;
   if (/^07700900\d{3}$/.test(digits)) return true;
   if (/^447700900\d{3}$/.test(digits)) return true;
   return false;
 }
+
+test("fictional 555 is the exchange", () => {
+  const exchange = ["212", "555", "0123"].join("");
+  const withCountry = ["1", exchange].join("");
+  const area = ["555", "123", "4567"].join("");
+  const line = ["212", "123", "5555"].join("");
+  assert.equal(isFictionalPhone(exchange), true);
+  assert.equal(isFictionalPhone(withCountry), true);
+  assert.equal(isFictionalPhone(area), false);
+  assert.equal(isFictionalPhone(line), false);
+});
 
 function fixtureFiles(dir) {
   /** @type {string[]} */
