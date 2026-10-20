@@ -5,14 +5,16 @@
  * Cleat: 43aff81936cc627f6e3959879246fa6d0e1ca171
  * Mission Control: 7f1c19038f46e9ffd43147afbe705fc4da7c74d5
  *
- * Chunk text, headings, and titles are normalized so display copy has no dash
- * punctuation and no arrows. URLs are left intact. Run from the repo root:
+ * Chunk headings, titles, and text keep inline code spans and fenced code blocks
+ * byte for byte. Dashes and arrows are removed only from the prose around them.
+ * URLs are left intact. Run from the repo root:
  * node scripts/sync-docs.mjs
  */
 
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { normalizeDocText, proseDashIssues } from "../lib/doc-text.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const docsDir = path.join(root, "kb", "docs");
@@ -95,8 +97,6 @@ const SOURCES = [
   },
 ];
 
-const URL_PATTERN = /https?:\/\/[^\s<>\])"']+/gi;
-const COMPOUND_HYPHEN = /[A-Za-z][A-Za-z0-9]*-[A-Za-z0-9]+/;
 const PHONE = /(?:\+\d{1,3}[\s.-]?)?(?:\(\d{3}\)|\b\d{3})[\s.-]\d{3}[\s.-]\d{4}\b/;
 
 /**
@@ -112,55 +112,6 @@ async function fetchDoc(repo, sha, file) {
     throw new Error(`fetch failed ${response.status} ${url}`);
   }
   return response.text();
-}
-
-/**
- * @param {string} raw
- * @returns {string}
- */
-function normalizeCopy(raw) {
-  const urls = [];
-  let text = raw.replace(URL_PATTERN, (match) => {
-    const token = `@@URL${urls.length}@@`;
-    urls.push(match);
-    return token;
-  });
-  text = text.replaceAll("-->", " to ");
-  text = text.replaceAll("<=", " at most ");
-  text = text.replaceAll("=>", " to ");
-  text = text.replaceAll("<-", " from ");
-  text = text.replaceAll("->", " to ");
-  text = text.replace(/[\u2190-\u21FF\u27F0-\u27FF\u2900-\u297F]/g, " to ");
-  text = text.replaceAll("\u2014", ", ");
-  text = text.replaceAll("\u2013", " to ");
-  text = text.replaceAll("\u2012", " ");
-  text = text.replaceAll("\u2015", " ");
-  text = text.replace(/\s-\s/g, ", ");
-  text = text.replace(/(?<=[A-Za-z0-9])-(?=[A-Za-z0-9])/g, " ");
-  text = text.replace(/[ ]{2,}/g, " ");
-  text = text.replace(/@@URL(\d+)@@/g, (_match, index) => urls[Number(index)]);
-  return text;
-}
-
-/**
- * @param {string} text
- * @returns {string[]}
- */
-function punctuationIssues(text) {
-  URL_PATTERN.lastIndex = 0;
-  const stripped = text.replace(URL_PATTERN, " ");
-  /** @type {string[]} */
-  const issues = [];
-  if (stripped.includes("\u2014")) issues.push("em dash");
-  if (stripped.includes("\u2013")) issues.push("en dash");
-  if (stripped.includes("\u2012")) issues.push("figure dash");
-  if (stripped.includes("\u2015")) issues.push("horizontal bar");
-  if (/\s-\s/.test(stripped)) issues.push("spaced hyphen");
-  if (COMPOUND_HYPHEN.test(stripped)) issues.push("hyphen joining two words");
-  const arrows = ["-" + ">", "=" + ">", "<" + "-", "<" + "="];
-  if (arrows.some((form) => stripped.includes(form))) issues.push("arrow");
-  if (/[\u2190-\u21FF\u27F0-\u27FF\u2900-\u297F]/.test(stripped)) issues.push("arrow");
-  return issues;
 }
 
 /**
@@ -217,13 +168,13 @@ function toRecords(source, markdown) {
   /** @type {Record<string, unknown>[]} */
   const records = [];
   for (const section of chunkByHeading(markdown)) {
-    const heading = normalizeCopy(section.heading || "Introduction");
-    const title = normalizeCopy(source.title);
-    const text = normalizeCopy(section.text);
+    const heading = normalizeDocText(section.heading || "Introduction");
+    const title = normalizeDocText(source.title);
+    const text = normalizeDocText(section.text);
     const issues = [
-      ...punctuationIssues(heading).map((issue) => `heading ${issue}`),
-      ...punctuationIssues(title).map((issue) => `title ${issue}`),
-      ...punctuationIssues(text).map((issue) => `text ${issue}`),
+      ...proseDashIssues(heading).map((issue) => `heading ${issue}`),
+      ...proseDashIssues(title).map((issue) => `title ${issue}`),
+      ...proseDashIssues(text).map((issue) => `text ${issue}`),
     ];
     if (issues.length > 0) {
       throw new Error(`${source.file} ${heading}: ${issues.join(", ")}`);

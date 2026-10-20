@@ -69,7 +69,7 @@
     "project": "Mission Control",
     "title": "Stack",
     "heading": "Layout",
-    "text": "```\napps/web/ React dashboard\napps/api/ NestJS API, Prisma schema, seed script\nbridge/ Optional OpenClaw sync\ndocs/ Install, security, API, remote access\ndocs/screenshots/ README hero GIF and stills\nwireframes/ Static wireframe art, not the running UI\nLOG.md Change log\nONBOARDING.md Human install steps for an agent to walk through\n```\n\nThe running UI is `apps/web`. `wireframes/` is the drawing set. `design/` is older reference art and is not the screenshot source.",
+    "text": "```\napps/web/                     React dashboard\napps/api/                     NestJS API, Prisma schema, seed script\nbridge/                       Optional OpenClaw sync\ndocs/                         Install, security, API, remote access\ndocs/screenshots/             README hero GIF and stills\nwireframes/                   Static wireframe art, not the running UI\nLOG.md                        Change log\nONBOARDING.md                 Human install steps for an agent to walk through\n```\n\nThe running UI is `apps/web`. `wireframes/` is the drawing set. `design/` is older reference art and is not the screenshot source.",
     "url": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
     "source": "https://github.com/jaysinghcodes/Mission-Control/blob/7f1c19038f46e9ffd43147afbe705fc4da7c74d5/docs/STACK.md",
     "as_of": "2026-10-20",
