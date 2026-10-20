@@ -1,0 +1,29 @@
+name: Phone scan
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  phone-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install poppler
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
+      - name: Install scanner dependencies
+        run: npm ci
+
+      - name: Scan committed files for phone numbers
+        run: npm run phone:scan
+
+      - name: Test the scanner and resume load
+        run: npm test
