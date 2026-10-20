@@ -1,0 +1,265 @@
+.ask-section {
+  padding: 48px 0 56px;
+}
+
+.kicker {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.ask-section h1 {
+  margin: 8px 0 10px;
+  font-family: var(--sans);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.ask-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 18px;
+}
+
+.ask-card {
+  margin-top: 22px;
+  background: var(--card);
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.ask-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--hair);
+}
+
+.ask-form textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  max-height: 160px;
+  padding: 10px 0;
+  border: 0;
+  resize: none;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.ask-form textarea::placeholder {
+  color: var(--faint);
+}
+
+.ask-form textarea:focus {
+  outline: none;
+}
+
+.ask-form:focus-within {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.ask-go {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.ask-go:hover:not(:disabled) {
+  background: #000;
+}
+
+.ask-go:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--hair);
+}
+
+.chips button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--wash);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.chips button:hover:not(:disabled) {
+  background: #ebe4de;
+}
+
+.chips button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.convo {
+  padding: 18px 18px 6px;
+}
+
+.turn-q {
+  margin: 0 0 10px;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.turn-q + .turn-q,
+.turn-a + .turn-q {
+  margin-top: 18px;
+}
+
+.turn-a {
+  margin: 0 0 16px;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.turn-a sup {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-left: 2px;
+}
+
+.ask-status {
+  margin: 0 0 16px;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.ask-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--wash);
+}
+
+.ask-error p {
+  flex: 1 1 180px;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.ask-error button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ask-retry {
+  border: 0;
+  background: var(--ink);
+  color: #fff;
+}
+
+.ask-dismiss {
+  border: 1px solid var(--hair);
+  background: var(--card);
+  color: var(--ink);
+}
+
+.ask-foot {
+  padding: 12px 18px;
+  background: var(--wash);
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (min-width: 761px) {
+  .ask-section {
+    padding: 64px 0 72px;
+  }
+
+  .ask-section h1 {
+    font-size: 30px;
+  }
+
+  .ask-card {
+    margin-top: 26px;
+  }
+
+  .ask-form {
+    padding: 16px 18px;
+  }
+
+  .ask-go {
+    min-height: 36px;
+  }
+
+  .chips {
+    padding: 14px 18px;
+  }
+
+  .chips button {
+    min-height: 0;
+    padding: 6px 12px;
+  }
+
+  .convo {
+    padding: 22px 24px 8px;
+  }
+
+  .turn-a {
+    font-size: 18px;
+  }
+
+  .ask-foot {
+    padding: 12px 24px;
+  }
+}
