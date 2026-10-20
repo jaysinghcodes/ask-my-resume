@@ -1,1 +1,238 @@
-[]
+[
+  {
+    "id": "role-captech-consultant",
+    "employer": "CapTech Consulting",
+    "title": "Software Engineer Consultant",
+    "employment_type": "full time",
+    "location": "Chicago, IL",
+    "start": "2024-09",
+    "end": "present",
+    "client_description": "a Top 10 U.S. bank",
+    "stack": [
+      "Python",
+      "Go",
+      "SQL",
+      "AWS Lambda",
+      "AWS ECS",
+      "AWS Fargate",
+      "AWS SQS",
+      "AWS SNS",
+      "AWS RDS",
+      "Databricks",
+      "Snowflake",
+      "REST APIs",
+      "New Relic",
+      "Splunk"
+    ],
+    "bullet_ids": [
+      "bullet-captech-consultant-1",
+      "bullet-captech-consultant-2",
+      "bullet-captech-consultant-3",
+      "bullet-captech-consultant-4",
+      "bullet-captech-consultant-support",
+      "bullet-captech-consultant-onboarding"
+    ],
+    "summary": "Jay works on a core banking modernization for a Top 10 U.S. bank, migrating legacy systems to scalable AWS infrastructure. He builds REST APIs and Python and Go backed AWS Lambda services in the Product Lifecycle Management domain, led data standardization with Databricks and Snowflake, and built Databricks validation pipelines that detect data loss during transformation.",
+    "scope": "The platform migration impacted 80% of the organization.",
+    "worked_with": "",
+    "learned": "How to work inside a regulated environment where a partial data loss is worse than an outright failure, how to brief non technical executives on technical progress, and how to coordinate a change across dozens of teams that do not report to you.",
+    "learned_public": false,
+    "why_joined_or_left": "",
+    "unverified_claims": [],
+    "confidence": "verified",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "resume_2024 (repo mcp-server/resume.pdf, older resume; Jay approved use on Oct 18)"
+    ],
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Summary rewritten from resume wording only. Claude's chat sourced details moved to unverified_claims (public false until Jay confirms). learned is Claude's reflection, hidden until Jay confirms. Oct 19: Jay confirmed the chat sourced claims (Q3, Q4); they now live in confirmed_details, public.",
+    "confirmed_details": [
+      {
+        "id": "claim-captech-35-teams",
+        "text": "The bank modernization program spans more than 35 teams, and Jay worked on an end to end testing environment across those teams.",
+        "public": true,
+        "confidence": "verified",
+        "source": [
+          "Jay's answers to the KB open questions, Oct 19 2026 (Q3)"
+        ],
+        "as_of": "2026-10-19"
+      },
+      {
+        "id": "claim-captech-exec-briefings",
+        "text": "Jay is a technical point of contact for the client. He runs technical discovery with stakeholders and delivers monthly briefings to bank leadership.",
+        "public": true,
+        "confidence": "verified",
+        "source": [
+          "Jay's answers to the KB open questions, Oct 19 2026 (Q3)"
+        ],
+        "as_of": "2026-10-19"
+      },
+      {
+        "id": "claim-captech-testing-framework",
+        "text": "Jay led his team onto the new program wide testing framework.",
+        "public": true,
+        "confidence": "verified",
+        "source": [
+          "Jay's answers to the KB open questions, Oct 19 2026 (Q3)"
+        ],
+        "as_of": "2026-10-19"
+      }
+    ]
+  },
+  {
+    "id": "role-procrewz-salesforce-intern",
+    "employer": "ProCrewz",
+    "title": "Salesforce Developer Intern",
+    "employment_type": "internship",
+    "location": "Lombard, IL",
+    "start": "2024-05",
+    "end": "2024-08",
+    "client_description": "none",
+    "stack": [
+      "Salesforce",
+      "Apex",
+      "Salesforce Lightning",
+      "Jira"
+    ],
+    "bullet_ids": [
+      "bullet-procrewz-1",
+      "bullet-procrewz-2",
+      "bullet-procrewz-3"
+    ],
+    "summary": "Jay did Salesforce development at ProCrewz. He spearheaded the migration of the internal issue management system from Salesforce to Jira, implemented Apex triggers that enforce accurate client rate card displays, and built Lightning based job templates that increased production and logging efficiency by over 40%.",
+    "scope": "Internal business systems.",
+    "worked_with": "",
+    "learned": "That a platform change is only as good as its adoption, and that pricing logic belongs in enforced rules rather than in a process people are asked to follow.",
+    "learned_public": false,
+    "why_joined_or_left": "",
+    "unverified_claims": [],
+    "confidence": "verified",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Summary rewritten from resume wording only. Claude's chat sourced details moved to unverified_claims (public false until Jay confirms). learned is Claude's reflection, hidden until Jay confirms. Oct 19: Jay confirmed the chat sourced claims (Q3, Q4); they now live in confirmed_details, public.",
+    "confirmed_details": [
+      {
+        "id": "claim-procrewz-stakeholders",
+        "text": "Jay gathered requirements from business users and trained the team on what he shipped.",
+        "public": true,
+        "confidence": "verified",
+        "source": [
+          "Jay's answers to the KB open questions, Oct 19 2026 (Q3)"
+        ],
+        "as_of": "2026-10-19"
+      }
+    ]
+  },
+  {
+    "id": "role-captech-intern",
+    "employer": "CapTech Consulting",
+    "title": "Software Engineering Intern",
+    "employment_type": "internship",
+    "location": "Columbus, OH",
+    "start": "2023-05",
+    "end": "2023-08",
+    "client_description": "a major airline client",
+    "stack": [
+      "React",
+      "Java",
+      "Spring Boot",
+      "REST APIs",
+      "AWS EC2"
+    ],
+    "bullet_ids": [
+      "bullet-captech-intern-1",
+      "bullet-captech-intern-2",
+      "bullet-captech-intern-chatbot"
+    ],
+    "summary": "Jay designed a React customer facing website with Java Spring Boot RESTful APIs for a major airline client, deployed and scaled full stack applications on AWS EC2, and developed a natural language chatbot to enhance customer support and website redirection.",
+    "scope": "Client engagement for a major airline client.",
+    "worked_with": "",
+    "learned": "How client facing delivery works in consulting, and how to present design decisions to a client rather than only to engineers.",
+    "learned_public": false,
+    "why_joined_or_left": "The internship converted into his full time CapTech offer, and he started full time in September 2024.",
+    "unverified_claims": [],
+    "confidence": "verified",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "resume_2024 (repo mcp-server/resume.pdf, older resume; Jay approved use on Oct 18)"
+    ],
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Summary rewritten from resume wording only. Claude's chat sourced details moved to unverified_claims (public false until Jay confirms). learned is Claude's reflection, hidden until Jay confirms. Oct 19: Jay confirmed the chat sourced claims (Q3, Q4); they now live in confirmed_details, public.",
+    "confirmed_details": [
+      {
+        "id": "claim-intern-conversion",
+        "text": "The 2023 CapTech internship converted into his full time CapTech offer. He started full time in September 2024.",
+        "public": true,
+        "confidence": "verified",
+        "source": [
+          "Jay's answers to the KB open questions, Oct 19 2026 (Q4)"
+        ],
+        "as_of": "2026-10-19"
+      },
+      {
+        "id": "claim-intern-client-facing",
+        "text": "Jay partnered with the client from requirements gathering through launch and presented design decisions to client stakeholders.",
+        "public": true,
+        "confidence": "verified",
+        "source": [
+          "Jay's answers to the KB open questions, Oct 19 2026 (Q3)"
+        ],
+        "as_of": "2026-10-19"
+      }
+    ]
+  },
+  {
+    "id": "role-osu-wexner",
+    "employer": "OSU Wexner Medical Center",
+    "title": "Full Stack Student Developer",
+    "employment_type": "student job",
+    "location": "Columbus, OH",
+    "start": "2023-01",
+    "end": "2023-05",
+    "client_description": "none",
+    "stack": [
+      "React",
+      "GraphQL",
+      "Prisma",
+      "Apollo",
+      "Docker"
+    ],
+    "bullet_ids": [
+      "bullet-osu-wexner-1",
+      "bullet-osu-wexner-2"
+    ],
+    "summary": "While finishing his degree, Jay engineered components of a $2M clinical research platform that lets healthcare providers track patients with infectious diseases through a React application, and designed GraphQL APIs and data models using Prisma and Apollo.",
+    "scope": "Components of a $2M clinical research platform.",
+    "worked_with": "",
+    "learned": "How to model data for a clinical domain where the schema has to match how providers actually record care, and how to take feedback from users who are not engineers.",
+    "learned_public": false,
+    "why_joined_or_left": "",
+    "unverified_claims": [],
+    "confidence": "verified",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "resume_2024 (repo mcp-server/resume.pdf, older resume; Jay approved use on Oct 18)"
+    ],
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Summary rewritten from resume wording only. Claude's chat sourced details moved to unverified_claims (public false until Jay confirms). learned is Claude's reflection, hidden until Jay confirms. Oct 19: Jay confirmed the chat sourced claims (Q3, Q4); they now live in confirmed_details, public.",
+    "stack_note": "Claude listed PostgreSQL (its own assumption, not in any artifact); replaced with Docker from the older resume (Clinical Research Platform | React GraphQL Prisma Docker).",
+    "confirmed_details": [
+      {
+        "id": "claim-wexner-clinical-feedback",
+        "text": "Jay gathered feedback from clinical staff through iterative testing.",
+        "public": true,
+        "confidence": "verified",
+        "source": [
+          "Jay's answers to the KB open questions, Oct 19 2026 (Q3)"
+        ],
+        "as_of": "2026-10-19"
+      }
+    ]
+  }
+]

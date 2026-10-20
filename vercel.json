@@ -9,7 +9,7 @@
   "functions": {
     "api/chat.js": {
       "maxDuration": 60,
-      "includeFiles": "mcp-server/resume.pdf"
+      "includeFiles": "frontend/public/Jay-Singh-Resume-Oct-2026.pdf"
     },
     "api/health.js": {
       "maxDuration": 60

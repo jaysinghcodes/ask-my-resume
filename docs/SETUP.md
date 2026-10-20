@@ -72,7 +72,7 @@ If the variable is missing, blank, or still the `.env.example` placeholder, the 
 
 Shared server logic lives in the root `lib/` directory: `claude.js`, `tools.js`, `prompts.js`, `resume.js`, `config.js`, `chat.js`, and `kb-build.js`. `api/chat.js` and `api/health.js` import it, and so do the Vitest tests.
 
-It used to live in `mcp-server/lib/`. It moved to the repo root so the functions and the tests import one copy, without a second package, and so `mcp-server/` only keeps `resume.pdf` until a later ticket replaces that file. The tool use loop itself is the same logic, with two required changes from this ticket: `MODEL_ID` comes from the environment with no fallback model, and the loop stops after 5 tool rounds.
+It used to live in `mcp-server/lib/`. It moved to the repo root so the functions and the tests import one copy, without a second package. The phone free resume PDF is `frontend/public/Jay-Singh-Resume-Oct-2026.pdf`. The tool use loop itself is the same logic, with two required changes from this ticket: `MODEL_ID` comes from the environment with no fallback model, and the loop stops after 5 tool rounds.
 
 `api/chat.js` is the POST function. `api/health.js` is the GET function. Both are Node.js functions on Fluid compute with `maxDuration` of 60 seconds. The ticket asks for these two files, so they stay separate. The Vite app in `frontend/` is served as static files from the same project. The page calls `/api` on the same origin. There is no CORS middleware.
 

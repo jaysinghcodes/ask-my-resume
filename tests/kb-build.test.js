@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 describe("knowledge base build", () => {
-  it("writes kb.json from the empty files", () => {
+  it("writes kb.json from the seeded knowledge base", () => {
     const outDir = makeTemp();
     const outPath = path.join(outDir, "kb.json");
     const result = buildKnowledgeBase({
@@ -30,17 +30,32 @@ describe("knowledge base build", () => {
     expect(result.warnings.join("\n")).toMatch(/KB_BANNED_TERMS is unset/);
     const kb = requireKb(result);
     expect(kb.meta.built_at).toBe("2026-10-20");
-    expect(kb.profile).toBeNull();
-    expect(kb.roles).toEqual([]);
-    expect(kb.bullets).toEqual([]);
-    expect(kb.projects).toEqual([]);
-    expect(kb.skills).toEqual([]);
-    expect(kb.education).toEqual([]);
-    expect(kb.achievements).toEqual([]);
+    if (!kb.profile) throw new Error("missing profile");
+    expect(kb.profile.headline).toBe("AI native software engineer.");
+    expect(kb.profile.availability).toBe("Open to new roles");
+    expect(kb.roles).toHaveLength(4);
+    const pageBullets = kb.bullets.filter((bullet) => bullet.show_on_page);
+    expect(pageBullets).toHaveLength(11);
+    expect(kb.projects.filter((project) => project.featured).map((project) => project.name)).toEqual([
+      "Cleat",
+      "Mission Control",
+      "Ask Jay",
+    ]);
+    expect([...new Set(kb.skills.map((skill) => skill.group))]).toEqual([
+      "Languages",
+      "AI and data",
+      "Cloud and frameworks",
+    ]);
+    expect(kb.education).toHaveLength(1);
+    expect(kb.docs.length).toBeGreaterThan(0);
+    const older = kb.bullets.filter((bullet) => bullet.source === "resume_2024");
+    expect(older).toHaveLength(3);
+    expect(older.every((bullet) => bullet.show_on_page === false)).toBe(true);
+    const iayp = kb.achievements.find((item) => item.id === "achievement-iayp");
+    if (!iayp) throw new Error("missing iayp");
+    expect(iayp.source).toBe("resume_2024");
+    expect(iayp.show_on_page).toBe(false);
     expect(kb.certifications).toEqual([]);
-    expect(kb.faqs).toEqual([]);
-    expect(kb.never_say).toEqual([]);
-    expect(kb.docs).toEqual([]);
     expect(kb.values).toBe(fs.readFileSync(path.join(root, "kb/values.md"), "utf8"));
     expect(kb).not.toHaveProperty("open_questions");
     expect(JSON.parse(fs.readFileSync(outPath, "utf8"))).toEqual(kb);

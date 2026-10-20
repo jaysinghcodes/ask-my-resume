@@ -1,1 +1,67 @@
-[]
+[
+  {
+    "id": "achievement-45-prs-one-week",
+    "title": "45 merged pull requests across Cleat and Mission Control in one week",
+    "date": "2026-10",
+    "description": "Running a multi agent AI engineering team on Grok Bot with an automated QA gate in front of every merge, Jay merged 45 pull requests across Cleat (21) and Mission Control (24) from Oct 5 to 12, 2026.",
+    "related_ids": [
+      "project-cleat",
+      "project-mission-control"
+    ],
+    "confidence": "verified",
+    "source": [
+      "resume_brief_2026_10_12 (/workspace/resume-brief/Resume-Brief.md)"
+    ],
+    "as_of": "2026-10-12",
+    "public": true,
+    "notes": "Split 21 and 24 from the brief."
+  },
+  {
+    "id": "achievement-iayp",
+    "title": "International Award for Young People (IAYP), Silver and Bronze",
+    "show_on_page": false,
+    "date": "",
+    "description": "Recipient of the International Award for Young People (IAYP) at the Silver and Bronze levels.",
+    "related_ids": [
+      "education-osu"
+    ],
+    "confidence": "verified",
+    "source": "resume_2024",
+    "as_of": "2024",
+    "public": true,
+    "notes": "Approved by Jay Oct 18. Dates unknown."
+  },
+  {
+    "id": "achievement-testing-framework-rollout",
+    "title": "Led team adoption of a program wide testing framework",
+    "date": "",
+    "description": "Jay led his team onto a new program wide testing framework on the bank modernization, and worked on an end to end testing environment across the program's more than 35 teams.",
+    "related_ids": [
+      "role-captech-consultant"
+    ],
+    "confidence": "verified",
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q3)"
+    ],
+    "as_of": "2026-10-19",
+    "public": true,
+    "notes": "Confirmed by Jay Oct 19 (Q3). No date."
+  },
+  {
+    "id": "achievement-half-marathon",
+    "title": "Half marathon and Hyrox",
+    "date": "",
+    "description": "Outside of work, Jay has run a half marathon and has signed up for Hyrox.",
+    "confidence": "verified",
+    "public": true,
+    "source": [
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q14)"
+    ],
+    "as_of": "2026-10-19",
+    "related_ids": [
+      "profile-jay"
+    ],
+    "notes": "Jay approved these as activities outside of work (Q14). Claude's guessed year and the framing about entering before knowing he can finish were removed.",
+    "kind": "activity outside work"
+  }
+]
