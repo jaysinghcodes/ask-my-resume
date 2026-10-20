@@ -7,8 +7,9 @@
  * Cf, fold every Unicode decimal digit to ASCII from DerivedNumericValues,
  * and map U+2010 to U+2015 and U+2212 to an ASCII hyphen. Within a line,
  * whitespace matches collapseSpace in lib/text-normalize.js (tab, form
- * feed, vertical tab, U+2028, U+2029, and the Unicode spaces). Line
- * breaks are LF, CRLF, and CR. Digit groups on separate lines do not join.
+ * feed, vertical tab, U+2028, U+2029, and the Unicode spaces). A lone CR
+ * still separates digit groups. Lines are counted only at LF, so CRLF is
+ * one line and a lone CR does not advance the count.
  * Drop separators that sit between digits (space, dash, dot, slash,
  * underscore, comma, parentheses), then fail any run of 10 or more digits.
  * A neighboring letter or x does not exempt that run. tel links fail the
@@ -26,7 +27,10 @@ import { fileURLToPath } from "node:url";
 import { decode } from "html-entities";
 
 const FIXTURE_DIR = "tests/fixtures/phone-scan";
-const UNICODE_DATA_FILE = "scripts/unicode/DerivedNumericValues.txt";
+const UNICODE_DATA_FILES = new Set([
+  "scripts/unicode/DerivedNumericValues.txt",
+  "lib/unicode/DerivedNumericValues.txt",
+]);
 const ALLOWLIST_REL = "scripts/phone-scan-allowlist.txt";
 const DECIMAL_DIGITS_PATH = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -36,8 +40,8 @@ const DECIMAL_DIGITS_PATH = path.join(
 
 /**
  * Same character set as collapseSpace in lib/text-normalize.js, without LF
- * and CR. U+2028 and U+2029 are inline spaces. LF, CRLF, and CR stay as
- * line breaks so digit groups on separate lines do not join.
+ * and CR. U+2028 and U+2029 are inline spaces. A lone CR is not inline
+ * space: it separates digits, and it does not advance the line count.
  */
 const INLINE_SPACE = /[\t\f\v \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]/;
 
@@ -134,7 +138,7 @@ function foldDashes(text) {
  * @returns {string}
  */
 function breakLines(text) {
-  return text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  return text.replace(/\r\n/g, "\n");
 }
 
 /**
@@ -215,6 +219,16 @@ function blankToken(items, token) {
  * @param {{ ch: string, line: number }[]} items
  * @returns {{ ch: string, line: number }[]}
  */
+/**
+ * @param {{ ch: string, line: number }[]} target
+ * @param {{ ch: string, line: number }[]} source
+ * @param {number} start
+ * @param {number} end
+ */
+function appendSlice(target, source, start, end) {
+  for (let i = start; i < end; i += 1) target.push(source[i]);
+}
+
 function dropSeparators(items) {
   let current = items;
   let prev = "";
@@ -227,10 +241,10 @@ function dropSeparators(items) {
     SEPARATOR.lastIndex = 0;
     for (const match of next.matchAll(SEPARATOR)) {
       const start = match.index ?? 0;
-      kept.push(...current.slice(last, start));
+      appendSlice(kept, current, last, start);
       last = start + match[0].length;
     }
-    kept.push(...current.slice(last));
+    appendSlice(kept, current, last, current.length);
     current = kept;
     next = current.map((item) => item.ch).join("");
   }
@@ -340,8 +354,9 @@ export function shouldSkipRepoPath(rel, options = {}) {
   if (parts.includes("node_modules") || parts.includes(".git")) return true;
   if (LOCKFILE_BASENAMES.has(path.posix.basename(norm))) return true;
   if (!options.explicit && (norm === FIXTURE_DIR || norm.startsWith(`${FIXTURE_DIR}/`))) return true;
-  // The Unicode data file holds large numeric values. The loader still reads it.
-  if (!options.explicit && norm === UNICODE_DATA_FILE) return true;
+  // Exact paths only. #18 and #20 add lib/unicode/DerivedNumericValues.txt.
+  // Merging the two copies into one shared module is a follow-up in #23.
+  if (!options.explicit && UNICODE_DATA_FILES.has(norm)) return true;
   return false;
 }
 
@@ -458,8 +473,9 @@ function walkFiles(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (entry.name === "node_modules" || entry.name === ".git") continue;
     const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) files.push(...walkFiles(full));
-    else if (entry.isFile()) files.push(full);
+    if (entry.isDirectory()) {
+      for (const child of walkFiles(full)) files.push(child);
+    } else if (entry.isFile()) files.push(full);
   }
   return files;
 }
