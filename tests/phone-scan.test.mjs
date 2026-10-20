@@ -89,7 +89,6 @@ test("hashes, UUIDs, ISO dates, and short numbers are not phone hits", () => {
     "7.3.8",
     "43aff81936cc627f6e3959879246fa6d0e1ca171",
     "550e8400-e29b-41d4-a716-446655440000",
-    "9".repeat(16),
     "9".repeat(9),
     "+1234567",
     "test@example.com",
@@ -114,6 +113,10 @@ test("fullwidth, zero width, five and five, extension, and 00 prefix fail", () =
   assertHit(["00", "44", "555", "555", "0123"].join(" "));
   assertClean("9".repeat(8));
   assertClean(["44", "555", "018"].join(" "));
+  assertHit("9".repeat(10));
+  assertHit("9".repeat(16));
+  assertHit("9".repeat(40));
+  assertClean(`abc${"9".repeat(10)}def`);
 });
 
 test("an allowlisted exact token is kept", () => {
@@ -173,6 +176,13 @@ test("plus 44 and plus 91 fixtures fail the scan", () => {
 
 test("normalized fixtures fail the scan", () => {
   assertFixtureFails("bad/normalized.txt");
+});
+
+test("hex edges and html entities fail", () => {
+  const file = path.join(fixtures, "bad/edges.txt");
+  const lines = fs.readFileSync(file, "utf8").split(/\n/).filter((line) => line.trim() !== "");
+  for (const line of lines) assertHit(line);
+  assertFixtureFails("bad/edges.txt");
 });
 
 test("clean fixture passes", () => {

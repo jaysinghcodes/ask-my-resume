@@ -2,21 +2,24 @@
  * Repo phone scan. Stay in sync with the phone bar in lib/kb-build.js
  * from PR #18 (issue #3, not on main yet).
  *
- * Normalize each character with NFKC, strip Unicode Cf, fold Arabic Indic
- * digits to ASCII (NFKC leaves them unchanged), and map U+2010 to U+2015
- * and U+2212 to an ASCII hyphen. Collapse whitespace, then drop separators
- * that sit between digits (space, dash, dot, slash, underscore, comma,
- * parentheses). A run of 10 to 15 digits fails, with or without a leading
- * + or 00. A neighboring letter or x does not exempt that run. tel links
- * fail the same way. Hex hashes of 7 to 40 characters that contain a letter,
- * UUIDs, ISO dates, and exact tokens in scripts/phone-scan-allowlist.txt
- * are kept. Output is the file path and line number only.
+ * Decode percent escapes, then HTML entities (&nbsp;, &#160;, &#xA0;, and
+ * other named entities). Normalize each character with NFKC, strip Unicode
+ * Cf, fold Arabic Indic digits to ASCII (NFKC leaves them unchanged), and
+ * map U+2010 to U+2015 and U+2212 to an ASCII hyphen. Collapse whitespace,
+ * drop separators that sit between digits (space, dash, dot, slash,
+ * underscore, comma, parentheses), then fail any run of 10 or more digits.
+ * A neighboring letter or x does not exempt that run. tel links fail the
+ * same way. A hex hash of 7 to 40 characters is kept only when it contains
+ * a letter and every long digit run sits strictly inside the token. UUIDs,
+ * ISO dates, and exact tokens in scripts/phone-scan-allowlist.txt are kept.
+ * Output is the file path and line number only.
  */
 
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { decode } from "html-entities";
 
 const FIXTURE_DIR = "tests/fixtures/phone-scan";
 const ALLOWLIST_REL = "scripts/phone-scan-allowlist.txt";
@@ -51,9 +54,17 @@ const SKIP_EXT = new Set([
 
 const ISO_DATE = /(?<!\d)\d{4}-\d{2}-\d{2}(?:[tT]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:[zZ]|[+-]\d{2}:?\d{2})?)?(?!\d)/g;
 const UUID_TOKEN = /(?<![0-9a-fA-F])[0-9a-fA-F]{8}[-\s][0-9a-fA-F]{4}[-\s][0-9a-fA-F]{4}[-\s][0-9a-fA-F]{4}[-\s][0-9a-fA-F]{12}(?![0-9a-fA-F])/g;
-const HEX_HASH = /(?<![0-9a-fA-F])[0-9a-fA-F]{7,40}(?![0-9a-fA-F])/g;
-const PHONE_RUN = /(?<!\d)(?:\+|00)?\d{10,15}(?!\d)/g;
+const HEX_HASH = /(?<![0-9A-Za-z])[0-9a-fA-F]{7,40}(?![0-9A-Za-z])/g;
+const PHONE_RUN = /(?<!\d)\d{10,}(?!\d)/g;
 const SEPARATOR = /(?<=\d)[ \t./\\_,()\-\u2010-\u2015\u2212]+(?=\d)/g;
+
+/**
+ * @param {string} text
+ * @returns {string}
+ */
+function decodePercents(text) {
+  return text.replace(/%([0-9a-fA-F]{2})/g, (_match, hex) => String.fromCharCode(Number.parseInt(hex, 16)));
+}
 
 /**
  * @param {string} ch
@@ -79,22 +90,14 @@ function foldChar(ch) {
  * @returns {{ ch: string, line: number }[]}
  */
 export function normalizeChars(input) {
-  const source = String(input).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const source = decode(decodePercents(String(input).replace(/\r\n/g, "\n").replace(/\r/g, "\n")));
   /** @type {{ ch: string, line: number }[]} */
   const out = [];
   let line = 1;
-  const units = [...source];
-  for (let i = 0; i < units.length; i += 1) {
-    const ch = units[i];
+  for (const ch of source) {
     if (ch === "\n") {
       line += 1;
       out.push({ ch: "\n", line });
-      continue;
-    }
-    if (ch === "%" && i + 2 < units.length && /^[0-9a-fA-F]$/.test(units[i + 1]) && /^[0-9a-fA-F]$/.test(units[i + 2])) {
-      const decoded = String.fromCharCode(Number.parseInt(units[i + 1] + units[i + 2], 16));
-      i += 2;
-      for (const part of foldChar(decoded)) out.push({ ch: part, line });
       continue;
     }
     for (const part of foldChar(ch)) out.push({ ch: part, line });
@@ -168,6 +171,18 @@ function dropSeparators(items) {
 }
 
 /**
+ * A whole hex token of 7 to 40 characters with a letter.
+ * A run of 10 or more digits at the start or end stays visible.
+ * @param {string} token
+ * @returns {boolean}
+ */
+function isSafeHexHash(token) {
+  if (!/[a-fA-F]/.test(token)) return false;
+  if (/^\d{10,}/.test(token) || /\d{10,}$/.test(token)) return false;
+  return true;
+}
+
+/**
  * @param {string} text
  * @param {string[]} [allowed]
  * @returns {{ line: number, rule: string }[]}
@@ -176,9 +191,9 @@ export function findPhoneHits(text, allowed = []) {
   let items = normalizeChars(text);
   items = blankMatches(items, ISO_DATE);
   items = blankMatches(items, UUID_TOKEN);
-  items = blankMatches(items, HEX_HASH, (token) => /[a-fA-F]/.test(token));
   for (const token of allowed) items = blankToken(items, token);
   items = dropSeparators(items);
+  items = blankMatches(items, HEX_HASH, isSafeHexHash);
 
   const body = items.map((item) => item.ch).join("");
   /** @type {Map<number, string>} */
