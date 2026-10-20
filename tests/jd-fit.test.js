@@ -9,6 +9,7 @@ import {
   JD_FIT_SECTIONS,
   checkJdFitAnswer,
   parseJdFitAnswer,
+  renderedJdFit,
 } from "../lib/jd-fit.js";
 import { JD_FIT_SECTIONS as PAGE_SECTIONS, layoutAnswer, normalizeSources } from "../frontend/src/ask/askModel.js";
 import { allowedJdHeading, reportsMissing } from "../lib/jd-fit-rules.js";
@@ -105,7 +106,6 @@ describe("JD fit evals", () => {
     for (const good of [
       "Strong matches\n1. AWS Lambda [bullet-captech-consultant-3]",
       "### Strong matches:\n- AWS [bullet-captech-consultant-3]",
-      "Strong matches\nAWS Lambda services in Python and Go [bullet-captech-consultant-3]",
     ]) {
       expect(checkJdFitAnswer(good, opts), good).toEqual([]);
     }
@@ -117,15 +117,43 @@ describe("JD fit evals", () => {
     expect(checkJdFitAnswer(`Strong matches\n- AWS ${C4}\n\nNot a fit [role-osu-wexner]\n- Kafka: used SQS instead [project-cleat]`, opts)).toContain('unexpected section "Not a fit"');
     expect(checkJdFitAnswer(`Strong matches\n- AWS ${C4}\n\nConcerns: [role-osu-wexner]\n- Kafka: used SQS instead [project-cleat]`, opts)).toContain('unexpected section "Concerns"');
     expect(checkJdFitAnswer("Strong matches\n- AWS [1]")).toContain("uncited item in Strong matches");
-    expect(checkJdFitAnswer(`Overall a solid fit ${C4}.\n\nStrong matches\n- AWS ${C4}`, opts)).toContain("text before the first heading");
+    expect(checkJdFitAnswer(`Overall a solid fit ${C4}.\n\nStrong matches\n- AWS ${C4}`, opts)).toContain('unexpected section "Overall a solid fit"');
+    expect(checkJdFitAnswer(`- AWS ${C4}\n\nStrong matches\n- Go ${C4}`, opts)).toContain("text before the first heading");
     for (const good of [
       `Strong matches (2)\n- AWS ${C4}\n- Go [project-cleat]`,
       `**Strong matches:** AWS ${C4}`,
       `## strong matches\n- AWS ${C4}`,
-      `Strong matches\nHere are the clear matches:\n- AWS ${C4}`,
     ]) {
       expect(checkJdFitAnswer(good, opts), good).toEqual([]);
     }
+  });
+
+  describe("shared JD fit fixtures (Atlas ruling, PR #30 r4): the checker gives exactly these items", () => {
+    const shared = JSON.parse(fs.readFileSync(path.join(root, "tests/fixtures/jd-fit-shared.json"), "utf8"));
+    const ids = /** @type {Record<string, string>} */ (shared.ids);
+    /** @param {string} text */
+    const fill = (text) => text.replace(/\{(\w+)\}/g, (_m, key) => `[${ids[key]}]`);
+    /** @param {string} value */
+    const norm = (value) =>
+      value.replace(/\[[A-Za-z][\w.:-]{0,79}\](?!\()/g, "").replace(/\*\*|__/g, "").replace(/\s+/g, " ").replace(/\s+([.,;:!?])/g, "$1").trim();
+    for (const fixture of shared.fixtures) {
+      it(`${fixture.id} (${fixture.rule})`, () => {
+        const text = fill(fixture.text);
+        const got = renderedJdFit(text, { sourceIds }).map((section) => ({ heading: section.heading, items: section.items.map((item) => norm(item.text)) }));
+        expect(got).toEqual(fixture.sections);
+        const problems = checkJdFitAnswer(text, { sourceIds });
+        if (fixture.checker === "pass") expect(problems, fixture.id).toEqual([]);
+        else expect(problems.length, fixture.id).toBeGreaterThan(0);
+      });
+    }
+  });
+
+  it("page and checker import the same parser", () => {
+    const page = fs.readFileSync(path.join(root, "frontend/src/ask/askModel.js"), "utf8");
+    const checker = fs.readFileSync(path.join(root, "lib/jd-fit.js"), "utf8");
+    expect(page).toMatch(/import \{[^}]*\brenderJdFit\b[^}]*\} from "\.\.\/\.\.\/\.\.\/lib\/jd-fit-rules\.js"/);
+    expect(checker).toMatch(/import \{[^}]*\brenderJdFit\b[^}]*\bwalkJdFit\b[^}]*\} from "\.\/jd-fit-rules\.js"/);
+    expect(page).not.toMatch(/function walkJdFit|HEADING_HINT/);
   });
 
   it("shares one rules module with the page", () => {

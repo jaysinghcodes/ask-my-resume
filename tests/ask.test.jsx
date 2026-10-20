@@ -278,9 +278,8 @@ describe("citations and sources", () => {
         "# Strong matches\nul: AWS Lambda services in Python and Go^1\n# Closest experience\nul: Kubernetes: container orchestration with AWS ECS^2",
       );
       expect(flat("Strong matches\n1. AWS Lambda [bullet-captech-consultant-3]")).toBe("# Strong matches\nol: AWS Lambda^1");
-      expect(flat("Strong matches\nAWS Lambda services in Python and Go [bullet-captech-consultant-3]")).toBe(
-        "# Strong matches\nul: AWS Lambda services in Python and Go^1",
-      );
+      // Atlas r4: a cited plain line is not an item; it closes the section.
+      expect(flat("Strong matches\nAWS Lambda services in Python and Go [bullet-captech-consultant-3]")).toBe("");
       const layout = layoutAnswer(`Gaps\n- Kafka [project-cleat]\n\nStrong matches\n- AWS ${C4}`, probeSources, { jdFit: true });
       expect(layout.sources.map((source) => [source.n, source.label])).toEqual([[1, "A bullet 4"]]);
       expect(flat("")).toBe("");
@@ -327,10 +326,11 @@ describe("citations and sources", () => {
       expect(view(`**Strong matches:** AWS ${C4}\n**Gaps:** Kafka [project-cleat]`).text).toBe("# Strong matches\nul: AWS^1");
     });
 
-    it("an uncited intro line in a section is dropped, and the cited items under it still render", () => {
-      expect(view(`Strong matches\nHere are the clear matches:\n- AWS ${C4}\n- Go [project-cleat]`).text).toBe("# Strong matches\nul: AWS^1 | Go^2");
+    // Superseded by Atlas's r4 ruling (fail closed): an intro line now closes its section.
+    it("an intro line closes its section (r4 replaces the r3 intro line clause)", () => {
+      expect(view(`Strong matches\nHere are the clear matches:\n- AWS ${C4}\n- Go [project-cleat]`).text).toBe("");
       expect(view(`Here is how he fits.\n\nStrong matches\n- AWS ${C4}`).text).toBe("# Strong matches\nul: AWS^1");
-      expect(view(`Partial matches\nThese are partly covered by his work.\n- Go ${C4}`).text).toBe("# Partial matches\nul: Go^1");
+      expect(view(`Partial matches\n- Go ${C4}\nThese are partly covered by his work.\n- Rust ${C4}`).text).toBe("# Partial matches\nul: Go^1");
     });
 
     // Sentinel r3 probes: an unknown heading that carries a cite.
@@ -356,8 +356,8 @@ describe("citations and sources", () => {
       expect(out.sources).toEqual(["1:A bullet 4", "2:C wexner"]);
     });
 
-    it("never drops a cited item under an allowed heading because of formatting (over drop cases)", () => {
-      expect(view(`Strong matches\nAWS Lambda services in Python and Go ${C4}`).text).toBe("# Strong matches\nul: AWS Lambda services in Python and Go^1");
+    it("keeps bullet and numbered items in any list form (heading forms and list markers)", () => {
+      expect(view(`Strong matches\nAWS Lambda services in Python and Go ${C4}`).text).toBe("");
       expect(view(`Strong matches\n1. AWS ${C4}\n2. Go [project-cleat]`).text).toBe("# Strong matches\nol: AWS^1 | Go^2");
       expect(view(`Strong matches\n\u2022 AWS ${C4}\n\n\n- Go [project-cleat]`).text).toBe("# Strong matches\nul: AWS^1 | Go^2");
       expect(view(`Strong matches\n- Cloud\n  - AWS Lambda ${C4}`).text).toBe("# Strong matches\nul: AWS Lambda^1");
@@ -365,6 +365,35 @@ describe("citations and sources", () => {
         "# Closest experience\nul: Kubernetes: container orchestration with AWS ECS^1",
       );
     });
+  });
+
+  describe("shared JD fit fixtures (Atlas ruling, PR #30 r4): the page gives exactly these items", () => {
+    const shared = JSON.parse(fs.readFileSync(path.join(root, "tests/fixtures/jd-fit-shared.json"), "utf8"));
+    const ids = /** @type {Record<string, string>} */ (shared.ids);
+    const pageSources = normalizeSources(Object.values(ids).map((id) => ({ id, label: id, href: `#${id}` })));
+    /** @param {string} text */
+    const fill = (text) => text.replace(/\{(\w+)\}/g, (_m, key) => `[${ids[key]}]`);
+    /** @param {string} value */
+    const norm = (value) => value.replace(/\*\*|__/g, "").replace(/\s+/g, " ").replace(/\s+([.,;:!?])/g, "$1").trim();
+    for (const fixture of shared.fixtures) {
+      it(`${fixture.id} (${fixture.rule})`, () => {
+        const { blocks } = layoutAnswer(fill(fixture.text), pageSources, { jdFit: true });
+        /** @type {{ heading: string, items: string[] }[]} */
+        const got = [];
+        for (const block of blocks) {
+          if (block.type === "heading") got.push({ heading: loose(block).inline.map((p) => p.text).join(""), items: [] });
+          else if ("items" in block) {
+            for (const parts of block.items) {
+              expect(parts.some((p) => p.type === "cite"), fixture.id).toBe(true);
+              got.at(-1)?.items.push(norm(parts.map((p) => ("text" in p ? p.text : "")).join("")));
+            }
+          } else {
+            throw new Error(`${fixture.id}: a ${block.type} block rendered`);
+          }
+        }
+        expect(got).toEqual(fixture.sections);
+      });
+    }
   });
 
   it("lists only cited sources, numbered by first citation", () => {
