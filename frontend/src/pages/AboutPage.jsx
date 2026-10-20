@@ -50,8 +50,9 @@ export function AboutPage() {
       <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.8 }}>
         Instead of a static resume PDF, this project lets recruiters and hiring
         managers have a real conversation about Jay's background. Ask about
-        skills, experience, projects, or fit for a role — Claude uses an MCP
-        tool to search his actual resume and give grounded, specific answers.
+        skills, experience, projects, or fit for a role. Claude calls a search
+        tool, the tool returns the resume text, and Claude writes the answer
+        from that text.
       </Typography>
 
       <Typography
@@ -86,20 +87,20 @@ export function AboutPage() {
       </Typography>
       <Paper variant="outlined" sx={codeBlockSx}>
         <Box component="pre">
-          {`resume.pdf
+          {`public resume PDF
     ↓
-MCP Server (Node.js/Express)   ← defines "search_resume" tool
+api/chat.js                    ← loads the resume text
     ↑
-Claude API (claude-sonnet)    ← calls the tool, forms responses
+Claude API                     ← calls the tool, forms responses
     ↑
-React Frontend (Vite)         ← chat UI, hosted on GitHub Pages`}
+React frontend (Vite)          ← chat UI`}
         </Box>
       </Paper>
 
       <Typography variant="body2" sx={{ mt: 2, color: "text.secondary" }}>
-        The MCP server loads the resume PDF, exposes a single tool (
-        <code>search_resume</code>), and runs an agentic loop: Claude decides
-        when to call the tool, gets the resume content, and synthesizes answers.
+        The chat function loads the public resume PDF in frontend/public. It
+        exposes a search tool. Claude decides when to call the tool, gets the
+        resume text, and writes the answer.
       </Typography>
 
       <Typography
@@ -111,22 +112,19 @@ React Frontend (Vite)         ← chat UI, hosted on GitHub Pages`}
       <Paper variant="outlined" sx={codeBlockSx}>
         <Box component="pre">
           {`ask-my-resume/
-├── .github/workflows/deploy.yml
-├── mcp-server/
-│   ├── index.js
-│   ├── resume.pdf
-│   ├── .env.example
-│   └── package.json
+├── kb/
+│   ├── profile.json
+│   ├── roles.json
+│   └── bullets.json
+├── api/
+│   └── chat.js
 └── frontend/
-    ├── src/
-    │   ├── config/constants.js
-    │   ├── components/
-    │   ├── pages/
-    │   ├── App.jsx
-    │   ├── main.jsx
-    │   └── theme.js
-    ├── index.html
-    └── package.json`}
+    ├── public/
+    │   └── resume PDF
+    └── src/
+        ├── pages/
+        ├── App.jsx
+        └── main.jsx`}
         </Box>
       </Paper>
     </Box>

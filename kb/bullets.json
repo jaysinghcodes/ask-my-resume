@@ -1,1 +1,796 @@
-[]
+[
+  {
+    "id": "bullet-captech-consultant-1",
+    "role_id": "role-captech-consultant",
+    "order": 1,
+    "resume_text": "Engineered cloud-native services on a core banking modernization for a Top-10 U.S. bank, migrating legacy systems to scalable AWS infrastructure that impacted 80% of the org and cut product launch timelines from 9 months to 1 week.",
+    "display_text": "Engineered cloud native services on a core banking modernization for a Top 10 U.S. bank, migrating legacy systems to scalable AWS infrastructure that impacted 80% of the org and cut product launch timelines from 9 months to 1 week.",
+    "metrics": [
+      {
+        "value": "80",
+        "unit": "percent",
+        "meaning": "share of the organization affected by the platform migration"
+      },
+      {
+        "value": "9 months to 1 week",
+        "unit": "time",
+        "meaning": "reduction in the time it took to launch a new financial product"
+      }
+    ],
+    "skills": [
+      "AWS",
+      "Python",
+      "Go",
+      "REST APIs",
+      "cloud migration",
+      "distributed systems"
+    ],
+    "story": {
+      "context": "Jay works on a core banking modernization for a Top 10 U.S. bank. The old core banking ran on COBOL, and the program spans more than 35 teams.",
+      "problem": "All the checks required to launch a new financial product took 9 months.",
+      "approach": "Jay engineered cloud native services on AWS in the Product Lifecycle Management domain, including REST APIs and Go Lambda services. Moving from COBOL to services written in Go increased concurrency.",
+      "tools": [
+        "AWS Lambda",
+        "AWS ECS",
+        "AWS Fargate",
+        "AWS SQS",
+        "AWS SNS",
+        "Python",
+        "Go",
+        "REST APIs"
+      ],
+      "decisions": "",
+      "result": "All the checks required to launch a financial product went from 9 months to 1 week, and the migration impacted 80% of the organization.",
+      "jay_owned": "Jay engineered services in the Product Lifecycle Management domain, including REST APIs and Python and Go backed Lambda functions. The 9 months to 1 week outcome is a program result that his work contributed to.",
+      "team": "",
+      "interview_answer": "Jay works on a core banking modernization for a Top 10 U.S. bank. The old core banking ran on COBOL, and the checks required to launch a new financial product took 9 months. Jay engineered cloud native services on AWS in the Product Lifecycle Management domain, including REST APIs and Go Lambda services. Because the new services were written in Go, concurrency went up, and all the checks required to launch a financial product went from 9 months to 1 week. The migration impacted 80% of the organization. The timeline result is a program outcome that his services were part of.",
+      "likely_follow_ups": [
+        {
+          "question": "What exactly did Jay build versus the rest of the program?",
+          "answer": "He engineered services in the Product Lifecycle Management domain: REST APIs and Go Lambda services, plus the Databricks validation pipelines that check the migration did not lose data. The full modernization spans more than 35 teams."
+        },
+        {
+          "question": "What made the old process take 9 months?",
+          "answer": "The old core banking ran on COBOL. Launching a financial product meant running all the checks it required, and that took 9 months. The new services were written in Go, so concurrency went up, and those checks went from 9 months to 1 week."
+        },
+        {
+          "question": "How does a bank that size manage a migration like this safely?",
+          "answer": "On Jay's side, by proving nothing was lost. He built Databricks validation pipelines that reconcile records across each transformation so partial data loss surfaces instead of passing silently."
+        },
+        {
+          "question": "Was this greenfield or working inside existing systems?",
+          "answer": "The new services are cloud native and written in Go. They replace work that the old COBOL core banking did. Further detail is best confirmed with Jay."
+        }
+      ]
+    },
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Resume text verified verbatim against the Oct 2026 resume. Story rebuilt Oct 19 from the resume and Jay's answers (Q3, Q16); Claude's reconstruction of the old process was removed.",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "show_on_page": true,
+    "story_confidence": "verified",
+    "story_public": true,
+    "story_sources": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q3, Q16)"
+    ]
+  },
+  {
+    "id": "bullet-captech-consultant-2",
+    "role_id": "role-captech-consultant",
+    "order": 2,
+    "resume_text": "Led data standardization across legacy systems using Databricks and Snowflake, projected to generate $7.8M in annual value through reduced operational costs and higher account-opening completion rates.",
+    "display_text": "Led data standardization across legacy systems using Databricks and Snowflake, projected to generate $7.8M in annual value through reduced operational costs and higher account opening completion rates.",
+    "metrics": [
+      {
+        "value": "7.8",
+        "unit": "million USD per year",
+        "meaning": "projected annual value from reduced operational costs and higher account opening completion rates"
+      }
+    ],
+    "skills": [
+      "Databricks",
+      "Snowflake",
+      "SQL",
+      "Python",
+      "data modeling",
+      "ETL"
+    ],
+    "story": {
+      "context": "On the core banking modernization for a Top 10 U.S. bank, data sat across legacy systems.",
+      "problem": "",
+      "approach": "Jay led data standardization across the legacy systems. Snowflake was used to look at and monitor the data. Databricks notebooks, written in Python, did the reconciliation: they checked the standardized records to confirm that incoming records were ingested.",
+      "tools": [
+        "Databricks",
+        "Snowflake",
+        "Python"
+      ],
+      "decisions": "",
+      "result": "The client projects $7.8M in annual value from the standardization, through reduced operational costs and higher account opening completion rates.",
+      "jay_owned": "Jay led the data standardization effort.",
+      "team": "",
+      "interview_answer": "On the core banking modernization for a Top 10 U.S. bank, Jay led data standardization across legacy systems. Snowflake was used to look at and monitor the data, and Databricks notebooks in Python did the reconciliation, checking the standardized records to confirm that incoming records were ingested. The client projects the work at $7.8M in annual value through reduced operational costs and higher account opening completion rates. That figure is the client's business projection.",
+      "likely_follow_ups": [
+        {
+          "question": "How was the $7.8M calculated?",
+          "answer": "It is a business projection made by the client: the projected annual value of the standardization, through reduced operational costs and higher account opening completion rates. Jay does not break the figure down further."
+        },
+        {
+          "question": "Why both Databricks and Snowflake?",
+          "answer": "They did different jobs. Snowflake was used to look at and monitor the data. Databricks notebooks did the reconciliation, checking standardized records to confirm incoming records were ingested."
+        },
+        {
+          "question": "How did you know the standardization was correct?",
+          "answer": "The Databricks reconciliation notebooks checked the standardized records to confirm incoming records were ingested, and Jay also built Databricks validation pipelines that detect data loss during transformation."
+        }
+      ]
+    },
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Resume text verified verbatim against the Oct 2026 resume. Story rebuilt Oct 19 from the resume and Jay's answers (Q2, Q5); Claude's source of truth table and value driver reconstruction was removed.",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "show_on_page": true,
+    "story_confidence": "verified",
+    "story_public": true,
+    "story_sources": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q2, Q5)"
+    ]
+  },
+  {
+    "id": "bullet-captech-consultant-3",
+    "role_id": "role-captech-consultant",
+    "order": 3,
+    "resume_text": "Engineered REST APIs and Python and Go backed AWS Lambda services in the Product Lifecycle Management domain to support release and management of new financial products.",
+    "display_text": "Engineered REST APIs and Python and Go backed AWS Lambda services in the Product Lifecycle Management domain to support release and management of new financial products.",
+    "metrics": [],
+    "skills": [
+      "Python",
+      "Go",
+      "AWS Lambda",
+      "REST APIs",
+      "AWS SQS",
+      "AWS SNS",
+      "event driven architecture"
+    ],
+    "story": {
+      "context": "Product Lifecycle Management is the domain that handles how a financial product gets defined, released and then managed over its life. Jay's services sit in that domain and are the path by which product data reaches the rest of the bank's systems.",
+      "problem": "Product definitions had to reach a lot of downstream enterprise systems reliably. In a bank, a workflow that fails halfway through is a real problem, so the services could not simply assume a call succeeded.",
+      "approach": "Jay built REST APIs and AWS Lambda services in Python and Go. He has described event driven ingestion workflows on Lambda and SQS that route financial product data across enterprise systems, and has said a lot of his time went into retries, idempotency and state recovery so a partially completed workflow could be recovered rather than silently left broken. He also debugs production integration failures in real time when data stops flowing, using New Relic and Splunk.",
+      "tools": [
+        "Python",
+        "Go",
+        "AWS Lambda",
+        "AWS SQS",
+        "AWS SNS",
+        "REST APIs",
+        "New Relic",
+        "Splunk"
+      ],
+      "decisions": "Jay has said he prefers simple, explainable implementations over clever ones. In this context that means retry and idempotency logic a teammate can read and reason about during an incident, rather than a sophisticated mechanism nobody wants to touch at 2am.",
+      "result": "The services support release and management of new financial products, and are part of what brought launch timelines from 9 months to 1 week.",
+      "jay_owned": "Jay engineered these APIs and Lambda services directly. This is his most hands on day to day work.",
+      "team": "",
+      "interview_answer": "Jay builds the REST APIs and AWS Lambda services in the Product Lifecycle Management domain, written in Python and Go, that carry product definitions out to the bank's downstream systems. A lot of that is event driven work on Lambda and SQS. The part he talks about most is failure handling: in a bank, a workflow that dies halfway through is worse than one that never started, so he spent real time on retries, idempotency and state recovery rather than assuming calls succeed. He also owns production debugging when integrations break, working through New Relic and Splunk. His stated preference is for retry logic a teammate can read during an incident over something clever nobody wants to touch.",
+      "likely_follow_ups": [
+        {
+          "question": "Why Go and Python in the same codebase?",
+          "answer": "Go was used for the production Lambdas, and Python was used for the Databricks notebooks."
+        },
+        {
+          "question": "How does he handle a Lambda that fails partway through a workflow?",
+          "answer": "Retries, idempotency and state recovery built into the services so a partially completed workflow can be recovered.",
+          "unverified_extra": "Claude added that this drew Jay to durable execution engines like Temporal. Hidden pending Jay."
+        },
+        {
+          "question": "What does a production issue look like here?",
+          "answer": "Data stops flowing between enterprise systems. Jay debugs these in real time through New Relic and Splunk and has done production support on both tools."
+        },
+        {
+          "question": "How are these services tested?",
+          "answer": "On the program, Jay led his team onto the new program wide testing framework and worked on an end to end testing environment across its more than 35 teams. Service level test details are best confirmed with Jay.",
+          "public": true
+        }
+      ]
+    },
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Resume text verified verbatim against the Oct 2026 resume. Story written by Claude: Well grounded. The only soft spot is the Go versus Python selection rule, which is flagged in follow ups.",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "show_on_page": true,
+    "story_confidence": "unsure",
+    "story_public": true,
+    "story_sources": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q3, Q6)"
+    ]
+  },
+  {
+    "id": "bullet-captech-consultant-4",
+    "role_id": "role-captech-consultant",
+    "order": 4,
+    "resume_text": "Built Databricks validation pipelines in Python and SQL to detect data loss during transformation; optimized ECS configurations and DB throughput via 6 months of New Relic analysis, reducing infrastructure costs by 75%.",
+    "display_text": "Built Databricks validation pipelines in Python and SQL to detect data loss during transformation, and optimized ECS configurations and DB throughput via 6 months of New Relic analysis, reducing infrastructure costs by 75%.",
+    "metrics": [
+      {
+        "value": "6",
+        "unit": "months",
+        "meaning": "span of New Relic performance data Jay analyzed"
+      },
+      {
+        "value": "75",
+        "unit": "percent",
+        "meaning": "reduction in infrastructure costs after the ECS and database throughput changes"
+      }
+    ],
+    "skills": [
+      "Databricks",
+      "Python",
+      "SQL",
+      "AWS ECS",
+      "New Relic",
+      "performance analysis",
+      "data quality"
+    ],
+    "story": {
+      "context": "This bullet covers two related pieces of work on the same migration. The first is proving data survived the move from legacy to cloud native systems. The second is bringing down the cost of running the platform that does the moving.",
+      "problem": "On the data side, records were moving from legacy systems into cloud native ones and there was no reliable way to prove nothing was lost in transformation. The failures were partial rather than loud: a dropped field, a silently coerced type. Jobs exited successfully and downstream reporting looked fine, so the loss was invisible. On the cost side, the platform was over provisioned.",
+      "approach": "For validation, Jay built Databricks pipelines in Python and SQL that reconcile records on both sides of each transformation job and flag mismatches, instead of trusting the job's exit code. The hard part was less the code than defining what equal meant across two schemas that did not agree. For cost, he used 6 months of New Relic analysis, which showed that about 50% of the provisioned resources were not being used. He right sized ECS configurations and database throughput to match.",
+      "tools": [
+        "Databricks",
+        "Python",
+        "SQL",
+        "AWS ECS",
+        "AWS RDS",
+        "New Relic"
+      ],
+      "decisions": "Jay chose to validate by reconciliation rather than by trusting job success signals, because the failure mode he cared about was the one that reports success. For the cost work he based changes on 6 months of New Relic data.",
+      "result": "The validation pipelines detect data loss during transformation. Right sizing ECS configurations and database throughput reduced infrastructure costs by 75%, with no performance tradeoff.",
+      "jay_owned": "Jay built the validation pipelines and ran the New Relic analysis himself. He has described both as his own work.",
+      "team": "",
+      "interview_answer": "There are two halves to this. First, records were being moved from legacy systems into cloud native ones with no reliable way to prove nothing was lost, and the failures that mattered were partial ones: a dropped field, a silently coerced type, a job that exits zero while reporting looks fine. Jay built Databricks validation pipelines in Python and SQL that reconcile records across both sides of each transformation and flag mismatches rather than trusting the exit code. He says the hard part was defining what equal meant across two schemas that did not agree. Second, 6 months of New Relic analysis showed that about 50% of the provisioned resources were not being used, so he right sized ECS configurations and database throughput. That reduced infrastructure costs by 75%, with no performance tradeoff.",
+      "likely_follow_ups": [
+        {
+          "question": "What specifically did the New Relic analysis show?",
+          "answer": "It showed that about 50% of the provisioned resources were not being used."
+        },
+        {
+          "question": "What exactly changed in ECS to cut cost 75%?",
+          "answer": "Jay right sized the ECS configurations and database throughput to match what was actually being used. Instance level specifics are best confirmed with Jay."
+        },
+        {
+          "question": "What do the validation pipelines actually check?",
+          "answer": "They reconcile records across each transformation and flag mismatches, catching the partial failures that pass a job's own success check: dropped fields, silently coerced types, records that do not line up on both sides."
+        },
+        {
+          "question": "Did the cost reduction hurt performance?",
+          "answer": "No. There was no performance tradeoff."
+        }
+      ]
+    },
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Resume text verified verbatim against the Oct 2026 resume. Story written by Claude: The validation half is well grounded and close to Jay's own phrasing. Cost half updated Oct 19 from Jay's answer (Q1).",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "show_on_page": true,
+    "story_confidence": "unsure",
+    "story_public": true,
+    "story_sources": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)",
+      "Jay's answers to the KB open questions, Oct 19 2026 (Q1)"
+    ]
+  },
+  {
+    "id": "bullet-procrewz-1",
+    "role_id": "role-procrewz-salesforce-intern",
+    "order": 1,
+    "resume_text": "Spearheaded migration of the internal issue management system from Salesforce to Jira, improving scalability and cross-platform integration.",
+    "display_text": "Spearheaded migration of the internal issue management system from Salesforce to Jira, improving scalability and cross platform integration.",
+    "metrics": [],
+    "skills": [
+      "Salesforce",
+      "Jira",
+      "systems migration",
+      "stakeholder management",
+      "requirements gathering"
+    ],
+    "story": {
+      "context": "ProCrewz was tracking internal issues inside Salesforce, which is not what Salesforce is built for. Jay took this on as a summer intern.",
+      "problem": "Issue management in Salesforce did not scale and did not integrate well with the other tools the business used, so tracking work meant fighting the tool.",
+      "approach": "Jay led the migration onto Jira. That meant gathering requirements from the business teams who used the system, mapping the existing data and workflows onto Jira's model, and then driving adoption so people actually moved over.",
+      "tools": [
+        "Salesforce",
+        "Jira"
+      ],
+      "decisions": "",
+      "result": "Issue management moved to Jira with better scalability and cross platform integration.",
+      "jay_owned": "Jay spearheaded it, so he drove the migration rather than supporting someone else's.",
+      "team": "",
+      "interview_answer": "ProCrewz was tracking internal issues inside Salesforce, which is not what the platform is for, so it did not scale and did not integrate cleanly with their other tools. Jay led the migration to Jira as a summer intern. The technical part was mapping existing data and workflows onto Jira's model. The harder part was the people side: gathering requirements from the business teams who lived in the old system and then driving adoption, because a migration nobody moves to is not a migration. He points to this as where he learned that a platform change is only as good as its uptake.",
+      "likely_follow_ups": [
+        {
+          "question": "How much of this was technical versus change management?",
+          "answer": "Both. Jay has described the internship as a mix of platform configuration and stakeholder facing work, including training the team on the new system."
+        },
+        {
+          "question": "How was the existing data moved?",
+          "answer": "Jay has not described the migration mechanics to me. Ask him."
+        },
+        {
+          "question": "What made Jira the right target?",
+          "answer": "Scalability and cross platform integration, per the resume. Jay has not told me whether he chose the tool or inherited the decision."
+        }
+      ]
+    },
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Resume text verified verbatim against the Oct 2026 resume. Story written by Claude: The adoption and requirements framing comes from how Jay has described the internship overall, not from him describing this migration specifically. decisions left empty.",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "show_on_page": true,
+    "story_confidence": "unsure",
+    "story_public": false,
+    "story_sources": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)"
+    ]
+  },
+  {
+    "id": "bullet-procrewz-2",
+    "role_id": "role-procrewz-salesforce-intern",
+    "order": 2,
+    "resume_text": "Implemented Apex triggers to enforce accurate client rate card displays, preventing pricing errors and reducing revenue leakage.",
+    "display_text": "Implemented Apex triggers to enforce accurate client rate card displays, preventing pricing errors and reducing revenue leakage.",
+    "metrics": [],
+    "skills": [
+      "Apex",
+      "Salesforce",
+      "business logic enforcement",
+      "data integrity"
+    ],
+    "story": {
+      "context": "Client rate cards drive what ProCrewz bills. They were being displayed and used in Salesforce in ways that let wrong prices through.",
+      "problem": "Pricing errors on client rate cards. When the wrong rate is shown or used, the business bills the wrong amount, which is revenue leakage.",
+      "approach": "Rather than ask people to be careful, Jay put the rule in the platform. He wrote Apex triggers that enforce correct rate card values at the data layer, so an incorrect price cannot be saved or displayed in the first place.",
+      "tools": [
+        "Apex",
+        "Salesforce"
+      ],
+      "decisions": "Enforce in code rather than document a process. Jay's framing is that pricing logic belongs in enforced rules, not in a process people are asked to follow.",
+      "result": "Pricing errors prevented and revenue leakage reduced.",
+      "jay_owned": "Jay implemented the triggers.",
+      "team": "",
+      "interview_answer": "ProCrewz bills off client rate cards, and the way those were handled in Salesforce allowed incorrect prices through, which is direct revenue leakage. Jay's fix was to move the rule into the platform rather than into a process: he wrote Apex triggers that enforce correct rate card values at the data layer so a wrong price cannot be saved in the first place. His view is that pricing logic belongs in enforced rules, not in a checklist people are asked to follow. It is the same instinct that shows up later in his side project work, where a confidence floor is enforced in code, in the schema and in a database constraint rather than trusted to one layer.",
+      "likely_follow_ups": [
+        {
+          "question": "How large was the leakage?",
+          "answer": "Jay has never given me a figure and the resume does not state one. Ask him."
+        },
+        {
+          "question": "Why triggers rather than validation rules?",
+          "answer": "Jay has not explained the choice to me."
+        },
+        {
+          "question": "Is that enforce in one place instinct something he still does?",
+          "answer": "Yes. In Cleat he enforces the confidence floor in application code, a Zod schema and a database check constraint, so no single layer is the only thing standing between a bad value and the user."
+        }
+      ]
+    },
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Resume text verified verbatim against the Oct 2026 resume. Story written by Claude: The connection drawn to Cleat's layered enforcement is my observation, not Jay's stated words, though both halves are things he described.",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "show_on_page": true,
+    "story_confidence": "unsure",
+    "story_public": true,
+    "story_sources": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)"
+    ]
+  },
+  {
+    "id": "bullet-procrewz-3",
+    "role_id": "role-procrewz-salesforce-intern",
+    "order": 3,
+    "resume_text": "Built Lightning-based job templates that increased production and logging efficiency by over 40%.",
+    "display_text": "Built Lightning based job templates that increased production and logging efficiency by over 40%.",
+    "metrics": [
+      {
+        "value": "over 40",
+        "unit": "percent",
+        "meaning": "increase in production and logging efficiency from the reusable job templates"
+      }
+    ],
+    "skills": [
+      "Salesforce Lightning",
+      "Salesforce",
+      "workflow automation"
+    ],
+    "story": {
+      "context": "Jobs at ProCrewz were being set up and logged from scratch each time inside Salesforce.",
+      "problem": "Repetitive manual setup and inconsistent logging, which cost time and made the resulting data uneven.",
+      "approach": "Jay built reusable Lightning based job templates that standardized how a job gets created and logged, so the common case is one step instead of many and the captured data has the same shape every time.",
+      "tools": [
+        "Salesforce Lightning",
+        "Salesforce"
+      ],
+      "decisions": "",
+      "result": "Production and logging efficiency increased by over 40%.",
+      "jay_owned": "Jay built the templates and demonstrated them to stakeholders.",
+      "team": "",
+      "interview_answer": "Jobs at ProCrewz were being created and logged from scratch every time in Salesforce, which was slow and produced uneven data. Jay built reusable Lightning based job templates so the common case became one step and every job logged the same fields in the same shape. That raised production and logging efficiency by over 40%. He also demonstrated the templates to stakeholders, which was part of getting them adopted rather than just shipped.",
+      "likely_follow_ups": [
+        {
+          "question": "How was the 40% measured?",
+          "answer": "Jay has not told me the measurement method. Ask him."
+        },
+        {
+          "question": "Are the templates still in use?",
+          "answer": "Unknown."
+        }
+      ]
+    },
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Resume text verified verbatim against the Oct 2026 resume. Story written by Claude: Mostly an expansion of the resume wording. The standardized data shape detail is a reasonable read of what job templates do, not something Jay stated. decisions left empty.",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "show_on_page": true,
+    "story_confidence": "unsure",
+    "story_public": false,
+    "story_sources": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)"
+    ]
+  },
+  {
+    "id": "bullet-captech-intern-1",
+    "role_id": "role-captech-intern",
+    "order": 1,
+    "resume_text": "Designed a React customer-facing website with Java Spring Boot RESTful APIs for a major airline client, enabling structured data exchange between frontend and backend systems.",
+    "display_text": "Designed a React customer facing website with Java Spring Boot RESTful APIs for a major airline client, enabling structured data exchange between frontend and backend systems.",
+    "metrics": [],
+    "skills": [
+      "React",
+      "Java",
+      "Spring Boot",
+      "REST APIs",
+      "full stack development"
+    ],
+    "story": {
+      "context": "Jay's first CapTech engagement, as a summer intern in Columbus, building for a major airline client.",
+      "problem": "The client needed a customer facing web application with a backend that could exchange structured data reliably with their systems.",
+      "approach": "Jay worked across the stack: a React frontend and Java Spring Boot REST APIs behind it. He partnered with the client from requirements gathering through launch and presented design decisions to stakeholders along the way rather than only to his own team.",
+      "tools": [
+        "React",
+        "Java",
+        "Spring Boot",
+        "REST APIs"
+      ],
+      "decisions": "",
+      "result": "A customer facing website delivered with Spring Boot REST APIs enabling structured data exchange between frontend and backend systems.",
+      "jay_owned": "Jay designed the site and the APIs as an intern on the engagement team.",
+      "team": "",
+      "interview_answer": "As a CapTech intern Jay built a customer facing website for a major airline client, React on the front with Java Spring Boot REST APIs behind it handling structured data exchange with the client's systems. What he took from it was less about the stack and more about how consulting delivery works: he was in requirements conversations with the client and presenting design decisions to their stakeholders, not just receiving tickets. That is the same split between building and client facing work that he does full time now.",
+      "likely_follow_ups": [
+        {
+          "question": "What did the site do for customers?",
+          "answer": "Jay has not described the specific functionality to me beyond it being customer facing. Ask him."
+        },
+        {
+          "question": "How much client contact does an intern get?",
+          "answer": "Enough that Jay points to this internship as where he learned to present design decisions to a client. He was in requirements gathering through launch."
+        },
+        {
+          "question": "Did this lead to the full time role?",
+          "answer": "Jay returned to CapTech full time in September 2024. He has not described the conversion process itself."
+        }
+      ]
+    },
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Resume text verified verbatim against the Oct 2026 resume. Story written by Claude: decisions left empty. Specific product functionality unknown.",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "show_on_page": true,
+    "story_confidence": "unsure",
+    "story_public": true,
+    "story_sources": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)"
+    ]
+  },
+  {
+    "id": "bullet-captech-intern-2",
+    "role_id": "role-captech-intern",
+    "order": 2,
+    "resume_text": "Deployed and scaled full-stack applications on AWS EC2, achieving a 50% increase in cost efficiency and high availability.",
+    "display_text": "Deployed and scaled full stack applications on AWS EC2, achieving a 50% increase in cost efficiency and high availability.",
+    "metrics": [
+      {
+        "value": "50",
+        "unit": "percent",
+        "meaning": "increase in cost efficiency from the EC2 deployment and scaling work"
+      }
+    ],
+    "skills": [
+      "AWS EC2",
+      "deployment",
+      "scaling",
+      "high availability"
+    ],
+    "story": {
+      "context": "The same airline client engagement. Beyond building the application, Jay was responsible for getting it running and keeping it available.",
+      "problem": "The application needed to be deployed, scaled and highly available without spending more on infrastructure than the workload justified.",
+      "approach": "Jay deployed and scaled the full stack application on AWS EC2 and tuned the setup for both availability and cost.",
+      "tools": [
+        "AWS EC2"
+      ],
+      "decisions": "",
+      "result": "A 50% increase in cost efficiency alongside high availability.",
+      "jay_owned": "Jay did the deployment and scaling work.",
+      "team": "",
+      "interview_answer": "On the same airline engagement Jay owned deploying and scaling the application on AWS EC2, and tuned it for availability and cost rather than just getting it running. That produced a 50% increase in cost efficiency while keeping the application highly available. It is an early version of something he does now at a much bigger scale, where 6 months of New Relic analysis led to ECS and database changes that cut infrastructure costs 75%.",
+      "likely_follow_ups": [
+        {
+          "question": "What drove the 50%?",
+          "answer": "Jay has not described the specific changes to me. Ask him."
+        },
+        {
+          "question": "What did high availability mean on this setup?",
+          "answer": "Unknown in specifics."
+        },
+        {
+          "question": "Is infrastructure cost something he looks at habitually?",
+          "answer": "It recurs. The same instinct shows up in the 75% infrastructure cost reduction in his current role, which came from analyzing 6 months of real performance data."
+        }
+      ]
+    },
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Resume text verified verbatim against the Oct 2026 resume. Story written by Claude: Expansion of resume wording. The mechanics of the 50% are unknown. decisions left empty.",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "show_on_page": true,
+    "story_confidence": "unsure",
+    "story_public": false,
+    "story_sources": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)"
+    ]
+  },
+  {
+    "id": "bullet-osu-wexner-1",
+    "role_id": "role-osu-wexner",
+    "order": 1,
+    "resume_text": "Engineered components of a $2M clinical research platform enabling healthcare providers to track patients with infectious diseases through a React application.",
+    "display_text": "Engineered components of a $2M clinical research platform enabling healthcare providers to track patients with infectious diseases through a React application.",
+    "metrics": [
+      {
+        "value": "2",
+        "unit": "million USD",
+        "meaning": "value of the clinical research platform Jay contributed to"
+      }
+    ],
+    "skills": [
+      "React",
+      "frontend development",
+      "healthcare data"
+    ],
+    "story": {
+      "context": "Jay worked at OSU's Wexner Medical Center as a student developer in early 2023, while finishing his degree, on a clinical research platform.",
+      "problem": "Healthcare providers needed to track patients with infectious diseases in a way that matched how they actually work, not how a generic application would assume they work.",
+      "approach": "Jay engineered components of the React application providers used. He has described gathering feedback from clinical staff through iterative testing and letting that shape what he built, rather than designing in isolation.",
+      "tools": [
+        "React"
+      ],
+      "decisions": "",
+      "result": "Components of a $2M clinical research platform that providers use to track patients with infectious diseases.",
+      "jay_owned": "Jay engineered components of the platform. The resume is deliberately scoped to components rather than the whole platform.",
+      "team": "",
+      "interview_answer": "While finishing his degree Jay worked at OSU's Wexner Medical Center on a $2M clinical research platform that providers use to track patients with infectious diseases. He engineered components of the React application. The part he emphasizes is that he gathered feedback from clinical staff through iterative testing and let that drive the design, because a tool for providers has to match how they actually record care rather than how an engineer assumes they do. It is also why healthcare data is not new territory for him.",
+      "likely_follow_ups": [
+        {
+          "question": "Which components specifically?",
+          "answer": "Jay has not told me which parts of the application he owned. Ask him."
+        },
+        {
+          "question": "Was there PHI involved?",
+          "answer": "Jay has not discussed the data handling or compliance side with me. Ask him rather than assuming."
+        },
+        {
+          "question": "Does he have healthcare domain experience?",
+          "answer": "This platform is his direct healthcare experience, and he has drawn on it when applying to healthcare AI companies."
+        }
+      ]
+    },
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Resume text verified verbatim against the Oct 2026 resume. Story written by Claude: Do not let the assistant speculate about PHI or HIPAA. Jay has never discussed it with me.",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "show_on_page": true,
+    "story_confidence": "unsure",
+    "story_public": true,
+    "story_sources": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)"
+    ]
+  },
+  {
+    "id": "bullet-osu-wexner-2",
+    "role_id": "role-osu-wexner",
+    "order": 2,
+    "resume_text": "Designed GraphQL APIs and data models using Prisma and Apollo to enable efficient querying and patient data management.",
+    "display_text": "Designed GraphQL APIs and data models using Prisma and Apollo to enable efficient querying and patient data management.",
+    "metrics": [],
+    "skills": [
+      "GraphQL",
+      "Prisma",
+      "Apollo",
+      "data modeling",
+      "API design"
+    ],
+    "story": {
+      "context": "The data layer behind the same clinical research platform.",
+      "problem": "Patient tracking data had to be queryable efficiently and modeled in a way that reflected the clinical domain, including the relationships between patients, infections and the records providers keep over time.",
+      "approach": "Jay designed the GraphQL APIs and the underlying data models using Prisma and Apollo, so the frontend could ask for exactly the shape it needed and the schema matched how providers record care.",
+      "tools": [
+        "GraphQL",
+        "Prisma",
+        "Apollo"
+      ],
+      "decisions": "",
+      "result": "GraphQL APIs and data models enabling efficient querying and patient data management.",
+      "jay_owned": "Jay designed the APIs and data models.",
+      "team": "",
+      "interview_answer": "On the same clinical platform Jay designed the GraphQL layer and the data models behind it, using Prisma and Apollo. The interesting part was the modeling rather than the API surface: patient tracking for infectious disease has relationships that have to match how providers actually record care over time, or the queries get awkward and the data stops reflecting reality. Designing a schema against a domain he did not start out knowing is the same thing he does now in banking.",
+      "likely_follow_ups": [
+        {
+          "question": "Why GraphQL rather than REST?",
+          "answer": "Jay has not explained the choice to me, and may have inherited it. Ask him."
+        },
+        {
+          "question": "How did he learn the clinical domain?",
+          "answer": "Through iterative testing and feedback with clinical staff, per his own description of the work."
+        },
+        {
+          "question": "Does he still use GraphQL?",
+          "answer": "It is on his resume skills list and he used it here and at CapTech. His current day to day is REST APIs."
+        }
+      ]
+    },
+    "confidence": "verified",
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "Resume text verified verbatim against the Oct 2026 resume. Story written by Claude: The specific relationship modeling detail is a reasonable read of the domain rather than Jay's own account. decisions left empty.",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)"
+    ],
+    "show_on_page": true,
+    "story_confidence": "unsure",
+    "story_public": false,
+    "story_sources": [
+      "Claude output 2026-10-18, from Jay's chats (not in any artifact)"
+    ]
+  },
+  {
+    "id": "bullet-captech-consultant-support",
+    "role_id": "role-captech-consultant",
+    "order": 5,
+    "resume_text": "Developed Databricks validation pipelines to detect data loss during transformation and supported production systems using Splunk and New Relic to maintain platform stability.",
+    "display_text": "Supported production systems using Splunk and New Relic to maintain platform stability.",
+    "metrics": [],
+    "skills": [
+      "Splunk",
+      "New Relic",
+      "production support"
+    ],
+    "story": {
+      "context": "",
+      "problem": "",
+      "approach": "",
+      "decisions": "",
+      "result": "",
+      "jay_owned": "",
+      "team": "",
+      "interview_answer": "",
+      "tools": [],
+      "likely_follow_ups": []
+    },
+    "confidence": "verified",
+    "source": "resume_2024",
+    "as_of": "2024",
+    "public": true,
+    "show_on_page": false,
+    "story_confidence": "unsure",
+    "story_public": false,
+    "story_sources": [],
+    "notes": "From the older resume, approved by Jay on Oct 18 for agent answers. Not shown in the site experience list, which mirrors the Oct 2026 resume. Story empty: Claude had no detail."
+  },
+  {
+    "id": "bullet-captech-consultant-onboarding",
+    "role_id": "role-captech-consultant",
+    "order": 6,
+    "resume_text": "Created an analytics tool to measure contractor onboarding effectiveness (time-to-first-commit), enabling leadership to identify bottlenecks and optimize ramp-up timelines.",
+    "display_text": "Created an analytics tool to measure contractor onboarding effectiveness (time to first commit), enabling leadership to identify bottlenecks and optimize ramp up timelines.",
+    "metrics": [],
+    "skills": [
+      "analytics",
+      "developer productivity"
+    ],
+    "story": {
+      "context": "",
+      "problem": "",
+      "approach": "",
+      "decisions": "",
+      "result": "",
+      "jay_owned": "",
+      "team": "",
+      "interview_answer": "",
+      "tools": [],
+      "likely_follow_ups": []
+    },
+    "confidence": "verified",
+    "source": "resume_2024",
+    "as_of": "2024",
+    "public": true,
+    "show_on_page": false,
+    "story_confidence": "unsure",
+    "story_public": false,
+    "story_sources": [],
+    "notes": "From the older resume, approved by Jay on Oct 18 for agent answers. Not shown in the site experience list, which mirrors the Oct 2026 resume. Story empty: Claude had no detail."
+  },
+  {
+    "id": "bullet-captech-intern-chatbot",
+    "role_id": "role-captech-intern",
+    "order": 3,
+    "resume_text": "Developed a natural language chatbot to enhance customer support and website redirection.",
+    "display_text": "Developed a natural language chatbot to enhance customer support and website redirection.",
+    "metrics": [],
+    "skills": [
+      "chatbots",
+      "natural language"
+    ],
+    "story": {
+      "context": "",
+      "problem": "",
+      "approach": "",
+      "decisions": "",
+      "result": "",
+      "jay_owned": "",
+      "team": "",
+      "interview_answer": "",
+      "tools": [],
+      "likely_follow_ups": []
+    },
+    "confidence": "verified",
+    "source": "resume_2024",
+    "as_of": "2024",
+    "public": true,
+    "show_on_page": false,
+    "story_confidence": "unsure",
+    "story_public": false,
+    "story_sources": [],
+    "notes": "From the older resume, approved by Jay on Oct 18 for agent answers. Not shown in the site experience list, which mirrors the Oct 2026 resume. Story empty: Claude had no detail."
+  }
+]

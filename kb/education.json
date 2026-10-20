@@ -1,1 +1,28 @@
-[]
+[
+  {
+    "id": "education-osu",
+    "school": "The Ohio State University",
+    "degree": "B.S.",
+    "field": "Computer Science and Engineering",
+    "end": "2024",
+    "activities": [
+      "Secretary, Buckeye Bhangra",
+      "Ambassador, Hack OHI/O",
+      "Ambassador, Sikh Student Association (SSA)"
+    ],
+    "honors": [
+      "International Award for Young People (IAYP), Silver and Bronze"
+    ],
+    "confidence": "verified",
+    "start": "",
+    "location": "Columbus, OH",
+    "display": "B.S. Computer Science and Engineering, The Ohio State University, Class of 2024",
+    "source": [
+      "resume_2026_10 (resume-2026-10.txt)",
+      "resume_2024 (repo mcp-server/resume.pdf, older resume; Jay approved use on Oct 18)"
+    ],
+    "as_of": "2026-10",
+    "public": true,
+    "notes": "IAYP from the older resume education section, approved by Jay Oct 18."
+  }
+]

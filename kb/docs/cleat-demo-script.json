@@ -1,0 +1,93 @@
+[
+  {
+    "id": "doc-cleat-demo-script-cleat-demo-script",
+    "project": "Cleat",
+    "title": "Demo script",
+    "heading": "Cleat demo script",
+    "text": "Two roles. The coach uses the web desk. The client uses the Expo app on a phone, a simulator, or an emulator. A fresh clone plus `pnpm run setup` is the starting point. `pnpm dev` starts the desk and Expo together. Push is not part of this demo.\n\nOn a local stack, read the sign in code from Mailpit at http://127.0.0.1:54324. A hosted project sends a real email code instead.\n\n| Role | Email | What you should see |\n| --- | --- | --- |\n| Coach | alex.rivera@cleat.demo | Alex Rivera · Coach, org Rivera Strength |\n| Client | sam.lee@cleat.demo | Foundation 3 day, today already logged |\n| Client | morgan.patel@cleat.demo | Hypertrophy 4 day, today already logged |\n| Client | jordan.kim@cleat.demo | Today skipped, note Travel day |\n| Client | casey.torres@cleat.demo | Partial log, plus the knee pain thread |\n| Client | riley.wong@cleat.demo | Hypertrophy 4 day, nothing logged yet |\n| Invite | none yet | One unused invite on Clients |\n\nAuto send is on for Rivera Strength only. Slots are 45 minutes. Leave `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` empty.",
+    "url": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "source": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "as_of": "2026-10-14",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Cleat docs/demo-script.md at 43aff81936cc627f6e3959879246fa6d0e1ca171."
+  },
+  {
+    "id": "doc-cleat-demo-script-beat-1-client-logs-a-workout",
+    "project": "Cleat",
+    "title": "Demo script",
+    "heading": "Beat 1. Client logs a workout",
+    "text": "1. On the phone, open Cleat in Expo Go.\n2. Choose Log in. Email `riley.wong@cleat.demo`. Choose Email me a code. Read the code in Mailpit at http://127.0.0.1:54324 on a local stack, or in the email on a hosted project.\n3. Open Today. The program is Hypertrophy 4 day.\n4. Choose Continue logging. Enter a weight and reps for each set. Choose Save sets.\n5. Repeat until every exercise on that day says Logged. Today shows the session as done.",
+    "url": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "source": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "as_of": "2026-10-14",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Cleat docs/demo-script.md at 43aff81936cc627f6e3959879246fa6d0e1ca171."
+  },
+  {
+    "id": "doc-cleat-demo-script-beat-2-accountability-board-shows-the-nudge",
+    "project": "Cleat",
+    "title": "Demo script",
+    "heading": "Beat 2. Accountability board shows the nudge",
+    "text": "1. On the computer, open [http://localhost:3000/login](http://localhost:3000/login).\n2. Sign in as `alex.rivera@cleat.demo` with the same code.\n3. The sidebar reads Alex Rivera · Coach and Org: Rivera Strength.\n4. Open Accountability. Sam Lee and Morgan Patel are Done. Jordan Kim is Skipped, with Soft nudge, and the note Travel day. Riley Wong still needs a nudge for the missed day before today, even after beat 1.\n5. Choose Send nudge or Soft nudge. The client Today tab shows the nudge banner. This demo does not send a phone push.",
+    "url": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "source": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "as_of": "2026-10-14",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Cleat docs/demo-script.md at 43aff81936cc627f6e3959879246fa6d0e1ca171."
+  },
+  {
+    "id": "doc-cleat-demo-script-beat-3-high-confidence-faq-auto-answer",
+    "project": "Cleat",
+    "title": "Demo script",
+    "heading": "Beat 3. High confidence FAQ auto answer",
+    "text": "The desk server needs `SUPABASE_SERVICE_ROLE` in `apps/web/.env.local` so it can write the reply. Do not put that key in `apps/mobile/.env`. Leave `OPENAI_API_KEY` unset. The seed and the server then share the offline embedder.\n\n1. On the phone, open Chat.\n2. Send `What is on my program today?`\n3. The reply is an AI message. It quotes the coach note: Open Today for the day name, sets, and reps. It shows one source: What is on my program today.\n4. On the desk, open Chat for that client. The same reply is there.\n5. Open Audit log. The row is an auto send.\n\nSam Lee's thread already contains this turn if you want to show it before sending a new one.",
+    "url": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "source": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "as_of": "2026-10-14",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Cleat docs/demo-script.md at 43aff81936cc627f6e3959879246fa6d0e1ca171."
+  },
+  {
+    "id": "doc-cleat-demo-script-beat-4-knee-pain-is-hard-refused",
+    "project": "Cleat",
+    "title": "Demo script",
+    "heading": "Beat 4. Knee pain is hard refused",
+    "text": "1. On the desk, open Priority inbox.\n2. Casey Torres has an open Injury item at P0. The preview is `Sharp pain in my knee on lunges, what should I do?`\n3. Open it. The safety reply is already in the thread. There is no held draft. The template is medical safety.\n4. Optional live pass: sign in on the phone as `casey.torres@cleat.demo` and send that same sentence. The client sees the fixed safety reply immediately. A P0 item is on the desk. The model does not write that reply.\n5. Riley Wong is also on the inbox as Unanswered, priority P2. The latest message is from Riley and is older than 4 hours: Still waiting on a reply about Friday.",
+    "url": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "source": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "as_of": "2026-10-14",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Cleat docs/demo-script.md at 43aff81936cc627f6e3959879246fa6d0e1ca171."
+  },
+  {
+    "id": "doc-cleat-demo-script-beat-5-book-a-session-and-subscribe-with-ics",
+    "project": "Cleat",
+    "title": "Demo script",
+    "heading": "Beat 5. Book a session and subscribe with ICS",
+    "text": "Do this with Google env vars empty. Booking must not call Google.\n\n1. On the desk, open Calendar. The slot pill says 45 min slots. Sam Lee already has a session at 9:00 tomorrow in America/Chicago.\n2. Choose Sync ICS. Copy the subscribe URL. It ends in `.ics`.\n3. On the phone, open Book. Pick a later open slot on any day and choose Book.\n4. Fetch the subscribe URL again. The new session is in the file. A calendar app may keep the previous file for up to 60 seconds (`Cache-Control: public, max-age=60`).\n5. The desk week view lists the new session after a refresh.",
+    "url": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "source": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "as_of": "2026-10-14",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Cleat docs/demo-script.md at 43aff81936cc627f6e3959879246fa6d0e1ca171."
+  },
+  {
+    "id": "doc-cleat-demo-script-phone-plus-web-steps-for-the-device-checklist",
+    "project": "Cleat",
+    "title": "Demo script",
+    "heading": "Phone plus web steps for the device checklist",
+    "text": "Use these on iOS and again on Android. The desk stays on the computer.\n\nThe short path from a fresh clone is `pnpm run setup`, then `pnpm dev`. Setup writes `apps/web/.env.local` and `apps/mobile/.env` from `supabase status -o env`. The mobile Supabase URL uses the computer LAN address. `pnpm dev` starts the desk and Expo in one terminal and prints a QR code for Expo Go. `pnpm stop` stops both. If port 3000 is taken, dev picks another port and prints it. The long manual steps are in [local setup.md](./local setup.md).\n\nThe numbered steps below are the same work by hand. Use them when you need a different host.\n\n1. `pnpm install`\n2. From `packages/db`, run `docker info`, then `supabase start`, then `supabase status`.\n3. `apps/web/.env.local` (browser and server on the computer):\n\n```\nNEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321\nNEXT_PUBLIC_SUPABASE_ANON_KEY=<ANON_KEY from supabase status>\nNEXT_PUBLIC_CLIENT_APP_URL=http://localhost:8081\nSUPABASE_URL=http://127.0.0.1:54321\nSUPABASE_SERVICE_ROLE=<service_role key from supabase status>\nICS_FEED_SIGNING_SECRET=cleat-demo-ics-secret\n```\n\n`supabase status` prints `service_role key`. Map that value to `SUPABASE_SERVICE_ROLE`. `cleat-demo-ics-secret` is a demo value. Change it before any use outside this local stack. Both stay in this file. Do not prefix them with `NEXT_PUBLIC_`. Do not copy the service role into the Expo env.\n\n4. `pnpm seed` from the repo root. Run it again. The printed counts stay the same.\n5. Start the desk so a phone can reach it: `pnpm --filter @cleat/web exec next dev -H 0.0.0.0`\n6. `apps/mobile/.env` depends on the target. `pnpm run setup` writes the physical phone block. Set `CLEAT_LAN_IP` and run setup again for the simulator (`127.0.0.1`) or the Android emulator (`10.0.2.2`).\n\niOS Simulator (localhost works):\n\n```\nEXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321\nEXPO_PUBLIC_SUPABASE_ANON_KEY=<ANON_KEY>\nEXPO_PUBLIC_DESK_URL=http://127.0.0.1:3000\nEXPO_PUBLIC_WEB_URL=http://127.0.0.1:3000\n```\n\nAndroid Emulator (the host machine is `10.0.2.2`):\n\n```\nEXPO_PUBLIC_SUPABASE_URL=http://10.0.2.2:54321\nEXPO_PUBLIC_SUPABASE_ANON_KEY=<ANON_KEY>\nEXPO_PUBLIC_DESK_URL=http://10.0.2.2:3000\nEXPO_PUBLIC_WEB_URL=http://10.0.2.2:3000\n```\n\nPhysical iPhone or Android phone, same Wi Fi. Replace `LAN` with the computer address. Docker publishes `54321`. The desk must be listening on `0.0.0.0`.\n\n```\nEXPO_PUBLIC_SUPABASE_URL=http://LAN:54321\nEXPO_PUBLIC_SUPABASE_ANON_KEY=<ANON_KEY>\nEXPO_PUBLIC_DESK_URL=http://LAN:3000\nEXPO_PUBLIC_WEB_URL=http://LAN:3000\n```\n\n7. From `apps/mobile`, `npx expo start`. iOS Simulator: press `i`. Android Emulator: press `a`. Physical phone: install Expo Go from the App Store or Play Store and scan the QR code. Use `npx expo start --tunnel` only when the phone is not on the same Wi Fi as Metro. The Supabase and desk URLs still have to be reachable from the phone.\n8. Run beats 1 to 5 above. Beat 5 needs no Google vars.\n9. Repeat steps 6 to 8 on the other platform.\n\nExpo Go is enough. An Apple Developer account is not required. Store submission is later.",
+    "url": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "source": "https://github.com/jaysinghcodes/Cleat/blob/43aff81936cc627f6e3959879246fa6d0e1ca171/docs/demo-script.md",
+    "as_of": "2026-10-14",
+    "confidence": "verified",
+    "public": true,
+    "notes": "Chunked by heading from Cleat docs/demo-script.md at 43aff81936cc627f6e3959879246fa6d0e1ca171."
+  }
+]
