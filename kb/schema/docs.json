@@ -1,0 +1,30 @@
+{
+  "$id": "https://ask-jay.local/schema/docs.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "oneOf": [
+    { "$ref": "#/$defs/chunk" },
+    {
+      "type": "array",
+      "items": { "$ref": "#/$defs/chunk" }
+    }
+  ],
+  "$defs": {
+    "chunk": {
+      "allOf": [
+        { "$ref": "https://ask-jay.local/schema/common.json#/$defs/record" },
+        { "$ref": "https://ask-jay.local/schema/common.json#/$defs/noPhone" },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "project": { "type": "string" },
+            "title": { "type": "string" },
+            "heading": { "type": "string" },
+            "text": { "type": "string" },
+            "url": { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}

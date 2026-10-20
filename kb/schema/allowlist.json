@@ -1,0 +1,16 @@
+{
+  "$id": "https://ask-jay.local/schema/allowlist.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["phrases"],
+  "properties": {
+    "phrases": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "allOf": [
+    { "$ref": "https://ask-jay.local/schema/common.json#/$defs/noPhone" }
+  ]
+}

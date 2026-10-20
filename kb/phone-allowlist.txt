@@ -1,0 +1,2 @@
+# Exact tokens the phone check ignores. Each data line is a token, a tab, and the reason.
+# Lines starting with # are comments. This file ships with no tokens.

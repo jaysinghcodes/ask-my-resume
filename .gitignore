@@ -5,3 +5,4 @@ dist/
 frontend/dist/
 .DS_Store
 .vercel
+kb/kb.json
