@@ -75,7 +75,13 @@ export function SiteNav() {
       },
       {
         rootMargin: "-72px 0px -35% 0px",
-        threshold: [0, 0.15, 0.4, 0.75, 1],
+        threshold: [
+          0,
+          0.15,
+          0.4,
+          0.75,
+          1,
+        ],
       },
     );
     for (const node of nodes) observer.observe(node);
