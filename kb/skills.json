@@ -224,10 +224,10 @@
     "group": "AI and data",
     "name": "MCP (Model Context Protocol)",
     "evidence_ids": [
-      "project-ask-my-resume"
+      "source-resume-2026-10"
     ],
     "confidence": "verified",
-    "notes": "The Oct 2026 resume lists MCP on the Ask Jay project, so this skill cites that project record and stays public. No chunk in kb/docs covers an MCP server.",
+    "notes": "Evidence is the Oct 2026 resume only. No project is named.",
     "on_resume": true,
     "level_internal": "strong",
     "level_public": false,
@@ -238,7 +238,7 @@
     ],
     "public": true,
     "as_of": "2026-10-19",
-    "evidence_note": "Listed on the Oct 2026 resume; Jay confirmed he has built with MCP."
+    "evidence_note": "Listed on the Oct 2026 resume."
   },
   {
     "id": "skill-rag",
@@ -425,7 +425,7 @@
       "project-dermai"
     ],
     "confidence": "verified",
-    "notes": "Jay said Pandas was used in his Python notebooks (Q13). The DermAI README names Pandas in the training notebooks.",
+    "notes": "Jay said Pandas was used in his Python notebooks (Q13). The notebooks on the dermai branch import Pandas.",
     "on_resume": true,
     "level_internal": "working",
     "level_public": false,

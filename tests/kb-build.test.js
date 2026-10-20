@@ -50,7 +50,13 @@ describe("knowledge base build", () => {
     if (!mcp) throw new Error("missing skill-mcp");
     expect(mcp.confidence).toBe("verified");
     expect(mcp.public).toBe(true);
-    expect(mcp.evidence_ids).toEqual(["project-ask-my-resume"]);
+    expect(mcp.evidence_ids).toEqual(["source-resume-2026-10"]);
+    const resumeSource = kb.sources.find((item) => item.id === "source-resume-2026-10");
+    if (!resumeSource) throw new Error("missing resume source");
+    expect(resumeSource.confidence).toBe("verified");
+    expect(resumeSource.public).toBe(true);
+    expect(resumeSource.kind).toBe("resume");
+    expect(JSON.stringify(resumeSource)).not.toMatch(/project-|mailto:|linkedin|github\.com/);
     expect(kb.education).toHaveLength(1);
     expect(kb.docs.length).toBeGreaterThan(0);
     const older = kb.bullets.filter((bullet) => bullet.source === "resume_2024");
@@ -124,23 +130,109 @@ describe("knowledge base build", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("ignores dashes and arrows inside a code span or fenced block", () => {
+  it("fails a hyphen inside backticks in a non doc display field", () => {
     const span = build(tempKb({
       "bullets.json": [bullet({ display_text: "Use `gpt-4o-mini` and `x-ingest-token` in the service." })],
     }));
-    expect(span.ok).toBe(true);
+    expect(span.ok).toBe(false);
+    expect(span.errors.join("\n")).toMatch(/kb\/bullets\.json id=bullet-1 field=display_text: hyphen joining two words/);
 
     const fence = "```bash\nnpm install --save-exact\n```";
     const fenced = build(tempKb({
       "bullets.json": [bullet({ display_text: `Run this.\n\n${fence}\n\nThen ship.` })],
     }));
-    expect(fenced.ok).toBe(true);
+    expect(fenced.ok).toBe(false);
+    expect(fenced.errors.join("\n")).toMatch(/hyphen joining two words/);
+  });
+
+  it("ignores dashes and arrows inside a code span or fenced block in a doc chunk", () => {
+    const fence = "```bash\nnpm install --save-exact\n```";
+    const kept = build(tempKb({
+      "docs/sample.json": [record({
+        id: "doc-1",
+        title: "Sample",
+        heading: "Intro",
+        text: `Use \`gpt-4o-mini\` and \`x-ingest-token\`.\n\n${fence}`,
+      })],
+    }));
+    expect(kept.ok).toBe(true);
 
     const prose = build(tempKb({
-      "bullets.json": [bullet({ display_text: "Use `gpt-4o-mini` in the cloud-native service." })],
+      "docs/sample.json": [record({
+        id: "doc-1",
+        title: "Sample",
+        heading: "Intro",
+        text: "Use `gpt-4o-mini` in the cloud-native service.",
+      })],
     }));
     expect(prose.ok).toBe(false);
-    expect(prose.errors.join("\n")).toMatch(/cloud-native|hyphen joining two words/);
+    expect(prose.errors.join("\n")).toMatch(/kb\/docs\/sample\.json id=doc-1 field=text: hyphen joining two words/);
+  });
+
+  it("fails a phone number inside backticks or a fenced block", () => {
+    const phone = fakePhone();
+    const span = build(tempKb({
+      "bullets.json": [bullet({ display_text: `Call \`${phone}\` today.` })],
+    }));
+    expect(span.ok).toBe(false);
+    expect(span.errors.join("\n")).toMatch(/field=display_text: phone number/);
+
+    const fenced = build(tempKb({
+      "docs/sample.json": [record({
+        id: "doc-1",
+        title: "Sample",
+        heading: "Intro",
+        text: "```\n" + phone + "\n```",
+      })],
+    }));
+    expect(fenced.ok).toBe(false);
+    expect(fenced.errors.join("\n")).toMatch(/field=text: phone number/);
+  });
+
+  it("fails a banned term inside backticks or a fenced block", () => {
+    const terms = { KB_BANNED_TERMS: "Acme Bank" };
+    const span = build(tempKb({
+      "bullets.json": [bullet({ display_text: "Worked with `Acme Bank`." })],
+    }), terms);
+    expect(span.ok).toBe(false);
+    expect(span.errors.join("\n")).toMatch(/field=display_text: banned term/);
+
+    const fenced = build(tempKb({
+      "docs/sample.json": [record({
+        id: "doc-1",
+        title: "Sample",
+        heading: "Intro",
+        text: "```\nAcme Bank\n```",
+      })],
+    }), terms);
+    expect(fenced.ok).toBe(false);
+    expect(fenced.errors.join("\n")).toMatch(/field=text: banned term/);
+  });
+
+  it("fails a verified skill with no evidence id and allows an unsure skill", () => {
+    const missing = build(tempKb({
+      "skills.json": [record({
+        id: "skill-empty",
+        name: "Example",
+        evidence_ids: [],
+        confidence: "verified",
+      })],
+    }));
+    expect(missing.ok).toBe(false);
+    expect(missing.errors.join("\n")).toMatch(
+      /kb\/skills\.json id=skill-empty field=evidence_ids: missing evidence/,
+    );
+
+    const unsure = build(tempKb({
+      "skills.json": [record({
+        id: "skill-unsure",
+        name: "Example",
+        evidence_ids: [],
+        confidence: "unsure",
+      })],
+    }));
+    expect(unsure.ok).toBe(true);
+    expect(requireKb(unsure).skills).toEqual([]);
   });
 
   it("ignores dashes and arrows inside a URL", () => {
@@ -704,6 +796,7 @@ describe("knowledge base build", () => {
         name: "Python",
         display_name: "Python",
         level_internal: "deep",
+        evidence_ids: ["bullet-1"],
       })],
     }));
 
@@ -984,7 +1077,7 @@ function build(dir, env = {}) {
 }
 
 /**
- * @param {{ ok: boolean, kb: { meta: { built_at: string }, profile: Record<string, unknown> | null, roles: Record<string, unknown>[], bullets: Record<string, unknown>[], projects: Record<string, unknown>[], skills: Record<string, unknown>[], education: Record<string, unknown>[], achievements: Record<string, unknown>[], certifications: Record<string, unknown>[], values: string, faqs: Record<string, unknown>[], never_say: Record<string, unknown>[], docs: Record<string, unknown>[] } | null }} result
+ * @param {{ ok: boolean, kb: { meta: { built_at: string }, profile: Record<string, unknown> | null, roles: Record<string, unknown>[], bullets: Record<string, unknown>[], projects: Record<string, unknown>[], skills: Record<string, unknown>[], education: Record<string, unknown>[], achievements: Record<string, unknown>[], certifications: Record<string, unknown>[], values: string, faqs: Record<string, unknown>[], never_say: Record<string, unknown>[], docs: Record<string, unknown>[], sources: Record<string, unknown>[] } | null }} result
  */
 function requireKb(result) {
   if (!result.ok || !result.kb) throw new Error("expected a public kb.json");
