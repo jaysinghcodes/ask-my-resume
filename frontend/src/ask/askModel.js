@@ -3,7 +3,7 @@
  * Nothing here touches the DOM, so the tests can cover it directly.
  */
 
-import { JD_FIT_SECTIONS, allowedJdHeading, reportsMissing } from "../../../lib/jd-fit-rules.js";
+import { JD_FIT_SECTIONS, reportsMissing, walkJdFit } from "../../../lib/jd-fit-rules.js";
 
 export { JD_FIT_SECTIONS };
 
@@ -169,7 +169,7 @@ export function safeHref(href) {
   return "";
 }
 
-/** `[1]`, `[bullet-captech-consultant-4]` or `[project-cleat]`, not a markdown link. */
+/** `[bullet-captech-consultant-4]` or `[project-cleat]`, not a markdown link. A bare `[1]` is matched only to drop it. */
 const MARKER = /\[([A-Za-z0-9][\w.:-]{0,79})\](?!\()/g;
 const PARTIAL_MARKER = /\[[A-Za-z0-9][\w.:-]{0,79}$/;
 const CITE = "\u0000";
@@ -182,11 +182,11 @@ const CITE = "\u0000";
 
 /**
  * Number the citations in an answer and lay it out in blocks.
- * Markers are numbered in the order they first appear. A numeric marker points at that
- * entry of the sources list. Once sources have arrived, a marker that matches no source
+ * Markers are numbered in the order they first appear. Only a KB source id is a cite: a
+ * bare number like [1] is dropped and never linked (Atlas ruling, PR #30 r3). Once sources have arrived, a marker that matches no source
  * is dropped, and a source that is never cited is left out of the list.
  * A superscript attaches to the word or punctuation before it with no space, and moves
- * after punctuation that directly follows it: "75% [1]." reads "75%.¹".
+ * after punctuation that directly follows it: "75% [id]." reads "75%.¹".
  * While streaming, a half received marker at the end is hidden.
  * @param {string} text
  * @param {Source[] | null} sources `null` while the sources event has not arrived.
@@ -220,15 +220,11 @@ export function layoutAnswer(text, sources, options = {}) {
     /** @type {Source | undefined} */
     let source;
     let key = "";
-    if (/^\d+$/.test(token)) {
-      const index = Number(token) - 1;
-      source = known ? known[index] : undefined;
-      key = source ? sourceKey(source, index) : `n:${token}`;
-    } else {
-      const index = known ? known.findIndex((item) => item.id === token) : -1;
-      source = index >= 0 && known ? known[index] : undefined;
-      key = source ? sourceKey(source, index) : `id:${token}`;
-    }
+    // Only a KB source id is a cite (Atlas ruling, PR #30 r3). A bare number is dropped.
+    if (/^\d+$/.test(token)) return "";
+    const index = known ? known.findIndex((item) => item.id === token) : -1;
+    source = index >= 0 && known ? known[index] : undefined;
+    key = source ? sourceKey(source, index) : `id:${token}`;
     if (known && !source) return "";
     return `${CITE}${numberFor(key, source)}${CITE}`;
   });
@@ -273,7 +269,7 @@ function tidy(text) {
 
 /**
  * Pull each run of superscripts onto the text before it and after any punctuation that
- * follows it, so "75% [1]." and "75%[1]." both read "75%.¹". Line breaks are kept.
+ * follows it, so "75% [id]." and "75%[id]." both read "75%.¹". Line breaks are kept.
  * @param {string} text
  */
 function attachCites(text) {
@@ -302,16 +298,16 @@ function headingText(line) {
 }
 
 /**
- * The JD fit allowlist (Atlas's ruling, Oct 20 2026), applied line by line before layout:
- *   only Strong matches, Partial matches and Closest experience headings render,
- *     written out in their canonical form;
- *   any other heading, in any form ("Gaps.", "Gap analysis", "**Weaknesses:** Kafka"),
- *     is dropped with everything under it until the next allowed heading;
- *   a line without a cite is dropped in every section; a line with no cite that is not
- *     a bullet counts as an unknown heading, so its bullets go too;
- *   a line that reports a missing skill is dropped (shared list in lib/jd-fit-rules.js);
- *   an allowed heading left with nothing under it is dropped.
- * Cited lines before the first heading stay.
+ * The JD fit allowlist (Atlas's ruling, Oct 20 2026), applied before layout. The answer is
+ * read like a structured parser (walkJdFit in lib/jd-fit-rules.js, shared with the server
+ * check): cites stripped, then each line is an allowed heading, an item, an intro sentence
+ * or anything else.
+ *   Only Strong matches, Partial matches and Closest experience render, in canonical form.
+ *   Anything else that isn't an item, cited or not, before or after the first allowed
+ *     heading, starts skipping until the next allowed heading.
+ *   An uncited intro sentence is dropped on its own; an uncited item is dropped in every
+ *     section; an item that reports a missing skill is dropped (shared word list).
+ *   An allowed heading left with nothing under it is dropped.
  * @param {string} text the answer with cite markers in place
  * @returns {string}
  */
@@ -320,30 +316,25 @@ export function jdFitText(text) {
   const out = [];
   /** @type {string | null} */
   let pending = null;
-  let skipping = false;
-  for (const raw of String(text).split("\n")) {
-    const line = raw.trim();
-    if (!line) continue;
-    const heading = allowedJdHeading(line);
-    if (heading) {
-      pending = heading;
+  let skipping = true;
+  for (const line of walkJdFit(text, CITE_ONE)) {
+    if (line.kind === "heading") {
+      pending = line.heading;
       skipping = false;
       continue;
     }
-    const isItem = BULLET.test(line) || NUMBERED.test(line);
-    const cited = line.includes(CITE);
-    const plain = line.split(CITE).filter((_part, index) => index % 2 === 0).join("");
-    const label = /^\s*(?:[-*\u2022]\s+)?\*\*([^*]+)\*\*/.exec(line);
-    if (!isItem && (!cited || /^#{1,6}\s/.test(line) || (label && !allowedJdHeading(label[1])))) {
+    if (line.kind === "unknown") {
       skipping = true;
       continue;
     }
-    if (skipping || !cited || reportsMissing(plain.replace(/^\s*(?:[-*\u2022]|\d+[.)])\s+/, ""))) continue;
+    if (line.kind !== "item" || skipping || !line.cited) continue;
+    const plain = line.text.split(CITE).filter((_part, index) => index % 2 === 0).join("");
+    if (reportsMissing(plain)) continue;
     if (pending) {
       out.push("", pending, "");
       pending = null;
     }
-    out.push(line);
+    out.push(`${line.indent}${line.numbered ? "1. " : "- "}${line.text}`);
   }
   return out.join("\n");
 }

@@ -18,6 +18,7 @@ const cases = JSON.parse(fs.readFileSync(path.join(root, "evals/jd-fit.cases.jso
 const sourceIds = [
   ...kb.bullets.map((/** @type {{ id: string }} */ b) => b.id),
   ...kb.projects.map((/** @type {{ id: string }} */ p) => p.id),
+  ...kb.roles.map((/** @type {{ id: string }} */ r) => r.id),
 ];
 
 describe("JD fit prompt and answer shape", () => {
@@ -105,6 +106,23 @@ describe("JD fit evals", () => {
       "Strong matches\n1. AWS Lambda [bullet-captech-consultant-3]",
       "### Strong matches:\n- AWS [bullet-captech-consultant-3]",
       "Strong matches\nAWS Lambda services in Python and Go [bullet-captech-consultant-3]",
+    ]) {
+      expect(checkJdFitAnswer(good, opts), good).toEqual([]);
+    }
+  });
+
+  it("Atlas r3: cited unknown headings and bare numbers are flagged, robust headings pass", () => {
+    const opts = { sourceIds };
+    const C4 = "[bullet-captech-consultant-4]";
+    expect(checkJdFitAnswer(`Strong matches\n- AWS ${C4}\n\nNot a fit [role-osu-wexner]\n- Kafka: used SQS instead [project-cleat]`, opts)).toContain('unexpected section "Not a fit"');
+    expect(checkJdFitAnswer(`Strong matches\n- AWS ${C4}\n\nConcerns: [role-osu-wexner]\n- Kafka: used SQS instead [project-cleat]`, opts)).toContain('unexpected section "Concerns"');
+    expect(checkJdFitAnswer("Strong matches\n- AWS [1]")).toContain("uncited item in Strong matches");
+    expect(checkJdFitAnswer(`Overall a solid fit ${C4}.\n\nStrong matches\n- AWS ${C4}`, opts)).toContain("text before the first heading");
+    for (const good of [
+      `Strong matches (2)\n- AWS ${C4}\n- Go [project-cleat]`,
+      `**Strong matches:** AWS ${C4}`,
+      `## strong matches\n- AWS ${C4}`,
+      `Strong matches\nHere are the clear matches:\n- AWS ${C4}`,
     ]) {
       expect(checkJdFitAnswer(good, opts), good).toEqual([]);
     }

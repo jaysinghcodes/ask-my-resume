@@ -142,7 +142,7 @@ describe("citations and sources", () => {
   });
 
   it("lays out the three JD fit parts as headings, with Closest experience and no Gaps", () => {
-    const text = "Strong matches\n- AWS [1]\n\nPartial matches\n- Go [1]\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS [1]";
+    const text = "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nPartial matches\n- Go [bullet-captech-consultant-4]\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS [bullet-captech-consultant-4]";
     const layout = layoutAnswer(text, normalizeSources(sources), { jdFit: true });
     const headings = layout.blocks.filter((b) => b.type === "heading").map((b) => loose(b).inline[0].text);
     expect(headings).toEqual(["Strong matches", "Partial matches", "Closest experience"]);
@@ -154,11 +154,11 @@ describe("citations and sources", () => {
   it("never shows a Gaps section or missing wording in a JD fit answer", () => {
     const text = [
       "Strong matches",
-      "- AWS Lambda services [1]",
-      "- Kotlin is missing from his resume [1]",
+      "- AWS Lambda services [bullet-captech-consultant-4]",
+      "- Kotlin is missing from his resume [bullet-captech-consultant-4]",
       "",
       "Closest experience",
-      "- Kubernetes: container orchestration with AWS ECS [1]",
+      "- Kubernetes: container orchestration with AWS ECS [bullet-captech-consultant-4]",
       "- Kafka: event streaming",
       "",
       "Gaps",
@@ -185,13 +185,13 @@ describe("citations and sources", () => {
   });
 
   it("drops a heading left empty after the JD fit rules", () => {
-    const layout = layoutAnswer("Closest experience\n- Kafka: event streaming\n\nStrong matches\n- AWS [1]", normalizeSources(sources), { jdFit: true });
+    const layout = layoutAnswer("Closest experience\n- Kafka: event streaming\n\nStrong matches\n- AWS [bullet-captech-consultant-4]", normalizeSources(sources), { jdFit: true });
     expect(layout.blocks.map((b) => b.type)).toEqual(["heading", "ul"]);
     expect(loose(layout.blocks[0]).inline[0].text).toBe("Strong matches");
   });
 
   it("leaves normal answers alone", () => {
-    const layout = layoutAnswer("Gaps\n- none [1]", normalizeSources(sources));
+    const layout = layoutAnswer("Gaps\n- none [bullet-captech-consultant-4]", normalizeSources(sources));
     expect(layout.blocks.map((b) => b.type)).toEqual(["p", "ul"]);
     expect(jdFitText("Strong matches")).toBe("");
   });
@@ -279,11 +279,91 @@ describe("citations and sources", () => {
       );
       expect(flat("Strong matches\n1. AWS Lambda [bullet-captech-consultant-3]")).toBe("# Strong matches\nol: AWS Lambda^1");
       expect(flat("Strong matches\nAWS Lambda services in Python and Go [bullet-captech-consultant-3]")).toBe(
-        "# Strong matches\nP: AWS Lambda services in Python and Go^1",
+        "# Strong matches\nul: AWS Lambda services in Python and Go^1",
       );
       const layout = layoutAnswer(`Gaps\n- Kafka [project-cleat]\n\nStrong matches\n- AWS ${C4}`, probeSources, { jdFit: true });
       expect(layout.sources.map((source) => [source.n, source.label])).toEqual([[1, "A bullet 4"]]);
       expect(flat("")).toBe("");
+    });
+  });
+
+  describe("JD fit, Atlas ruling of Oct 20 2026 (PR #30 r3)", () => {
+    const r3Sources = normalizeSources([
+      { id: "bullet-captech-consultant-4", label: "A bullet 4", href: "#role-captech-consultant" },
+      { id: "project-cleat", label: "B cleat", href: "https://github.com/jaysinghcodes/Cleat" },
+      { id: "role-osu-wexner", label: "C wexner", href: "#role-osu-wexner" },
+    ]);
+    /** @param {string} text */
+    const view = (text) => {
+      const layout = layoutAnswer(text, r3Sources, { jdFit: true });
+      const lines = layout.blocks.map((b) =>
+        b.type === "heading"
+          ? `# ${loose(b).inline.map((p) => p.text).join("")}`
+          : "items" in b
+            ? `${b.type}: ${b.items.map((i) => i.map((p) => (p.type === "cite" ? `^${p.n}` : p.text)).join("")).join(" | ")}`
+            : `P: ${b.inline.map((p) => (p.type === "cite" ? `^${p.n}` : p.text)).join("")}`,
+      );
+      return { text: lines.join("\n"), sources: layout.sources.map((source) => `${source.n}:${source.label}`) };
+    };
+    const C4 = "[bullet-captech-consultant-4]";
+
+    it('"Not a fit [id]" followed by bullets renders none of it', () => {
+      const out = view(`Strong matches\n- AWS ${C4}\n\nNot a fit [role-osu-wexner]\n- Kafka: used SQS instead [project-cleat]\n- Rust ${C4}`);
+      expect(out.text).toBe("# Strong matches\nul: AWS^1");
+      expect(out.sources).toEqual(["1:A bullet 4"]);
+    });
+
+    it("an item cited only as [1] is not rendered", () => {
+      expect(view("Strong matches\n- AWS [1]\n- Go [9]").text).toBe("");
+      expect(view(`Strong matches\n- AWS [1]\n- Go ${C4}`).text).toBe("# Strong matches\nul: Go^1");
+      expect(view("Partial matches\n- Go [2] [3]").sources).toEqual([]);
+    });
+
+    it('"Strong matches (2)", "**Strong matches:**" and "## strong matches" each render their cited items, and "**Strong matches:** AWS [id]" renders AWS as an item', () => {
+      for (const heading of ["Strong matches (2)", "**Strong matches:**", "## strong matches", "STRONG MATCHES:", "### Strong matches (3):"]) {
+        expect(view(`${heading}\n- AWS ${C4}\n- Go [project-cleat]`).text, heading).toBe("# Strong matches\nul: AWS^1 | Go^2");
+      }
+      expect(view(`**Strong matches:** AWS ${C4}`).text).toBe("# Strong matches\nul: AWS^1");
+      expect(view(`**Strong matches:** AWS ${C4}\n**Gaps:** Kafka [project-cleat]`).text).toBe("# Strong matches\nul: AWS^1");
+    });
+
+    it("an uncited intro line in a section is dropped, and the cited items under it still render", () => {
+      expect(view(`Strong matches\nHere are the clear matches:\n- AWS ${C4}\n- Go [project-cleat]`).text).toBe("# Strong matches\nul: AWS^1 | Go^2");
+      expect(view(`Here is how he fits.\n\nStrong matches\n- AWS ${C4}`).text).toBe("# Strong matches\nul: AWS^1");
+      expect(view(`Partial matches\nThese are partly covered by his work.\n- Go ${C4}`).text).toBe("# Partial matches\nul: Go^1");
+    });
+
+    // Sentinel r3 probes: an unknown heading that carries a cite.
+    const citedHeadings = {
+      cited_unknown_heading: `Strong matches\n- AWS ${C4}\n\nNot a fit [role-osu-wexner]\n- Kafka: used SQS instead [project-cleat]`,
+      cited_unknown_heading_colon: `Strong matches\n- AWS ${C4}\n\nConcerns: [role-osu-wexner]\n- Kafka: used SQS instead [project-cleat]`,
+      cited_bold_heading: `Strong matches\n- AWS ${C4}\n\n**Concerns** [role-osu-wexner]\n- Kafka [project-cleat]`,
+      cited_md_heading: `Strong matches\n- AWS ${C4}\n\n## Not a fit [role-osu-wexner]\n- Kafka [project-cleat]`,
+      numbered_heading: `Strong matches\n- AWS ${C4}\n1. Not a fit\n- Kafka [project-cleat]`,
+      table: `Strong matches\n- AWS ${C4}\n\n| Requirement | Status |\n| Kafka | partial [project-cleat] |`,
+    };
+    for (const [name, text] of Object.entries(citedHeadings)) {
+      it(`r3 ${name}: the cited unknown heading and its bullets are not rendered`, () => {
+        expect(view(text)).toEqual({ text: "# Strong matches\nul: AWS^1", sources: ["1:A bullet 4"] });
+      });
+    }
+
+    it("r3 jd_r3_cited_heading (browser case): Partial matches after the unknown heading still renders, renumbered", () => {
+      const out = view(
+        `Strong matches\n- AWS serverless work on a banking platform ${C4}\n\nNot a fit [role-osu-wexner]\n- Kafka: used SQS queues instead [project-cleat]\n\nPartial matches\n- Healthcare data in React [role-osu-wexner]`,
+      );
+      expect(out.text).toBe("# Strong matches\nul: AWS serverless work on a banking platform^1\n# Partial matches\nul: Healthcare data in React^2");
+      expect(out.sources).toEqual(["1:A bullet 4", "2:C wexner"]);
+    });
+
+    it("never drops a cited item under an allowed heading because of formatting (over drop cases)", () => {
+      expect(view(`Strong matches\nAWS Lambda services in Python and Go ${C4}`).text).toBe("# Strong matches\nul: AWS Lambda services in Python and Go^1");
+      expect(view(`Strong matches\n1. AWS ${C4}\n2. Go [project-cleat]`).text).toBe("# Strong matches\nol: AWS^1 | Go^2");
+      expect(view(`Strong matches\n\u2022 AWS ${C4}\n\n\n- Go [project-cleat]`).text).toBe("# Strong matches\nul: AWS^1 | Go^2");
+      expect(view(`Strong matches\n- Cloud\n  - AWS Lambda ${C4}`).text).toBe("# Strong matches\nul: AWS Lambda^1");
+      expect(view(`Closest experience:\n- Kubernetes: container orchestration with AWS ECS ${C4}`).text).toBe(
+        "# Closest experience\nul: Kubernetes: container orchestration with AWS ECS^1",
+      );
     });
   });
 
@@ -297,10 +377,11 @@ describe("citations and sources", () => {
       [1, "Cleat · architecture doc"],
       [2, "Resume · CapTech Consulting · bullet 4"],
     ]);
+    // Atlas ruling, PR #30 r3: a bare number is not a cite, so it is never linked.
     const numeric = layoutAnswer("Migrated to AWS [3]. Cut cost 75% [1]. Again [3].", three);
-    expect(numeric.sources.map((s) => s.label)).toEqual(["Resume · CapTech Consulting · bullet 1", "Resume · CapTech Consulting · bullet 4"]);
-    const cites = loose(numeric.blocks[0]).inline.filter((p) => p.type === "cite").map((p) => p.n);
-    expect(cites).toEqual([1, 2, 1]);
+    expect(numeric.sources).toEqual([]);
+    expect(loose(numeric.blocks[0]).inline.some((p) => p.type === "cite")).toBe(false);
+    expect(loose(numeric.blocks[0]).inline.map((p) => p.text).join("")).toBe("Migrated to AWS. Cut cost 75%. Again.");
     expect(layoutAnswer("No citations here.", three).sources).toEqual([]);
   });
 
