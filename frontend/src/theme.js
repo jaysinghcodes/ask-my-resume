@@ -1,92 +1,87 @@
 import { createTheme } from "@mui/material/styles";
 
-// Beige + dark grey — minimal (dark background, beige text)
-// Thoughtful, warm, minimalistic theme
-const beige = "#DDD0C8";
-const darkGrey = "#323232";
-const beigeMuted = "#b8a99e";
-const surface = "#2a2a2a";
-const border = "#404040";
+const bg = "#FCFBF9";
+const ink = "#191919";
+const text = "#2b2b2b";
+const muted = "#6b6b6b";
+const hair = "#EAE6E1";
+const card = "#FFFFFF";
+
+const sans = '"Inter", system-ui, sans-serif';
+const serif = '"Source Serif 4", Georgia, serif';
 
 export const theme = createTheme({
   palette: {
-    mode: "dark",
+    mode: "light",
     primary: {
-      main: beige,
-      light: "#e8e0d8",
-      dark: "#c9beb4",
-      contrastText: darkGrey,
+      main: ink,
+      contrastText: "#ffffff",
     },
     secondary: {
-      main: beige,
-      light: "#e8e0d8",
-      dark: beigeMuted,
-      contrastText: darkGrey,
+      main: ink,
+      contrastText: "#ffffff",
     },
     background: {
-      default: darkGrey,
-      paper: surface,
+      default: bg,
+      paper: card,
     },
     text: {
-      primary: beige,
-      secondary: beigeMuted,
-      disabled: beigeMuted,
+      primary: text,
+      secondary: muted,
     },
-    divider: border,
-    action: {
-      hover: "rgba(221, 208, 200, 0.08)",
-      selected: "rgba(221, 208, 200, 0.12)",
-    },
+    divider: hair,
   },
   typography: {
-    fontFamily: '"DM Sans", sans-serif',
+    fontFamily: sans,
     h1: {
-      fontFamily: '"DM Sans", sans-serif',
+      fontFamily: sans,
       fontWeight: 700,
       letterSpacing: "-0.02em",
-      color: beige,
+      color: ink,
     },
     h2: {
-      fontFamily: '"DM Sans", sans-serif',
+      fontFamily: sans,
       fontWeight: 600,
-      color: beige,
+      color: ink,
     },
     body1: {
-      fontSize: "0.875rem",
-      lineHeight: 1.7,
-      color: beige,
+      fontFamily: serif,
+      fontSize: "1.125rem",
+      lineHeight: 1.65,
+      color: text,
     },
     body2: {
-      fontSize: "0.8125rem",
-      color: beigeMuted,
+      fontFamily: sans,
+      fontSize: "0.875rem",
+      color: muted,
     },
     caption: {
-      fontSize: "0.6875rem",
-      letterSpacing: "0.08em",
-      textTransform: "uppercase",
-      color: beigeMuted,
+      fontFamily: sans,
+      fontSize: "0.75rem",
+      letterSpacing: "0.04em",
+      color: muted,
     },
     button: {
-      fontFamily: '"DM Sans", sans-serif',
+      fontFamily: sans,
       textTransform: "none",
       fontWeight: 500,
     },
   },
   shape: {
-    borderRadius: 6,
+    borderRadius: 14,
   },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
         html: {
-          overflowX: "hidden",
+          overflowX: "clip",
           WebkitTextSizeAdjust: "100%",
         },
         body: {
-          backgroundColor: darkGrey,
-          color: beige,
-          fontFamily: '"DM Sans", sans-serif',
-          overflowX: "hidden",
+          backgroundColor: bg,
+          color: text,
+          fontFamily: serif,
+          overflowX: "clip",
           minWidth: 0,
         },
       },
@@ -94,19 +89,19 @@ export const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderColor: border,
-          color: beigeMuted,
+          borderColor: hair,
+          color: ink,
+          borderRadius: 999,
           "&:hover": {
-            borderColor: beige,
-            color: beige,
-            backgroundColor: "rgba(221, 208, 200, 0.06)",
+            borderColor: ink,
+            backgroundColor: "rgba(25, 25, 25, 0.04)",
           },
         },
         containedPrimary: {
-          backgroundColor: beige,
-          color: darkGrey,
+          backgroundColor: ink,
+          color: "#ffffff",
           "&:hover": {
-            backgroundColor: "#e8e0d8",
+            backgroundColor: "#000000",
           },
         },
       },
@@ -115,16 +110,16 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiOutlinedInput-root": {
-            backgroundColor: surface,
-            "& fieldset": { borderColor: border },
-            "&:hover fieldset": { borderColor: beige },
-            "&.Mui-focused fieldset": { borderColor: beige, borderWidth: 1 },
+            backgroundColor: card,
+            "& fieldset": { borderColor: hair },
+            "&:hover fieldset": { borderColor: ink },
+            "&.Mui-focused fieldset": { borderColor: ink, borderWidth: 1 },
           },
           "& .MuiInputBase-input": {
-            color: beige,
+            color: ink,
           },
           "& .MuiInputBase-input::placeholder": {
-            color: beigeMuted,
+            color: muted,
             opacity: 1,
           },
         },
@@ -134,17 +129,8 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: "none",
-          backgroundColor: surface,
-          border: `1px solid ${border}`,
-        },
-      },
-    },
-    MuiAlert: {
-      styleOverrides: {
-        standardError: {
-          backgroundColor: "rgba(211, 47, 47, 0.12)",
-          border: "1px solid rgba(211, 47, 47, 0.3)",
-          color: "#ef9a9a",
+          backgroundColor: card,
+          border: `1px solid ${hair}`,
         },
       },
     },
