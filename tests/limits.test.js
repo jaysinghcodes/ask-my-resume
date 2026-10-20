@@ -279,7 +279,7 @@ describe("chat limits", () => {
       code: "rate_limited",
     });
 
-    const other = hashIp("198.51.100.20", "salt");
+    const other = hashIp("198.51.100.2", "salt");
     await expect(consumeQuota({ ipHash: other, store, caps, now })).resolves.toMatchObject({ ok: true });
     await expect(consumeQuota({ ipHash: other, store, caps, now })).resolves.toEqual({
       ok: false,
@@ -288,7 +288,7 @@ describe("chat limits", () => {
 
     const saved = JSON.stringify({ keys: store.keys, expires: store.expires });
     expect(saved).not.toContain(RAW_IP);
-    expect(saved).not.toContain("198.51.100.20");
+    expect(saved).not.toContain("198.51.100.2");
     expect(saved).toContain(hash);
     expect(store.keys.some((key) => key === `chat:ip:${hash}:2026-10-20`)).toBe(true);
     expect(store.keys.filter((key) => key === "chat:site:2026-10-20")).toHaveLength(4);
