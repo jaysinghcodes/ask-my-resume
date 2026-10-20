@@ -399,7 +399,7 @@ describe("knowledge base build", () => {
       "bullets.json": [bullet({
         id: "rec-12345678",
         as_of: "2026-10-18",
-        display_text: "Class of 2024. On 2026-10-18 the launch shipped. Logged 2026-10-19T21:07:00Z.",
+        display_text: "Class of 2024. On 2026-10-18 and 2026-10-19 the launch shipped. Logged 2026-10-19T21:07:00Z.",
         resume_text: "Shipped in 2026. Room 5555. Build abc1234.",
         story: { context: "Ticket 123456789 closed." },
         metrics: [{ value: 2026, label: "year" }, { value: 75, label: "share" }],
@@ -527,6 +527,16 @@ describe("knowledge base build", () => {
     ["uk mobile", () => ["07700", "900123"].join(" ")],
     ["india national", () => ["98765", "43210"].join(" ")],
     ["idd prefix", () => ["0044", "20", "7946", "0958"].join(" ")],
+    ["nbsp entity", () => ["555", "555", "0123"].join("&nbsp;")],
+    ["decimal entity", () => ["555", "555", "0123"].join("&#160;")],
+    ["hex entity", () => ["555", "555", "0123"].join("&#xA0;")],
+    ["letters after the digits", () => `${["555", "555", "0123"].join("")}call`],
+    ["glued ext word", () => `${["555", "555", "0123"].join("")}ext 12`],
+    ["hyphen groups then abc", () => `${["555", "555", "0123"].join("-")}abc`],
+    ["plus then a trailing letter", () => `${plusMark()}1${["555", "555", "0123"].join("")}a`],
+    ["hex letter after the digits", () => `${["555", "555", "0123"].join("")}e`],
+    ["hex letter before the digits", () => `cafe${["555", "555", "0123"].join("")}`],
+    ["two numbers joined by a comma", () => `${["555", "555", "0123"].join("-")}, ${["555", "555", "0199"].join("-")}`],
   ])("fails a %s phone bypass", (_label, makeText) => {
     const dir = tempKb({
       "bullets.json": [bullet({ display_text: `Call ${makeText()} today.` })],
