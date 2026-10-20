@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { findPhoneHits, parseAllowlist, phoneDigitRuns, readScanText, shouldSkipRepoPath } from "../scripts/phone-scan.mjs";
+import { allowTokens, findPhoneHits, parseAllowlist, phoneDigitRuns, readScanText, shouldSkipRepoPath } from "../scripts/phone-scan.mjs";
 import { buildTinyPdf } from "../scripts/tiny-pdf.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -132,6 +132,19 @@ test("allowlist lines need a reason", () => {
   const ok = parseAllowlist("1234\torder id in a fixture comment\n");
   assert.deepEqual(ok.errors, []);
   assert.equal(ok.tokens.length, 1);
+  assert.equal(ok.byPath.size, 0);
+});
+
+test("a path scoped allowlist token stays in that file", () => {
+  const id = `${"0".repeat(11)}1`;
+  const parsed = parseAllowlist(`tests/kb-build.test.js ${id} # demo org id fragment in a kb test\n`);
+  assert.deepEqual(parsed.errors, []);
+  assert.deepEqual(parsed.tokens, []);
+  const packed = `Call ${["21455", id, "50123"].join(" ")}`;
+  assert.equal(findPhoneHits(packed, allowTokens(parsed, "README.md")).length, 1);
+  assert.equal(findPhoneHits(packed, allowTokens(parsed, "tests/kb-build.test.js")).length, 0);
+  assert.equal(findPhoneHits(id, allowTokens(parsed, "tests/kb-build.test.js")).length, 0);
+  assert.equal(findPhoneHits(id, allowTokens(parsed, "scripts/phone-scan-allowlist.txt")).length, 0);
 });
 
 test("non breaking spaces and repeated spaces normalize before matching", () => {
@@ -331,6 +344,7 @@ function isFictionalPhone(digits) {
   if (/^(?:1|44|91)?\d{3}555\d{4}$/.test(digits)) return true;
   if (/^01632\d{6}$/.test(digits)) return true;
   if (/^4401632\d{6}$/.test(digits)) return true;
+  if (/^441632960\d{3}$/.test(digits)) return true;
   if (/^07700900\d{3}$/.test(digits)) return true;
   if (/^447700900\d{3}$/.test(digits)) return true;
   return false;
@@ -347,6 +361,13 @@ test("fictional 555 is the exchange", () => {
   assert.equal(isFictionalPhone(["91", exchange].join("")), true);
   assert.equal(isFictionalPhone(["01632", "960000"].join("")), true);
   assert.equal(isFictionalPhone(["44", "01632", "960000"].join("")), true);
+  assert.equal(isFictionalPhone(["44", "1632", "960000"].join("")), true);
+  assert.equal(isFictionalPhone(["44", "1632", "960999"].join("")), true);
+  assert.equal(isFictionalPhone(["44", "1632", "959999"].join("")), false);
+  assert.equal(isFictionalPhone(["44", "1632", "961000"].join("")), false);
+  const intlDrama = phoneDigitRuns(`+44 ${["1632", "960123"].join(" ")}`);
+  assert.equal(intlDrama.length, 1);
+  assert.equal(isFictionalPhone(intlDrama[0]), true);
   assert.equal(isFictionalPhone(["07700900", "123"].join("")), true);
   assert.equal(isFictionalPhone(["447700900", "123"].join("")), true);
   assert.equal(isFictionalPhone(area), false);

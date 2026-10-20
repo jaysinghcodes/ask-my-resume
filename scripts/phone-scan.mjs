@@ -16,6 +16,7 @@
  * same way. A hex hash of 7 to 40 characters is kept only when it contains
  * a letter and every long digit run sits strictly inside the token. UUIDs,
  * ISO dates, and exact tokens in scripts/phone-scan-allowlist.txt are kept.
+ * A path scoped allowlist line applies that token only in the named file.
  * UTF-16 LE, UTF-16 BE, and UTF-8 files with a BOM are decoded and scanned.
  * Output is the file path and line number only.
  */
@@ -340,27 +341,70 @@ export function phoneDigitRuns(text) {
 }
 
 /**
+ * @param {string} token
+ * @returns {string}
+ */
+function normalizeToken(token) {
+  return normalizeChars(token).map((item) => item.ch).join("").trim();
+}
+
+/**
  * @param {string} fileText
- * @returns {{ tokens: string[], errors: number[] }}
+ * @returns {{ tokens: string[], byPath: Map<string, string[]>, errors: number[] }}
  */
 export function parseAllowlist(fileText) {
   /** @type {string[]} */
   const tokens = [];
+  /** @type {Map<string, string[]>} */
+  const byPath = new Map();
   /** @type {number[]} */
   const errors = [];
   fileText.split(/\r?\n/).forEach((line, index) => {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) return;
     const tab = line.indexOf("\t");
-    const token = tab === -1 ? "" : line.slice(0, tab).trim();
-    const reason = tab === -1 ? "" : line.slice(tab + 1).trim();
-    if (!token || !reason) {
+    if (tab !== -1) {
+      const token = line.slice(0, tab).trim();
+      const reason = line.slice(tab + 1).trim();
+      if (!token || !reason) {
+        errors.push(index + 1);
+        return;
+      }
+      tokens.push(normalizeToken(token));
+      return;
+    }
+    const hash = line.indexOf(" # ");
+    const left = hash === -1 ? "" : line.slice(0, hash).trim();
+    const reason = hash === -1 ? "" : line.slice(hash + 3).trim();
+    const space = left.indexOf(" ");
+    const filePath = space === -1 ? "" : left.slice(0, space).trim();
+    const token = space === -1 ? "" : left.slice(space + 1).trim();
+    if (!filePath || !token || !reason) {
       errors.push(index + 1);
       return;
     }
-    tokens.push(normalizeChars(token).map((item) => item.ch).join("").trim());
+    const list = byPath.get(filePath) || [];
+    list.push(normalizeToken(token));
+    byPath.set(filePath, list);
   });
-  return { tokens, errors };
+  return { tokens, byPath, errors };
+}
+
+/**
+ * Global tokens, plus path scoped tokens for this file.
+ * The allowlist file itself also blanks every scoped token so it does not flag its own lines.
+ * @param {{ tokens: string[], byPath: Map<string, string[]> }} parsed
+ * @param {string} rel
+ * @returns {string[]}
+ */
+export function allowTokens(parsed, rel) {
+  const tokens = parsed.tokens.slice();
+  const scoped = parsed.byPath.get(rel);
+  if (scoped) tokens.push(...scoped);
+  if (rel === ALLOWLIST_REL) {
+    for (const list of parsed.byPath.values()) tokens.push(...list);
+  }
+  return tokens;
 }
 
 /**
@@ -572,7 +616,7 @@ export function main(argv = process.argv.slice(2)) {
     if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) continue;
     let found;
     try {
-      found = scanFile(absolute, allow.tokens);
+      found = scanFile(absolute, allowTokens(allow, rel));
     } catch (err) {
       const message = err instanceof Error ? err.message : "scan failed";
       console.error(message);

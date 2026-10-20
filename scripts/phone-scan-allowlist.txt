@@ -1,5 +1,6 @@
 # Exact tokens that are not phone numbers.
-# Each entry line is the token, a tab, and a reason.
+# A global line is the token, a tab, and a reason.
+# A path scoped line is: path token # reason
 # Comment lines and blank lines are ignored.
 
 rgba(212, 196, 176, 0.08)	color channel tuple
@@ -10,4 +11,4 @@ rgba(221, 208, 200, 0.06)	color channel tuple
 rgba(211, 47, 47, 0.12)	color channel tuple
 rgba(252, 251, 249, 0.92)	color channel tuple
 https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap	font axis range
-000000000001	demo org id fragment in a kb test
+tests/kb-build.test.js 000000000001 # demo org id fragment in a kb test
