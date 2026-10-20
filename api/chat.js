@@ -1,7 +1,7 @@
 /**
  * POST /api/chat
- * Node.js Vercel Function on Fluid compute. JSON in, JSON out.
- * Streaming is a later ticket.
+ * Node.js Vercel Function on Fluid compute.
+ * Server sent events: status, delta, sources, done, and error.
  */
 
 import { postChat } from "../lib/chat.js";

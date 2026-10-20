@@ -30,6 +30,10 @@ Set both variables for Production and for Preview.
 
 `KB_BANNED_TERMS` is the comma separated list from section 5. It is not an API key. Set it locally, as a GitHub Actions secret, and as a Vercel environment variable.
 
+`IP_HASH_SALT` is a long random string. Set it for Production and Preview. The chat function hashes visitor IPs with this salt and stores only the hash.
+
+The cap variables in `.env.example` are optional. Empty values use the defaults: 12 messages of history, 8,000 characters per message, 30 questions per IP per day, 500 questions per day for the whole site, 1,024 output tokens, a 60 second request timeout, and 5 tool rounds. Sections 6 and 7 are the Jay setup for Redis and the firewall rule.
+
 ## 4. Preview deploys
 
 Confirm preview deploys are on for pull requests. That is the default with the Git integration.
@@ -70,7 +74,7 @@ If the variable is missing, blank, or still the `.env.example` placeholder, the 
 
 ## Where shared logic lives
 
-Shared server logic lives in the root `lib/` directory: `claude.js`, `tools.js`, `prompts.js`, `resume.js`, `config.js`, `chat.js`, and `kb-build.js`. `api/chat.js` and `api/health.js` import it, and so do the Vitest tests.
+Shared server logic lives in the root `lib/` directory: `claude.js`, `tools.js`, `prompts.js`, `resume.js`, `config.js`, `chat.js`, `limits.js`, and `kb-build.js`. `api/chat.js` and `api/health.js` import it, and so do the Vitest tests.
 
 It used to live in `mcp-server/lib/`. It moved to the repo root so the functions and the tests import one copy, without a second package. The phone free resume PDF is `frontend/public/Jay-Singh-Resume-Oct-2026.pdf`. The tool use loop itself is the same logic, with two required changes from this ticket: `MODEL_ID` comes from the environment with no fallback model, and the loop stops after 5 tool rounds.
 
@@ -102,3 +106,35 @@ npm run build
 ```
 
 Copy `.env.example` to `.env` and fill in `ANTHROPIC_API_KEY`, `MODEL_ID`, and `KB_BANNED_TERMS` before `npx vercel dev`. Section 5 explains the banned terms list.
+
+## 6. Upstash Redis
+
+Counters for the per IP daily cap and the site daily cap live in Upstash Redis on the free tier. Function instances do not share memory, so the counters have to live outside the function. If `UPSTASH_REDIS_REST_URL` or `UPSTASH_REDIS_REST_TOKEN` is missing, the function falls back to in memory counters and logs that once. That fallback is for local development and tests. Production and Preview need Redis, or the caps reset whenever a new instance starts.
+
+The function stores an IP only as a salted hash. The key expires after 24 hours. Set `IP_HASH_SALT` to a long random string for Production and Preview. Do not commit the salt.
+
+### Jay setup
+
+1. Open the Vercel project from step 2.
+2. Open the Marketplace.
+3. Add Upstash for Redis on the free tier.
+4. Connect it to this project.
+5. Include Production and Preview.
+6. The integration writes `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. Leave those values in Vercel. Do not copy them into the repo.
+7. Redeploy so the function can read them.
+
+## 7. Firewall rate limit
+
+Vercel Hobby allows one rate limit rule. Use it on `/api/chat`. This is separate from the Anthropic monthly spend limit in section 1, which remains the spend backstop.
+
+### Jay setup
+
+1. Open the Vercel project from step 2.
+2. Open Firewall.
+3. Add one rate limit rule.
+4. Match the path `/api/chat`.
+5. Allow 20 requests per 10 minutes per IP.
+6. Use a fixed window.
+7. Set the action to deny.
+
+The function still enforces its own caps after the firewall: 30 questions per IP per day, and 500 questions per day for the whole site. Change those with `CHAT_PER_IP_DAILY` and `CHAT_SITE_DAILY` if you need to. The defaults are in `.env.example`.
