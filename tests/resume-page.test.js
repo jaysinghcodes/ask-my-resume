@@ -314,7 +314,7 @@ describe("resume page", () => {
     };
     const question = askAbout("role-osu-wexner", doc);
     expect(question).toBe(
-      "Tell me about Jay's Full Stack Student Developer role at OSU Wexner Medical Center.",
+      "Tell me about his time at OSU Wexner Medical Center as Full Stack Student Developer",
     );
     expect(ask.scrolled).toBe(true);
     expect(textarea.value).toBe(question);

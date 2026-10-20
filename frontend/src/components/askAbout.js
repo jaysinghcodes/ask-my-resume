@@ -1,5 +1,5 @@
 import { knowledgeBase } from "../data/knowledgeBase";
-import { questionForTopic } from "../resume/pageModel";
+import { askTarget } from "../ask/askModel.js";
 
 /**
  * @typedef {Object} AskNode
@@ -19,27 +19,53 @@ import { questionForTopic } from "../resume/pageModel";
  */
 
 /**
- * Scroll to the Ask card, prefill the chat input, and focus it.
- * T11 replaces this helper. Call sites pass a knowledge base id.
- * @param {string} topic
- * @param {AskDocument | Document | undefined} [doc]
- * @returns {string}
+ * @typedef {{ question: string, scope?: { type: "role" | "project", id: string } }} AskRequest
+ * @typedef {(request: AskRequest) => void} AskHandler
  */
-export function askAbout(topic, doc = /** @type {AskDocument | undefined} */ (globalThis.document)) {
-  const question = questionForTopic(topic, knowledgeBase);
+
+/** @type {AskHandler | null} */
+let handler = null;
+
+/**
+ * The Ask card registers here while it is mounted, so deep links can send through it.
+ * @param {AskHandler | null} next
+ * @returns {() => void} Unregister.
+ */
+export function registerAskHandler(next) {
+  handler = next;
+  return () => {
+    if (handler === next) handler = null;
+  };
+}
+
+/**
+ * Scroll to the Ask card, prefill the question and send it with its scope.
+ * Role and project buttons call this with a KB id or `{ type, id, label }`.
+ * Without a mounted card it only prefills the input.
+ * @param {string | import("../ask/askModel.js").AskTarget} target
+ * @param {AskDocument | Document | undefined} [doc]
+ * @returns {string} The question.
+ */
+export function askAbout(target, doc = /** @type {AskDocument | undefined} */ (globalThis.document)) {
+  const request = askTarget(target, knowledgeBase);
+  const { question } = request;
   if (!question || !doc) return question;
 
   const ask = doc.getElementById?.("ask") || null;
+  const behavior = prefersReducedMotion(doc) ? "auto" : "smooth";
+  if (ask?.scrollIntoView) ask.scrollIntoView({ behavior, block: "start" });
+  rememberAskHash();
+
+  if (handler) {
+    handler(request);
+    return question;
+  }
+
   const input =
     ask?.querySelector?.("textarea") ||
     doc.querySelector?.("#ask textarea, .ask-section textarea") ||
     null;
-  const behavior = prefersReducedMotion(doc) ? "auto" : "smooth";
-  if (ask?.scrollIntoView) ask.scrollIntoView({ behavior, block: "start" });
-  else if (input?.scrollIntoView) input.scrollIntoView({ behavior, block: "center" });
-
   if (input) fillAskInput(/** @type {AskNode} */ (input), question);
-  rememberAskHash();
   return question;
 }
 
@@ -90,5 +116,5 @@ function rememberAskHash() {
   const historyRef = globalThis.history;
   if (!locationRef || typeof historyRef?.replaceState !== "function") return;
   if (locationRef.hash === "#ask") return;
-  historyRef.replaceState(null, "", `${locationRef.pathname}${locationRef.search}#ask`);
+  historyRef.replaceState(historyRef.state, "", `${locationRef.pathname}${locationRef.search}#ask`);
 }
