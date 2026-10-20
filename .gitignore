@@ -6,3 +6,9 @@ frontend/dist/
 .DS_Store
 .vercel
 kb/kb.json
+
+# Private resume PDFs. The phone free public file is allowed below.
+mcp-server/*.[Pp][Dd][Ff]
+mcp-server/**/*.[Pp][Dd][Ff]
+**/*[Rr][Ee][Ss][Uu][Mm][Ee]*.[Pp][Dd][Ff]
+!/frontend/public/Jay-Singh-Resume-Oct-2026.pdf
