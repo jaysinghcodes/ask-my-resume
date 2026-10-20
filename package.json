@@ -11,10 +11,13 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "build": "npm run build --prefix frontend"
+    "kb:build": "node scripts/build-kb.js",
+    "build": "npm run kb:build && npm run build --prefix frontend"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.27.3",
+    "ajv": "^8.20.0",
+    "html-entities": "^2.6.0",
     "pdf-parse": "1.1.4"
   },
   "devDependencies": {

@@ -1,0 +1,39 @@
+{
+  "$id": "https://ask-jay.local/schema/projects.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "allOf": [
+      { "$ref": "https://ask-jay.local/schema/common.json#/$defs/record" },
+      { "$ref": "https://ask-jay.local/schema/common.json#/$defs/noPhone" },
+      {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "name": { "type": "string" },
+          "one_liner": { "type": "string" },
+          "problem": { "type": "string" },
+          "what_jay_built": { "type": "string" },
+          "architecture": { "type": "string" },
+          "key_decisions": { "type": "array", "items": { "type": "string" } },
+          "stack": { "type": "array", "items": { "type": "string" } },
+          "metrics": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "links": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "status": { "type": "string" },
+          "featured": { "type": "boolean" },
+          "built_with_note": { "type": "object", "additionalProperties": true },
+          "credit": { "type": "string" },
+          "private_notes": { "type": "object", "additionalProperties": true },
+          "repo_name": { "type": "string" },
+          "kind": { "type": "string" }
+        }
+      }
+    ]
+  }
+}

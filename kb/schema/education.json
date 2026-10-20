@@ -1,0 +1,26 @@
+{
+  "$id": "https://ask-jay.local/schema/education.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "allOf": [
+      { "$ref": "https://ask-jay.local/schema/common.json#/$defs/record" },
+      { "$ref": "https://ask-jay.local/schema/common.json#/$defs/noPhone" },
+      {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "school": { "type": "string" },
+          "degree": { "type": "string" },
+          "field": { "type": "string" },
+          "start": { "type": "string" },
+          "end": { "type": "string" },
+          "location": { "type": "string" },
+          "display": { "type": "string" },
+          "activities": { "type": "array", "items": { "type": "string" } },
+          "honors": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    ]
+  }
+}

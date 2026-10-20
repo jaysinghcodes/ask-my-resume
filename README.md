@@ -51,7 +51,9 @@ Create the Vercel project from [docs/SETUP.md](docs/SETUP.md). Name it `ask-jay`
 ## Project structure
 
 - `api/chat.js` and `api/health.js`: Vercel Functions
-- `lib/`: shared server logic (`claude.js`, `tools.js`, `prompts.js`, `resume.js`, `config.js`, `chat.js`)
+- `lib/`: shared server logic (`claude.js`, `tools.js`, `prompts.js`, `resume.js`, `config.js`, `chat.js`, `kb-build.js`)
+- `kb/`: knowledge base records, JSON Schemas, and generated `kb/kb.json`
+- `scripts/build-kb.js`: validates `kb/` and writes `kb/kb.json` for the Vite app and the functions
 - `frontend/`: Vite app
 - `mcp-server/resume.pdf`: resume file kept until a later ticket
 - `docs/SETUP.md`: Jay's Anthropic and Vercel steps

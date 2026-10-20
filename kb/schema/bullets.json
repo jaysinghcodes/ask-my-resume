@@ -1,0 +1,55 @@
+{
+  "$id": "https://ask-jay.local/schema/bullets.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "allOf": [
+      { "$ref": "https://ask-jay.local/schema/common.json#/$defs/record" },
+      { "$ref": "https://ask-jay.local/schema/common.json#/$defs/noPhone" },
+      {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["resume_text", "display_text", "metrics", "skills", "story", "show_on_page"],
+        "properties": {
+          "role_id": { "type": "string" },
+          "order": { "type": "integer" },
+          "resume_text": { "type": "string" },
+          "display_text": { "type": "string" },
+          "metrics": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "skills": { "type": "array", "items": { "type": "string" } },
+          "story": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "context": { "type": "string" },
+              "problem": { "type": "string" },
+              "approach": { "type": "string" },
+              "decisions": { "type": "string" },
+              "result": { "type": "string" },
+              "jay_owned": { "type": "string" },
+              "team": { "type": "string" },
+              "interview_answer": { "type": "string" },
+              "tools": { "type": "array", "items": { "type": "string" } },
+              "likely_follow_ups": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    { "type": "string" },
+                    { "type": "object", "additionalProperties": true }
+                  ]
+                }
+              }
+            }
+          },
+          "show_on_page": { "type": "boolean" },
+          "story_confidence": { "type": "string" },
+          "story_public": { "type": "boolean" },
+          "story_sources": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    ]
+  }
+}
