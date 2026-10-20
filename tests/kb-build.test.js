@@ -46,6 +46,11 @@ describe("knowledge base build", () => {
       "AI and data",
       "Cloud and frameworks",
     ]);
+    const mcp = kb.skills.find((skill) => skill.id === "skill-mcp");
+    if (!mcp) throw new Error("missing skill-mcp");
+    expect(mcp.confidence).toBe("verified");
+    expect(mcp.public).toBe(true);
+    expect(mcp.evidence_ids).toEqual(["project-ask-my-resume"]);
     expect(kb.education).toHaveLength(1);
     expect(kb.docs.length).toBeGreaterThan(0);
     const older = kb.bullets.filter((bullet) => bullet.source === "resume_2024");
@@ -117,6 +122,25 @@ describe("knowledge base build", () => {
     }));
 
     expect(result.ok).toBe(true);
+  });
+
+  it("ignores dashes and arrows inside a code span or fenced block", () => {
+    const span = build(tempKb({
+      "bullets.json": [bullet({ display_text: "Use `gpt-4o-mini` and `x-ingest-token` in the service." })],
+    }));
+    expect(span.ok).toBe(true);
+
+    const fence = "```bash\nnpm install --save-exact\n```";
+    const fenced = build(tempKb({
+      "bullets.json": [bullet({ display_text: `Run this.\n\n${fence}\n\nThen ship.` })],
+    }));
+    expect(fenced.ok).toBe(true);
+
+    const prose = build(tempKb({
+      "bullets.json": [bullet({ display_text: "Use `gpt-4o-mini` in the cloud-native service." })],
+    }));
+    expect(prose.ok).toBe(false);
+    expect(prose.errors.join("\n")).toMatch(/cloud-native|hyphen joining two words/);
   });
 
   it("ignores dashes and arrows inside a URL", () => {

@@ -86,20 +86,20 @@ export function AboutPage() {
       </Typography>
       <Paper variant="outlined" sx={codeBlockSx}>
         <Box component="pre">
-          {`resume.pdf
+          {`kb/
     ↓
-MCP Server (Node.js/Express)   ← defines "search_resume" tool
+api/chat.js                    ← reads the knowledge base
     ↑
-Claude API (claude-sonnet)    ← calls the tool, forms responses
+Claude API                     ← calls the tool, forms responses
     ↑
-React Frontend (Vite)         ← chat UI, hosted on GitHub Pages`}
+React frontend (Vite)          ← chat UI`}
         </Box>
       </Paper>
 
       <Typography variant="body2" sx={{ mt: 2, color: "text.secondary" }}>
-        The MCP server loads the resume PDF, exposes a single tool (
-        <code>search_resume</code>), and runs an agentic loop: Claude decides
-        when to call the tool, gets the resume content, and synthesizes answers.
+        The chat function reads the knowledge base and the public resume PDF in
+        frontend/public. It exposes a search tool, and Claude decides when to
+        call the tool, gets that source, and writes the answer.
       </Typography>
 
       <Typography
@@ -111,22 +111,19 @@ React Frontend (Vite)         ← chat UI, hosted on GitHub Pages`}
       <Paper variant="outlined" sx={codeBlockSx}>
         <Box component="pre">
           {`ask-my-resume/
-├── .github/workflows/deploy.yml
-├── mcp-server/
-│   ├── index.js
-│   ├── resume.pdf
-│   ├── .env.example
-│   └── package.json
+├── kb/
+│   ├── profile.json
+│   ├── roles.json
+│   └── bullets.json
+├── api/
+│   └── chat.js
 └── frontend/
-    ├── src/
-    │   ├── config/constants.js
-    │   ├── components/
-    │   ├── pages/
-    │   ├── App.jsx
-    │   ├── main.jsx
-    │   └── theme.js
-    ├── index.html
-    └── package.json`}
+    ├── public/
+    │   └── resume PDF
+    └── src/
+        ├── pages/
+        ├── App.jsx
+        └── main.jsx`}
         </Box>
       </Paper>
     </Box>
