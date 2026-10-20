@@ -217,7 +217,7 @@ describe("Ask Jay a question", () => {
     expect(model).not.toContain("pushState");
     expect(scroll).toContain('focus === "ask-input"');
     expect(scroll).toContain('id === "ask"');
-    expect(scroll).toContain('querySelector("h1, h2")');
+    expect(scroll).toContain('querySelector?.("h1, h2")');
     expect(nav).toContain("scrollToId(item.id)");
     expect(focusIdFromState({ focus: "ask-input" })).toBe("ask-input");
     expect(focusIdFromState(null)).toBe("");

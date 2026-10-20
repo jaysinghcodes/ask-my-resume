@@ -1,0 +1,151 @@
+{
+  "about": "JD fit eval cases for T7 (Jay's ruling on #30): no Gaps section, no missing wording, closest real experience with a citation, unrelated requirements left out. Run each job_description through the agent with mode jd_fit and check the answer with checkJdFitAnswer(answer, { sourceIds, omit }). The sample answers pin the checker itself.",
+  "cases": [
+    {
+      "id": "jd-cloud-backend",
+      "job_description": "Backend engineer. Requirements: AWS, Python, Go, Kubernetes, Kafka, a CPA license.",
+      "expect": {
+        "sections_allowed": [
+          "Strong matches",
+          "Partial matches",
+          "Closest experience"
+        ],
+        "closest": {
+          "Kubernetes": "bullet-captech-consultant-4"
+        },
+        "omit": [
+          "CPA"
+        ]
+      },
+      "good_answer": "Strong matches\n- AWS Lambda services in Python and Go.[bullet-captech-consultant-3]\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS.[bullet-captech-consultant-4]",
+      "bad_answers": [
+        "Strong matches\n- AWS Lambda services in Python and Go.[bullet-captech-consultant-3]\n\nGaps\n- Kafka",
+        "Strong matches\n- AWS.[bullet-captech-consultant-3]\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS.[bullet-captech-consultant-4]\n- CPA: none.[bullet-captech-consultant-4]",
+        "Strong matches\n- AWS.[bullet-captech-consultant-3]\n- Kafka is missing from his resume.[bullet-captech-consultant-3]",
+        "Closest experience\n- Kubernetes: ran large Kubernetes clusters.[made-up-source]"
+      ]
+    },
+    {
+      "id": "jd-data-platform",
+      "job_description": "Data engineer. Requirements: Snowflake, Databricks, SQL, Airflow, fluent Japanese.",
+      "expect": {
+        "sections_allowed": [
+          "Strong matches",
+          "Partial matches",
+          "Closest experience"
+        ],
+        "closest": {
+          "Airflow": "bullet-captech-consultant-4"
+        },
+        "omit": [
+          "Japanese"
+        ]
+      },
+      "good_answer": "Strong matches\n- Data standardization with Databricks and Snowflake.[bullet-captech-consultant-2]\n- Validation pipelines in Python and SQL.[bullet-captech-consultant-4]\n\nClosest experience\n- Airflow: Databricks validation pipelines that run the data checks.[bullet-captech-consultant-4]",
+      "bad_answers": [
+        "Strong matches\n- Databricks and Snowflake.[bullet-captech-consultant-2]\n\nClosest experience\n- Japanese: no experience.[bullet-captech-consultant-2]",
+        "Strong matches\n- Databricks and Snowflake.[bullet-captech-consultant-2]\n\nMissing skills\n- Airflow\n- Japanese"
+      ]
+    },
+    {
+      "id": "sentinel-r2-probes",
+      "note": "Every bad case from Sentinel's PR #30 r2 probe (unknown headings in any form, uncited items in every section, missing skill wording, bad cites, unrelated requirements, empty). An invented claim with a real cite is left to the T8 grounding eval (Atlas ruling Oct 20 2026, point 3).",
+      "job_description": "Backend engineer. Requirements: AWS, Kafka, Rust, Scala, Terraform, Kubernetes, a CPA license.",
+      "expect": {
+        "sections_allowed": [
+          "Strong matches",
+          "Partial matches",
+          "Closest experience"
+        ],
+        "omit": [
+          "CPA",
+          "Certified public accountant"
+        ],
+        "closest": {
+          "Kubernetes": "bullet-captech-consultant-4"
+        }
+      },
+      "good_answer": "Strong matches\n- AWS Lambda services in Python and Go [bullet-captech-consultant-3]\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS [bullet-captech-consultant-4]",
+      "bad_answers": [
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nGaps\n- Kafka",
+        "## Strong matches\n- AWS [bullet-captech-consultant-4]\n\n## Gaps:\n- Kafka",
+        "**Strong matches**\n- AWS [bullet-captech-consultant-4]\n**Gaps:** Kafka, Rust",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\nGaps.\n- Kafka [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nAreas to grow\n- Kafka [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nDevelopment areas\n- Kafka [bullet-captech-consultant-4]",
+        "Strong matches\n- Ran Kafka clusters [kafka-expert-1]",
+        "Partial matches\n- He hasn't used Kafka, but did AWS [bullet-captech-consultant-4]",
+        "Partial matches\n- He has never used Kafka [bullet-captech-consultant-4]",
+        "Partial matches\n- Not familiar with Kafka yet [bullet-captech-consultant-4]",
+        "Partial matches\n- Kafka is absent from his background [bullet-captech-consultant-4]",
+        "Closest experience\n- Kafka: none [bullet-captech-consultant-4]",
+        "Closest experience\n- Kafka: N/A [bullet-captech-consultant-4]",
+        "Partial matches\n- Without Kafka experience, he used AWS SQS [bullet-captech-consultant-4]",
+        "Partial matches\n- Kafka is not listed in his experience [bullet-captech-consultant-4]",
+        "Closest experience\n- CPA license: financial reporting dashboards [bullet-captech-consultant-2]",
+        "Closest experience\n- Certified public accountant: finance dashboards [bullet-captech-consultant-2]",
+        "Strong matches\n- AWS [bullet-captech-consultant-99]",
+        "Strong matches\n- AWS [1]",
+        "Strong matches\n- AWS [docs](https://example.com)",
+        "Strong matches\n- AWS [ bullet-captech-consultant-4 ]",
+        "Strong matches\n- AWS (bullet-captech-consultant-4)",
+        "Closest experience\n- Kubernetes - ECS [bullet-captech-consultant-4]",
+        "Closest experience\n- ECS for Kubernetes [bullet-captech-consultant-4]",
+        "",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nGap analysis\n- Kafka\n- Rust",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nWeaknesses\n- Kafka\n- Rust",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nweakness\n- Kafka [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nMissing skills\n- Kafka [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nNot a fit\n- Kafka [bullet-captech-consultant-4]",
+        "Partial matches\n- Go [bullet-captech-consultant-4]\n\nAreas to grow\n- Kafka\n- Rust",
+        "Strong matches\n- Kafka\n- Rust",
+        "Closest experience\n- None [bullet-captech-consultant-4]",
+        "Closest experience\n- N/A [bullet-captech-consultant-4]"
+      ]
+    },
+    {
+      "id": "atlas-r3",
+      "note": "Atlas ruling, PR #30 r3: a cited line that starts a block is still an unknown heading; a bare number is not a cite; heading matching ignores case, level, bold, a trailing colon and a trailing count; an uncited intro line drops only itself. The bad answers include Sentinel's r3 cited heading probes. Update r5 adds the r4 fail forms (cited and uncited numbered and setext headings) and the r4 ruling lines (fail closed). Update r6 adds Sentinel's r5 F1 repros (a blockquote or seven hash closer named like an allowed heading, at the start and in the middle of an answer; the checker must flag the bullets the page drops) and the r5 Clarification nested numbered sub item forms, cited and uncited.",
+      "job_description": "Backend engineer. Requirements: AWS, Python, Go, Kubernetes, Kafka.",
+      "expect": {
+        "sections_allowed": [
+          "Strong matches",
+          "Partial matches",
+          "Closest experience"
+        ],
+        "closest": {
+          "Kubernetes": "bullet-captech-consultant-4"
+        },
+        "omit": []
+      },
+      "good_answer": "Strong matches (2)\n- AWS Lambda services in Python and Go [bullet-captech-consultant-3]\n\n## partial matches\n- Healthcare data in React [role-osu-wexner]\n\n**Closest experience:** Kubernetes: container orchestration with AWS ECS [bullet-captech-consultant-4]",
+      "bad_answers": [
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nNot a fit [role-osu-wexner]\n- Kafka: used SQS instead [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nConcerns: [role-osu-wexner]\n- Kafka: used SQS instead [project-cleat]",
+        "Strong matches\n- AWS serverless work on a banking platform [bullet-captech-consultant-4]\n\nNot a fit [role-osu-wexner]\n- Kafka: used SQS queues instead [project-cleat]\n\nPartial matches\n- Healthcare data in React [role-osu-wexner]",
+        "Strong matches\n- AWS [1]",
+        "Strong matches\n- AWS [1]\n- Go [9]",
+        "**Strong matches:** AWS [bullet-captech-consultant-4]\n**Gaps:** Kafka [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n1. Not a fit\n- Kafka [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\n| Requirement | Status |\n| Kafka | partial [project-cleat] |",
+        "Overall a solid fit for the backend role [bullet-captech-consultant-4].\n\nStrong matches\n- AWS [bullet-captech-consultant-4]",
+        "Strong matches (2)\nHere are the clear matches:\n- AWS Lambda services in Python and Go [bullet-captech-consultant-3]\n\n## partial matches\n- Healthcare data in React [role-osu-wexner]\n\n**Closest experience:** Kubernetes: container orchestration with AWS ECS [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS serverless work on a banking platform [bullet-captech-consultant-4]\n\n1. Not a fit [role-osu-wexner]\n- Kafka: used SQS queues instead [project-cleat]\n\nPartial matches\n- Healthcare data in React [role-osu-wexner]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nNot a fit [role-osu-wexner]\n---\n- Kafka: SQS [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nGaps\n===\n- Kafka: SQS [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nNot a fit [role-osu-wexner]\nKafka: used SQS instead [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nWhere he would need to ramp up:\n- Kafka: used SQS queues instead [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\nHere are the requirements he has not met yet\n- Kafka: used SQS queues instead [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nKey highlights:\n- Cost cut 75% [bullet-captech-consultant-4]",
+        "> Strong matches\n- AWS [bullet-captech-consultant-4]",
+        "> **Strong matches**\n- AWS [bullet-captech-consultant-4]\n- Go [project-cleat]",
+        "####### Strong matches\n- AWS [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\n> Partial matches:\n- Kafka: used SQS instead [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\n> Closest experience\n- Kubernetes: container orchestration with AWS ECS [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\n####### Partial matches\n- Go services [project-cleat]\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS [bullet-captech-consultant-4]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\n1. Not a fit [role-osu-wexner]\n   1. Kafka: SQS [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\n1. Not a fit\n   1. Kafka: SQS [project-cleat]\n   2. Scala jobs [project-cleat]"
+      ]
+    }
+  ]
+}
