@@ -1,5 +1,6 @@
 .ask-section {
-  padding: 48px 0 56px;
+  padding-top: 48px;
+  padding-bottom: 56px;
 }
 
 .kicker {
@@ -61,7 +62,8 @@
 }
 
 .ask-form textarea::placeholder {
-  color: var(--faint);
+  color: var(--muted);
+  opacity: 1;
 }
 
 .ask-form textarea:focus {
@@ -223,7 +225,8 @@
 
 @media (min-width: 761px) {
   .ask-section {
-    padding: 64px 0 72px;
+    padding-top: 64px;
+    padding-bottom: 72px;
   }
 
   .ask-section h1 {

@@ -5,7 +5,7 @@
 }
 
 html {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -61,9 +61,18 @@ a {
   position: sticky;
   top: 0;
   z-index: 5;
+  isolation: isolate;
   background: rgba(252, 251, 249, 0.92);
-  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--hair);
+}
+
+.nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
 }
 
 .nav-inner {
@@ -143,11 +152,8 @@ a {
   position: fixed;
   inset: 0;
   z-index: 20;
+  height: 100%;
   background: rgba(25, 25, 25, 0.28);
-}
-
-.sheet[hidden] {
-  display: none;
 }
 
 .sheet-panel {
@@ -192,7 +198,7 @@ a {
   padding: 28px 0 40px;
   font-family: var(--sans);
   font-size: 13px;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .site-footer .wide {
