@@ -216,7 +216,9 @@ test("repo scan skips fixtures, lockfiles, and node_modules", () => {
   assert.equal(shouldSkipRepoPath("mcp-server/node_modules/express/index.js"), true);
   assert.equal(shouldSkipRepoPath("frontend/public/Jay-Singh-Resume-Oct-2026.pdf"), false);
   assert.equal(shouldSkipRepoPath("scripts/unicode/DerivedNumericValues.txt"), true);
+  assert.equal(shouldSkipRepoPath("lib/unicode/DerivedNumericValues.txt"), true);
   assert.equal(shouldSkipRepoPath("scripts/unicode/notes.txt"), false);
+  assert.equal(shouldSkipRepoPath("lib/unicode/notes.txt"), false);
   assert.equal(
     shouldSkipRepoPath("tests/fixtures/phone-scan/bad/numbers.txt", { explicit: true }),
     false,
@@ -265,19 +267,44 @@ test("digit groups on consecutive lines do not fail", () => {
 test("a line separator before a hit keeps the reported line", () => {
   const call = ["555", "555", "0123"].join(" ");
   const cases = [
-    `intro\u2028still line one\nCall ${call}\n`,
-    `intro\u2029still line one\nCall ${call}\n`,
-    `intro\u2028mid\u2029tail\nCall ${call}\n`,
+    { text: `intro\u2028still line one\nCall ${call}\n`, line: 2 },
+    { text: `intro\u2029still line one\nCall ${call}\n`, line: 2 },
+    { text: `intro\u2028mid\u2029tail\nCall ${call}\n`, line: 2 },
+    { text: `one\rtwo\r\nthree\nCall ${call}\n`, line: 3 },
   ];
-  cases.forEach((text, index) => {
+  cases.forEach((entry, index) => {
     const file = path.join(os.tmpdir(), `phone-scan-line-${index}.txt`);
-    fs.writeFileSync(file, text);
+    fs.writeFileSync(file, entry.text);
     const result = runScan([file]);
     const base = path.basename(file);
-    assert.match(result.stdout, new RegExp(`${base}:2\\n`));
-    assert.doesNotMatch(result.stdout, new RegExp(`${base}:3`));
+    assert.match(result.stdout, new RegExp(`${base}:${entry.line}\\n`));
+    assert.doesNotMatch(result.stdout, new RegExp(`${base}:${entry.line + 1}\\b`));
     assert.doesNotMatch(`${result.stdout}\n${result.stderr}`, /555/);
   });
+});
+
+test("a large file scans without a stack overflow", () => {
+  const line = "note\n";
+  const count = Math.ceil((1024 * 1024) / line.length);
+  const clean = path.join(os.tmpdir(), "phone-scan-large-clean.txt");
+  fs.writeFileSync(clean, line.repeat(count));
+  assert.ok(fs.statSync(clean).size >= 1024 * 1024);
+  const cleanResult = runScan([clean]);
+  assert.equal(cleanResult.status, 0, cleanResult.stderr);
+
+  const phone = ["555", "555", "0123"].join(" ");
+  const dirty = path.join(os.tmpdir(), "phone-scan-large-hit.txt");
+  fs.writeFileSync(dirty, `${line.repeat(count)}Call ${phone}\n`);
+  assert.ok(fs.statSync(dirty).size >= 1024 * 1024);
+  const dirtyResult = runScan([dirty]);
+  assert.equal(dirtyResult.status, 1);
+  assert.match(dirtyResult.stdout, new RegExp(`${path.basename(dirty)}:${count + 1}\\n`));
+  assert.doesNotMatch(`${dirtyResult.stdout}\n${dirtyResult.stderr}`, /555|Maximum call stack/);
+
+  const data = path.join(root, "scripts/unicode/DerivedNumericValues.txt");
+  const dataResult = runScan([data]);
+  assert.ok(dataResult.status === 0 || dataResult.status === 1);
+  assert.doesNotMatch(dataResult.stderr, /Maximum call stack/);
 });
 
 test("utf-16 and utf-8 bom fixtures fail the scan", () => {
@@ -298,18 +325,10 @@ test("a binary file without a bom is skipped", () => {
   assert.match(result.stdout, /no phone numbers/);
 });
 
-function nationalNumbers(digits) {
-  /** @type {string[]} */
-  const found = [];
-  if (digits.length >= 10) found.push(digits.slice(0, 10));
-  if (digits.startsWith("1") && digits.length >= 11) found.push(digits.slice(1, 11));
-  if (digits.startsWith("44") && digits.length >= 12) found.push(digits.slice(2, 12));
-  if (digits.startsWith("91") && digits.length >= 12) found.push(digits.slice(2, 12));
-  return found;
-}
-
 function isFictionalPhone(digits) {
-  if (nationalNumbers(digits).some((national) => national.slice(3, 6) === "555")) return true;
+  for (let i = 0; i + 10 <= digits.length; i += 1) {
+    if (digits.slice(i, i + 10).slice(3, 6) === "555") return true;
+  }
   if (/^01632\d{6}$/.test(digits)) return true;
   if (/^4401632\d{6}$/.test(digits)) return true;
   if (/^07700900\d{3}$/.test(digits)) return true;
@@ -322,8 +341,10 @@ test("fictional 555 is the exchange", () => {
   const withCountry = ["1", exchange].join("");
   const area = ["555", "123", "4567"].join("");
   const line = ["212", "123", "5555"].join("");
+  const later = ["99", exchange].join("");
   assert.equal(isFictionalPhone(exchange), true);
   assert.equal(isFictionalPhone(withCountry), true);
+  assert.equal(isFictionalPhone(later), true);
   assert.equal(isFictionalPhone(area), false);
   assert.equal(isFictionalPhone(line), false);
 });
