@@ -57,7 +57,7 @@
           "then": {
             "propertyNames": {
               "not": {
-                "enum": ["phone", "private.phone"]
+                "pattern": "[Pp][Hh][Oo][Nn][Ee]|[Mm][Oo][Bb][Ii][Ll][Ee]"
               }
             },
             "patternProperties": {
