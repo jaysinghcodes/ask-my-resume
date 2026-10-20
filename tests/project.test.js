@@ -53,7 +53,9 @@ describe("project checklist", () => {
     expect(vercel.fluid).toBe(true);
     expect(vercel.functions["api/chat.js"].maxDuration).toBe(60);
     expect(vercel.functions["api/health.js"].maxDuration).toBe(60);
-    expect(vercel.functions["api/chat.js"].includeFiles).toBe("mcp-server/resume.pdf");
+    expect(vercel.functions["api/chat.js"].includeFiles).toBe(
+      "frontend/public/Jay-Singh-Resume-Oct-2026.pdf",
+    );
     expect(vercel.rewrites).toEqual([
       { source: "/((?!api/).*)", destination: "/index.html" },
     ]);
@@ -98,7 +100,10 @@ describe("project checklist", () => {
     expect(fs.existsSync(path.join(root, "mcp-server", ".env.example"))).toBe(false);
     expect(fs.existsSync(path.join(root, "mcp-server", "index.js"))).toBe(false);
     expect(fs.existsSync(path.join(root, "mcp-server", "routes"))).toBe(false);
-    expect(fs.existsSync(path.join(root, "mcp-server", "resume.pdf"))).toBe(true);
+    expect(fs.existsSync(path.join(root, "mcp-server", "resume.pdf"))).toBe(false);
+    expect(
+      fs.existsSync(path.join(root, "frontend", "public", "Jay-Singh-Resume-Oct-2026.pdf")),
+    ).toBe(true);
     const serverPackage = fs.existsSync(path.join(root, "mcp-server", "package.json"))
       ? fs.readFileSync(path.join(root, "mcp-server", "package.json"), "utf8")
       : "";

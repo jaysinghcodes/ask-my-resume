@@ -12,7 +12,7 @@ Instead of a static resume PDF, anyone can ask about experience, skills, and rol
 
 ## Architecture
 
-The Vite app in `frontend/` builds to static files. `api/chat.js` (POST) and `api/health.js` (GET) are Node.js Vercel Functions on Fluid compute, with a 60 second max duration. They import the shared logic in `lib/`. The resume PDF stays at `mcp-server/resume.pdf`.
+The Vite app in `frontend/` builds to static files. `api/chat.js` (POST) and `api/health.js` (GET) are Node.js Vercel Functions on Fluid compute, with a 60 second max duration. They import the shared logic in `lib/`. The phone free resume PDF is `frontend/public/Jay-Singh-Resume-Oct-2026.pdf`.
 
 The page and the API share one origin. There is no CORS middleware and no separate API host.
 
@@ -55,7 +55,7 @@ Create the Vercel project from [docs/SETUP.md](docs/SETUP.md). Name it `ask-jay`
 - `kb/`: knowledge base records, JSON Schemas, and generated `kb/kb.json`
 - `scripts/build-kb.js`: validates `kb/` and writes `kb/kb.json` for the Vite app and the functions
 - `frontend/`: Vite app
-- `mcp-server/resume.pdf`: resume file kept until a later ticket
+- `frontend/public/Jay-Singh-Resume-Oct-2026.pdf`: phone free Oct 2026 resume
 - `docs/SETUP.md`: Jay's Anthropic and Vercel steps
 - `vercel.json`: build, output directory, Fluid compute, function duration, single page app fallback
 - `.github/workflows/ci.yml`: lint, typecheck, test, and build on every pull request
