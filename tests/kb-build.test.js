@@ -205,6 +205,69 @@ describe("knowledge base build", () => {
     expect(result.errors.join("\n")).toMatch(/kb\/faqs\.json id=faq-1 field=notes: banned term/);
   });
 
+  it.each([
+    ["double space", "Talked with Acme  Bank today."],
+    ["non breaking space", `Talked with Acme${"\u00A0"}Bank today.`],
+    ["em space", `Talked with Acme${"\u2003"}Bank today.`],
+  ])("fails a banned term hidden by a %s", (_label, displayText) => {
+    const dir = tempKb({
+      "bullets.json": [bullet({ display_text: displayText })],
+    });
+    const result = build(dir, { KB_BANNED_TERMS: "Acme Bank" });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors.join("\n")).toMatch(
+      /kb\/bullets\.json id=bullet-1 field=display_text: banned term/,
+    );
+    expect(outputMissing(dir)).toBe(true);
+  });
+
+  it("fails a banned term used as a key", () => {
+    const dir = tempKb({
+      "bullets.json": [bullet({ "Acme Bank": "alias" })],
+    });
+    const result = build(dir, { KB_BANNED_TERMS: "Acme Bank" });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors.join("\n")).toMatch(
+      /kb\/bullets\.json id=bullet-1 field=Acme Bank: banned term/,
+    );
+    expect(outputMissing(dir)).toBe(true);
+  });
+
+  it("fails a banned term on an unsure record", () => {
+    const dir = tempKb({
+      "bullets.json": [bullet({
+        confidence: "unsure",
+        display_text: "Worked with Acme Bank.",
+      })],
+    });
+    const result = build(dir, { KB_BANNED_TERMS: "Acme Bank" });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors.join("\n")).toMatch(/field=display_text: banned term/);
+    expect(outputMissing(dir)).toBe(true);
+  });
+
+  it("treats the env example placeholder as an unset banned term list", () => {
+    const example = fs.readFileSync(path.join(root, ".env.example"), "utf8");
+    const match = example.match(/^KB_BANNED_TERMS=(.+)$/m);
+    if (!match) throw new Error("expected KB_BANNED_TERMS in .env.example");
+    const placeholder = match[1];
+
+    const skipped = build(tempKb({
+      "bullets.json": [bullet({ display_text: `Mention ${placeholder} in public.` })],
+    }), { KB_BANNED_TERMS: placeholder });
+    expect(skipped.ok).toBe(true);
+    expect(skipped.warnings.join("\n")).toMatch(/KB_BANNED_TERMS is unset/);
+
+    const stillBanned = build(tempKb({
+      "bullets.json": [bullet({ display_text: "Worked with Acme Bank." })],
+    }), { KB_BANNED_TERMS: `${placeholder}, Acme Bank` });
+    expect(stillBanned.ok).toBe(false);
+    expect(stillBanned.errors.join("\n")).toMatch(/field=display_text: banned term/);
+  });
+
   it("does not fail a banned term that only sits on a nested private object", () => {
     const result = build(tempKb({
       "projects.json": [record({
@@ -223,29 +286,121 @@ describe("knowledge base build", () => {
   });
 
   it("fails a phone number pattern in a public field", () => {
-    const result = build(tempKb({
+    const dir = tempKb({
       "bullets.json": [bullet({
         resume_text: `Call ${fakePhone()} tomorrow.`,
         display_text: "Shipped the service.",
       })],
-    }));
+    });
+    const result = build(dir);
 
     expect(result.ok).toBe(false);
     expect(result.errors.join("\n")).toMatch(
       /kb\/bullets\.json id=bullet-1 field=resume_text: phone number/,
     );
+    expect(outputMissing(dir)).toBe(true);
   });
 
   it("fails a phone number pattern on a private record too", () => {
-    const result = build(tempKb({
+    const dir = tempKb({
       "bullets.json": [bullet({
         public: false,
         notes: `Reach ${fakePhone()}`,
       })],
-    }));
+    });
+    const result = build(dir);
 
     expect(result.ok).toBe(false);
     expect(result.errors.join("\n")).toMatch(/field=notes: phone number/);
+    expect(outputMissing(dir)).toBe(true);
+  });
+
+  it.each([
+    ["bare digits", () => digitGroups().join("")],
+    ["leading 1", () => `1${digitGroups().join("")}`],
+    ["compact plus 1", () => `${plusMark()}1${digitGroups().join("")}`],
+    ["tel compact", () => `tel:${plusMark()}1${digitGroups().join("")}`],
+    ["tel bare", () => `tel:${digitGroups().join("")}`],
+    ["tel with spaces", () => `tel: ${plusMark()}44 ${ukGroups().join(" ")}`],
+    ["paren without a space", () => `(${digitGroups()[0]})${digitGroups()[1]} ${digitGroups()[2]}`],
+    ["paren compact", () => `(${digitGroups()[0]})${digitGroups()[1]}${digitGroups()[2]}`],
+    ["dots", () => digitGroups().join(".")],
+    ["spaces", () => digitGroups().join(" ")],
+    ["hyphens", () => digitGroups().join("-")],
+    ["paren with a space", () => `(${digitGroups()[0]}) ${digitGroups()[1]}-${digitGroups()[2]}`],
+    ["plus 44 spaced", () => `${plusMark()}44 ${ukGroups().join(" ")}`],
+    ["plus 91 spaced", () => `${plusMark()}91 ${inGroups().join(" ")}`],
+    ["plus 44 compact", () => `${plusMark()}44${ukGroups().join("")}`],
+    ["plus 44 dotted", () => `${plusMark()}44.${ukGroups().join(".")}`],
+    ["plus 44 paren", () => `${plusMark()}44 (${digitGroups()[0]}) ${digitGroups()[1]} ${digitGroups()[2]}`],
+    ["non breaking space", () => digitGroups().join("\u00A0")],
+  ])("fails a %s phone form and does not write kb.json", (_label, makeText) => {
+    const dir = tempKb({
+      "bullets.json": [bullet({
+        display_text: `Call ${makeText()} today.`,
+      })],
+    });
+    fs.mkdirSync(path.join(dir, "out"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "out", "kb.json"), "{}\n");
+    const result = build(dir);
+
+    expect(result.ok).toBe(false);
+    expect(result.errors.join("\n")).toMatch(
+      /kb\/bullets\.json id=bullet-1 field=display_text: phone number/,
+    );
+    expect(outputMissing(dir)).toBe(true);
+  });
+
+  it("fails a phone number nested in a metric label", () => {
+    const dir = tempKb({
+      "bullets.json": [bullet({
+        metrics: [{ label: `Call ${digitGroups().join("-")}`, value: "1" }],
+      })],
+    });
+    const result = build(dir);
+
+    expect(result.ok).toBe(false);
+    expect(result.errors.join("\n")).toMatch(/field=metrics\[0\]\.label: phone number/);
+    expect(outputMissing(dir)).toBe(true);
+  });
+
+  it("passes years, dates, and ids that are not phone numbers", () => {
+    const result = build(tempKb({
+      "bullets.json": [bullet({
+        id: "rec-12345678",
+        as_of: "2026-10-18",
+        display_text: "Class of 2024. On 2026-10-18 the launch shipped.",
+        resume_text: "Shipped in 2026. Room 5555.",
+        story: { context: "Ticket 123456789 closed." },
+      })],
+    }), { KB_BANNED_TERMS: "Acme Bank" });
+
+    expect(result.ok).toBe(true);
+    expect(requireKb(result).bullets[0].id).toBe("rec-12345678");
+  });
+
+  it("passes a short plus code that is not an international number", () => {
+    const result = build(tempKb({
+      "bullets.json": [bullet({
+        display_text: `Extension ${plusMark()}445555 is an internal code.`,
+      })],
+    }));
+
+    expect(result.ok).toBe(true);
+  });
+
+  it("fails a phone number on an unsure record", () => {
+    const dir = tempKb({
+      "bullets.json": [bullet({
+        confidence: "unsure",
+        display_text: `Call ${digitGroups().join(" ")} today.`,
+      })],
+    });
+    const result = build(dir);
+
+    expect(result.ok).toBe(false);
+    expect(result.errors.join("\n")).toMatch(/field=display_text: phone number/);
+    expect(outputMissing(dir)).toBe(true);
   });
 
   it("rejects a phone field anywhere in the schema", () => {
@@ -274,6 +429,19 @@ describe("knowledge base build", () => {
     }));
     expect(story.ok).toBe(false);
     expect(story.errors.join("\n")).toMatch(/field=story\.phone: phone fields are not allowed/);
+  });
+
+  it.each([
+    ["Phone", () => bullet({ Phone: "hidden" }), /field=Phone: phone fields are not allowed/],
+    ["phone_number", () => bullet({ phone_number: "hidden" }), /field=phone_number: phone fields are not allowed/],
+    ["contact.mobile", () => bullet({ contact: { mobile: "hidden" } }), /field=contact\.mobile: mobile fields are not allowed/],
+  ])("rejects a %s key and does not write kb.json", (_label, makeBullet, pattern) => {
+    const dir = tempKb({ "bullets.json": [makeBullet()] });
+    const result = build(dir);
+
+    expect(result.ok).toBe(false);
+    expect(result.errors.join("\n")).toMatch(pattern);
+    expect(outputMissing(dir)).toBe(true);
   });
 
   it("leaves unsure and private records out of kb.json", () => {
@@ -442,6 +610,8 @@ describe("knowledge base build", () => {
     expect(setup).toMatch(/GitHub Actions/);
     expect(setup).toMatch(/Vercel/);
     expect(setup).toMatch(/\.env/);
+    expect(setup).toMatch(/kb-build\.js/);
+    expect(setup).toMatch(/UTC calendar date/);
   });
 });
 
@@ -490,6 +660,29 @@ function omit(value, key) {
 
 function fakePhone() {
   return ["555", "010", "0199"].join("-");
+}
+
+function digitGroups() {
+  return ["555", "555", "5555"];
+}
+
+function ukGroups() {
+  return ["5555", "555555"];
+}
+
+function inGroups() {
+  return ["55555", "55555"];
+}
+
+function plusMark() {
+  return "+";
+}
+
+/**
+ * @param {string} dir
+ */
+function outputMissing(dir) {
+  return !fs.existsSync(path.join(dir, "out", "kb.json"));
 }
 
 /**

@@ -38,7 +38,9 @@ Confirm preview deploys are on for pull requests. That is the default with the G
 
 The knowledge base build reads `KB_BANNED_TERMS`. The value is a comma separated list of terms that must not appear in a public field. Real client names belong in this list, not in the repo.
 
-If the variable is missing or blank, the build prints a warning and still succeeds. Set it in all three places below so the check actually runs.
+If the variable is missing, blank, or still the `.env.example` placeholder, the build prints a warning and still succeeds. Set it in all three places below so the check actually runs.
+
+`kb/kb.json` records `meta.built_at` as the UTC calendar date of the build.
 
 ### Local
 
@@ -68,7 +70,7 @@ If the variable is missing or blank, the build prints a warning and still succee
 
 ## Where shared logic lives
 
-Shared server logic lives in the root `lib/` directory: `claude.js`, `tools.js`, `prompts.js`, `resume.js`, `config.js`, and `chat.js`. `api/chat.js` and `api/health.js` import it, and so do the Vitest tests.
+Shared server logic lives in the root `lib/` directory: `claude.js`, `tools.js`, `prompts.js`, `resume.js`, `config.js`, `chat.js`, and `kb-build.js`. `api/chat.js` and `api/health.js` import it, and so do the Vitest tests.
 
 It used to live in `mcp-server/lib/`. It moved to the repo root so the functions and the tests import one copy, without a second package, and so `mcp-server/` only keeps `resume.pdf` until a later ticket replaces that file. The tool use loop itself is the same logic, with two required changes from this ticket: `MODEL_ID` comes from the environment with no fallback model, and the loop stops after 5 tool rounds.
 
