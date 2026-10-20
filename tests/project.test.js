@@ -38,11 +38,11 @@ describe("project checklist", () => {
     expect(ui).not.toContain("/health");
   });
 
-  it("removes the Pages base path from the Vite config", () => {
+  it("serves GitHub Pages from /ask-my-resume and Vercel from /", () => {
     const vite = fs.readFileSync(path.join(root, "frontend", "vite.config.js"), "utf8");
     const app = fs.readFileSync(path.join(root, "frontend", "src", "App.jsx"), "utf8");
-    expect(vite).not.toContain("/ask-my-resume");
-    expect(app).not.toContain("basename");
+    expect(vite).toContain('process.env.VERCEL ? "/" : "/ask-my-resume/"');
+    expect(app).toContain("basename={routerBasename()}");
     expect(vite).toContain('target: "http://127.0.0.1:3000"');
   });
 
