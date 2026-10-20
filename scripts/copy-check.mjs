@@ -2,7 +2,8 @@
  * Copy check for the built site (T13). Scans all rendered copy:
  *   frontend/dist/index.html: the prerendered home page, the meta tags and the Person JSON LD,
  *   frontend/dist-copy/*.html: the server render of every route (home, /about, /contact,
- *     the 404 page) and of ContactPage, written by the build's prerender step,
+ *     the 404 page), of ContactPage and of the open menu sheet, written by the build's
+ *     prerender step,
  *   frontend/src: copy that only shows after an interaction (menu, chat states, errors,
  *     route titles), read from JSX text, copy attributes and prose string literals,
  * for:
@@ -10,6 +11,8 @@
  *   arrows (Unicode arrows, "->", "<-", "=>"),
  *   phone numbers (the same rule as scripts/phone-scan.mjs),
  *   KB_BANNED_TERMS (comma separated, from the environment; skipped when unset).
+ * HTML entities are decoded first, repeatedly, so "&larr;", "&rarr;", "&mdash;" and a
+ * double encoded "&amp;rarr;" count like a literal arrow or dash.
  * Output names the file, the rule and the item number only, never the matched text,
  * so a banned term is not echoed into CI logs.
  */
@@ -26,7 +29,25 @@ const DEFAULT_FILES = ["frontend/dist/index.html"];
 const COPY_DIR = "frontend/dist-copy";
 const SOURCE_DIR = "frontend/src";
 /** The snapshots the prerender step must write. A missing one fails the check. */
-export const REQUIRED_SNAPSHOTS = ["home.html", "about.html", "contact.html", "not-found.html", "contact-page.html"];
+export const REQUIRED_SNAPSHOTS = ["home.html", "about.html", "contact.html", "not-found.html", "contact-page.html", "menu-open.html"];
+
+/**
+ * Decode HTML entities until nothing changes, so double (or deeper) encoded entities
+ * such as "&amp;larr;" come out as the character they stand for.
+ * @param {string} value
+ * @returns {string}
+ */
+export function decodeAll(value) {
+  let current = value;
+  for (let round = 0; round < 5; round += 1) {
+    const next = decode(current);
+    if (next === current) break;
+    current = next;
+  }
+  return current;
+}
+
+const ENTITY = /&(?:#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);/i;
 
 const DASH = /[\u2012-\u2015\u2E3A\u2E3B\uFE58\uFE63\uFF0D]|\s-\s|--/;
 const ARROW = /[\u2190-\u21FF\u27F0-\u27FF\u2900-\u297F\u2B00-\u2B4F]|->|<-|=>/;
@@ -56,11 +77,11 @@ export function extractCopy(html) {
       if (!value) continue;
       if (name === "content" && !/\s(name|property)="(description|og:[a-z:]+|twitter:[a-z:]+)"/i.test(attrs)) continue;
       if (name === "content" && /^https?:\/\//.test(value[1])) continue;
-      out.push(decode(value[1]));
+      out.push(decodeAll(value[1]));
     }
   }
   for (const text of body.replace(/<[^>]+>/g, "\n").split("\n")) {
-    const value = decode(text).trim();
+    const value = decodeAll(text).trim();
     if (value) out.push(value);
   }
   return out;
@@ -119,17 +140,21 @@ export function extractSourceCopy(source, fileName = "file.jsx") {
   /** @param {import("typescript").Node} node */
   const visit = (node) => {
     if (ts.isJsxText(node)) {
-      const text = node.text.replace(/\s+/g, " ").trim();
-      if (/[A-Za-z]/.test(text)) out.push(text);
+      // The JSX compiler decodes entities in JSX text, so "&larr; Close" renders an arrow.
+      const text = decodeAll(node.text).replace(/\s+/g, " ").trim();
+      if (/[A-Za-z]/.test(text) || (ENTITY.test(node.text) && text)) out.push(text);
     } else if (ts.isJsxAttribute(node) && node.initializer && ts.isStringLiteral(node.initializer)) {
-      if (COPY_ATTRS.includes(node.name.getText())) out.push(node.initializer.text);
-      else if (!CODE_ATTRS.test(node.name.getText()) && isProse(node.initializer.text)) out.push(node.initializer.text);
+      const raw = node.initializer.text;
+      if (COPY_ATTRS.includes(node.name.getText())) out.push(decodeAll(raw));
+      else if (!CODE_ATTRS.test(node.name.getText()) && (isProse(raw) || ENTITY.test(raw))) out.push(decodeAll(raw));
       return;
     } else if ((ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) && !skip(node)) {
-      if (isProse(node.text)) out.push(node.text);
+      // An entity in a string literal is copy too: React prints it as is, so it shows up
+      // double encoded in the HTML ("&amp;rarr;") and the check reads it as the arrow.
+      if (isProse(node.text) || ENTITY.test(node.text)) out.push(decodeAll(node.text));
     } else if (ts.isTemplateExpression(node) && !skip(node)) {
       const parts = [node.head.text, ...node.templateSpans.map((span) => span.literal.text)].join(" ");
-      if (isProse(parts)) out.push(parts);
+      if (isProse(parts) || ENTITY.test(parts)) out.push(decodeAll(parts));
     } else if (ts.isRegularExpressionLiteral(node)) {
       return;
     }

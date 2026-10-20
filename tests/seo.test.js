@@ -14,7 +14,7 @@ import {
 } from "../frontend/src/seo.js";
 import { canHydrate } from "../frontend/src/can-hydrate.js";
 import os from "os";
-import { REQUIRED_SNAPSHOTS, checkCopy, extractCopy, extractSourceCopy, main as copyCheck, parseBannedTerms } from "../scripts/copy-check.mjs";
+import { REQUIRED_SNAPSHOTS, checkCopy, decodeAll, extractCopy, extractSourceCopy, main as copyCheck, parseBannedTerms } from "../scripts/copy-check.mjs";
 import { applyPageMeta } from "../frontend/src/usePageMeta.js";
 import { BROWSER_KB_OMIT, browserKb } from "../frontend/vite.config.js";
 
@@ -302,6 +302,71 @@ describe("copy check covers every route and the page source", () => {
   it("fails when a route snapshot is missing", () => {
     const dir = tree((d) => fs.rmSync(path.join(d, "frontend/dist-copy/not-found.html")));
     expect(run(dir)).toBe(2);
+  });
+
+  // #12 QA line (Atlas, from #31 QA): entities are decoded, including double encoded ones.
+  it("a fixture with &larr; in button copy fails the copy check", () => {
+    const dir = tree((d) => {
+      const file = path.join(d, "frontend/src/components/MobileMenu.jsx");
+      const source = fs.readFileSync(file, "utf8");
+      expect(source).toMatch(/>\s*Close\s*</);
+      fs.writeFileSync(file, source.replace(/>(\s*)Close(\s*)</, ">$1&larr; Close$2<"));
+    });
+    expect(run(dir)).toBe(1);
+  });
+
+  it("fails on &rarr;, &mdash;, &ndash; and numeric arrow entities in JSX text", () => {
+    for (const bad of ["&rarr; Close", "Close &mdash; now", "Close &ndash; now", "&#8592; Close", "&#x2192; Close", "&rarr;"]) {
+      const dir = tree((d) => {
+        const file = path.join(d, "frontend/src/components/MobileMenu.jsx");
+        fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace(/>(\s*)Close(\s*)</, `>$1${bad}$2<`));
+      });
+      expect(run(dir), bad).toBe(1);
+    }
+  });
+
+  it("fails on an entity in a string literal or a copy attribute in the source", () => {
+    for (const [find, bad] of [
+      ['aria-label="Menu"', 'aria-label="Menu &rarr;"'],
+      ['aria-label="Menu"', 'aria-label="Menu &amp;rarr;"'],
+    ]) {
+      const dir = tree((d) => {
+        const file = path.join(d, "frontend/src/components/MobileMenu.jsx");
+        const source = fs.readFileSync(file, "utf8");
+        expect(source).toContain(find);
+        fs.writeFileSync(file, source.replace(find, bad));
+      });
+      expect(run(dir), bad).toBe(1);
+    }
+    const literal = tree((d) => fs.writeFileSync(path.join(d, "frontend/src/extra-copy.js"), 'export const BACK = "&larr;";\n'));
+    expect(run(literal)).toBe(1);
+  });
+
+  it("fails when the open menu snapshot has an arrow, single or double encoded", () => {
+    for (const bad of ["\u2190 Close", "&larr; Close", "&amp;larr; Close", "&amp;amp;rarr; Close"]) {
+      const dir = tree((d) => {
+        fs.writeFileSync(
+          path.join(d, "frontend/dist-copy/menu-open.html"),
+          `<html><body><div class="sheet"><div role="dialog" aria-label="Menu"><button class="sheet-close">${bad}</button></div></div></body></html>`,
+        );
+      });
+      expect(run(dir), bad).toBe(1);
+    }
+  });
+
+  it("requires the open menu snapshot", () => {
+    expect(REQUIRED_SNAPSHOTS).toContain("menu-open.html");
+    const dir = tree((d) => fs.rmSync(path.join(d, "frontend/dist-copy/menu-open.html")));
+    expect(run(dir)).toBe(2);
+  });
+
+  it("decodes entities until nothing changes", () => {
+    expect(decodeAll("&larr;")).toBe("\u2190");
+    expect(decodeAll("&amp;rarr;")).toBe("\u2192");
+    expect(decodeAll("&amp;amp;mdash;")).toBe("\u2014");
+    expect(decodeAll("Fish &amp; chips")).toBe("Fish & chips");
+    expect(extractCopy("<p>&amp;larr; Back</p>")).toEqual(["\u2190 Back"]);
+    expect(extractSourceCopy("export const A = () => <button>&larr; Close</button>;", "a.jsx")).toEqual(["\u2190 Close"]);
   });
 
   it("reads JSX text, copy attributes and prose strings, not code", () => {
