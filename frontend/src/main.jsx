@@ -11,6 +11,7 @@ import "@fontsource/jetbrains-mono/latin-500.css";
 import "./styles/tokens.css";
 import "./styles/shell.css";
 import "./styles/ask.css";
+import "./styles/resume.css";
 import App from "./App.jsx";
 
 const root = document.getElementById("root");

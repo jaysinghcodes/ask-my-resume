@@ -41,6 +41,9 @@ function kbMeta() {
 export default defineConfig({
   plugins: [react(), kbMeta()],
   server: {
+    fs: {
+      allow: [repoRoot],
+    },
     proxy: {
       "/api": {
         target: "http://127.0.0.1:3000",
