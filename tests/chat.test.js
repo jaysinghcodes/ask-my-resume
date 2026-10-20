@@ -307,6 +307,62 @@ describe("POST /api/chat", () => {
     expect(events[0]?.data.text).toBe(FRIENDLY.daily_cap);
   });
 
+  it("aborts the upstream model call when the client cancels", async () => {
+    const actual = await vi.importActual("../lib/claude.js");
+    /** @type {AbortSignal | undefined} */
+    let upstream;
+    const stream = vi.fn((_body, options) => {
+      upstream = options?.signal;
+      return {
+        on() {
+          return this;
+        },
+        finalMessage() {
+          return new Promise((_resolve, reject) => {
+            const requestSignal = options?.signal;
+            if (!requestSignal) {
+              reject(new Error("missing signal"));
+              return;
+            }
+            if (requestSignal.aborted) {
+              reject(requestSignal.reason ?? new Error("aborted"));
+              return;
+            }
+            requestSignal.addEventListener(
+              "abort",
+              () => {
+                reject(requestSignal.reason ?? new Error("aborted"));
+              },
+              { once: true },
+            );
+          });
+        },
+      };
+    });
+    /** @type {import("vitest").Mock} */ (createClient).mockImplementationOnce(() => ({
+      messages: { stream },
+    }));
+    /** @type {import("vitest").Mock} */ (streamAgenticLoop).mockImplementationOnce(
+      /** @type {any} */ (actual).streamAgenticLoop,
+    );
+
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    process.env.MODEL_ID = "model-from-env";
+    process.env.IP_HASH_SALT = "salt";
+    const response = await POST(chatRequest({ messages: [{ role: "user", content: "Hi" }] }));
+    const reader = response.body?.getReader();
+    expect(reader).toBeTruthy();
+    await vi.waitFor(() => {
+      expect(stream).toHaveBeenCalledTimes(1);
+    });
+    await reader?.cancel();
+    await vi.waitFor(() => {
+      expect(upstream?.aborted).toBe(true);
+    });
+    expect(stream).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(console.error).mock.calls.map((call) => String(call[0]))).not.toContain("Chat error");
+  });
+
   it("answers question 7 from the history window that starts on a user turn", async () => {
     /** @type {{ role: string, content: string }[]} */
     const history = [];

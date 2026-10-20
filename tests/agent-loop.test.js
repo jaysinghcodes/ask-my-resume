@@ -7,6 +7,7 @@ import {
   statusTextForTool,
   streamAgenticLoop,
 } from "../lib/claude.js";
+import { SYSTEM_PROMPT } from "../lib/prompts.js";
 
 /**
  * @param {string} id
@@ -162,15 +163,42 @@ describe("streamAgenticLoop", () => {
     vi.restoreAllMocks();
   });
 
-  it("emits final answer deltas only after the turn is not a tool call", async () => {
-    /** @type {(value?: void) => void} */
-    let release = () => {};
-    const hold = new Promise((resolve) => {
-      release = resolve;
+  it("emits the first delta well before the answer is done", async () => {
+    const gapMs = 150;
+    const stream = vi.fn(() => {
+      const deltas = ["Jay ", "has ", "AWS experience."];
+      return {
+        /** @type {((delta: string) => void) | null} */
+        _onText: null,
+        /**
+         * @param {string} event
+         * @param {(delta: string) => void} listener
+         */
+        on(event, listener) {
+          if (event === "text") this._onText = listener;
+          return this;
+        },
+        async finalMessage() {
+          /** @type {string[]} */
+          const parts = [];
+          for (let index = 0; index < deltas.length; index += 1) {
+            if (index > 0) await new Promise((resolve) => setTimeout(resolve, gapMs));
+            const delta = deltas[index] ?? "";
+            parts.push(delta);
+            this._onText?.(delta);
+          }
+          return {
+            stop_reason: "end_turn",
+            content: [{ type: "text", text: parts.join("") }],
+          };
+        },
+      };
     });
-    const stream = vi.fn(() => textStream(["Jay ", "has AWS experience."], hold));
     /** @type {import("../lib/claude.js").StreamPart[]} */
     const parts = [];
+    const started = performance.now();
+    let firstDeltaAt = 0;
+    let settled = false;
     const pending = streamAgenticLoop(
       /** @type {any} */ ({ messages: { stream } }),
       {
@@ -178,20 +206,33 @@ describe("streamAgenticLoop", () => {
         messages: [{ role: "user", content: "Skills?" }],
         model: "model-from-env",
       },
-      (part) => parts.push(part),
-    );
+      (part) => {
+        if (part.type === "delta" && firstDeltaAt === 0) firstDeltaAt = performance.now();
+        parts.push(part);
+      },
+    ).then((value) => {
+      settled = true;
+      return value;
+    });
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
-    expect(parts).toEqual([]);
-    release();
+    await vi.waitFor(() => {
+      expect(parts[0]).toEqual({ type: "delta", text: "Jay " });
+    });
+    expect(firstDeltaAt - started).toBeLessThan(100);
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    expect(settled).toBe(false);
+    expect(parts.map((part) => part.text).join("")).not.toContain("AWS experience.");
     await expect(pending).resolves.toBe("Jay has AWS experience.");
-    expect(parts).toEqual([
-      { type: "delta", text: "Jay " },
-      { type: "delta", text: "has AWS experience." },
+    const doneAt = performance.now();
+    expect(doneAt - firstDeltaAt).toBeGreaterThan(gapMs);
+    expect(parts.filter((part) => part.type === "delta").map((part) => part.text)).toEqual([
+      "Jay ",
+      "has ",
+      "AWS experience.",
     ]);
   });
 
-  it("never streams text written before a tool call", async () => {
+  it("starts the final answer with a separator after text written before a tool call", async () => {
     const preamble = "Let me check the resume.";
     const stream = vi
       .fn()
@@ -209,14 +250,14 @@ describe("streamAgenticLoop", () => {
       (part) => parts.push(part),
     );
 
-    const deltas = parts.filter((part) => part.type === "delta").map((part) => part.text).join("");
-    expect(deltas).toBe("The resume lists AWS.");
-    expect(result).toBe("The resume lists AWS.");
-    expect(deltas).not.toContain(preamble);
-    expect(result).not.toContain(preamble);
+    const deltas = parts.filter((part) => part.type === "delta").map((part) => part.text);
+    expect(deltas[0]).toBe(preamble);
+    expect(deltas.join("")).toBe(`${preamble}\n\nThe resume lists AWS.`);
+    expect(result).toBe("\n\nThe resume lists AWS.");
     expect(parts.filter((part) => part.type === "status")).toEqual([
       { type: "status", text: "Searching the resume" },
     ]);
+    expect(JSON.stringify(parts)).not.toContain("discard");
   });
 
   it("emits status while a tool runs, then streams the final text", async () => {
@@ -244,9 +285,10 @@ describe("streamAgenticLoop", () => {
     );
 
     await vi.waitFor(() => {
-      expect(parts[0]).toEqual({ type: "status", text: "Searching the resume" });
+      expect(parts.some((part) => part.type === "delta" && part.text === "Grounded ")).toBe(true);
     });
-    expect(parts.some((part) => part.type === "delta")).toBe(false);
+    expect(parts[0]).toEqual({ type: "status", text: "Searching the resume" });
+    expect(parts.map((part) => part.text).join("")).not.toContain("answer.");
     expect(stream).toHaveBeenCalledWith(
       expect.objectContaining({ model: "model-from-env", max_tokens: 128 }),
       undefined,
@@ -281,9 +323,15 @@ describe("streamAgenticLoop", () => {
       ),
     ).rejects.toBeInstanceOf(ToolRoundLimitError);
     expect(stream).toHaveBeenCalledTimes(MAX_TOOL_ROUNDS);
-    expect(parts.some((part) => part.type === "delta")).toBe(false);
-    expect(JSON.stringify(parts)).not.toContain(preamble);
+    expect(parts.filter((part) => part.type === "delta").map((part) => part.text).join("")).toContain(
+      preamble,
+    );
     expect(parts.filter((part) => part.type === "status")).toHaveLength(MAX_TOOL_ROUNDS);
+  });
+
+  it("tells the model to call tools without narrating first", () => {
+    expect(SYSTEM_PROMPT).toContain("Call tools without narrating first.");
+    expect(SYSTEM_PROMPT).toContain("Do not write text before a tool call");
   });
 
   it("names project doc search for a tool other than the resume", () => {

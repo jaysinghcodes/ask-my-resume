@@ -258,6 +258,7 @@ describe("chat limits", () => {
 
     process.env.ANTHROPIC_API_KEY = "test-key";
     process.env.MODEL_ID = "model-from-env";
+    process.env.IP_HASH_SALT = "salt";
     const evilPreview = await POST(
       chatRequest(
         { messages: [{ role: "user", content: "Hi" }] },
@@ -545,7 +546,35 @@ describe("chat limits", () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  it("warns and uses a development salt when IP_HASH_SALT is missing outside production", async () => {
+  it("fails closed on a Vercel preview when IP_HASH_SALT is missing and does not hash or store", async () => {
+    process.env.VERCEL_ENV = "preview";
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = "ask-jay.vercel.app";
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    process.env.MODEL_ID = "model-from-env";
+    const fetchImpl = vi.fn(async () => new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchImpl);
+    const headers = {
+      origin: "https://ask-jay-git-cursor-team-singh-solutions.vercel.app",
+      "x-forwarded-for": RAW_IP,
+    };
+    const body = { messages: [{ role: "user", content: "Hi" }] };
+
+    const response = await POST(chatRequest(body, headers));
+    expect(response.status).toBe(503);
+    expect(await response.text()).toContain(
+      `data: ${JSON.stringify({ code: "server", text: FRIENDLY.server })}`,
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(hashCallCount()).toBe(0);
+    expect(listMemoryKeys()).toEqual([]);
+    expect(String(vi.mocked(console.error).mock.calls[0]?.[0])).toBe(
+      "IP_HASH_SALT is unset. Chat is unavailable until the salt is set.",
+    );
+    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain(RAW_IP);
+  });
+
+  it("warns and uses a development salt when IP_HASH_SALT is missing in local development", async () => {
+    process.env.VERCEL_ENV = "development";
     process.env.ANTHROPIC_API_KEY = "test-key";
     process.env.MODEL_ID = "model-from-env";
     const headers = { "x-forwarded-for": RAW_IP };
@@ -583,6 +612,8 @@ describe("chat limits", () => {
     expect(setup).toContain("fixed window");
     expect(setup).toContain("Firewall");
     expect(setup).toContain("429");
+    expect(setup).toContain("both Preview and Production");
+    expect(setup).toContain("Issue 13");
     expect(setup).not.toContain("Set the action to deny");
     expect(setup).not.toMatch(/[—–→←↓↑⇒]/);
   });

@@ -30,7 +30,7 @@ Set both variables for Production and for Preview.
 
 `KB_BANNED_TERMS` is the comma separated list from section 5. It is not an API key. Set it locally, as a GitHub Actions secret, and as a Vercel environment variable.
 
-`IP_HASH_SALT` is a long random string. Set it for Production and Preview. The chat function hashes visitor IPs with this salt and stores only the hash. In production, chat stays unavailable until this salt is set. The function logs why and does not hash or store an IP. Local development warns once and uses a temporary salt.
+`IP_HASH_SALT` is a long random string. Set it in Vercel for both Preview and Production. The chat function hashes visitor IPs with this salt and stores only the hash. If the salt is missing on Preview or Production, chat stays unavailable. The function logs why and does not hash or store an IP. Local development warns once and uses a temporary salt.
 
 The cap variables in `.env.example` are optional. Empty values use the defaults: 12 messages of history, 8,000 characters per message, 30 questions per IP per day, 500 questions per day for the whole site, 1,024 output tokens, a 60 second request timeout, and 5 tool rounds. Sections 6 and 7 are the Jay setup for Redis and the firewall rule.
 
@@ -111,7 +111,7 @@ Copy `.env.example` to `.env` and fill in `ANTHROPIC_API_KEY`, `MODEL_ID`, and `
 
 Counters for the per IP daily cap and the site daily cap live in Upstash Redis on the free tier. Function instances do not share memory, so the counters have to live outside the function. If neither the Upstash REST pair nor the KV REST pair is set, the function falls back to in memory counters and logs that once. That fallback is for local development and tests. Production and Preview need Redis, or the caps reset whenever a new instance starts. With Redis, the per IP cap and the site cap reset at midnight UTC.
 
-The function stores an IP only as a salted hash. The key expires after 24 hours. Set `IP_HASH_SALT` to a long random string for Production and Preview. Do not commit the salt. In production, a missing salt keeps chat unavailable. The function logs one line that says why, and it does not hash or store an IP. Local development warns once and uses a temporary salt.
+The function stores an IP only as a salted hash. The key expires after 24 hours. Set `IP_HASH_SALT` in Vercel for both Preview and Production. Do not commit the salt. If the salt is missing on Preview or Production, chat stays unavailable. The function logs one line that says why, and it does not hash or store an IP. Local development warns once and uses a temporary salt.
 
 ### Jay setup
 
@@ -138,3 +138,7 @@ Vercel Hobby allows one rate limit rule. Use it on `/api/chat`. This is separate
 7. Keep the Default action, which returns 429. The page shows the rate limited text for that response. A deny action returns 403, and the page would not show that text.
 
 The function still enforces its own caps after the firewall: 30 questions per IP per day, and 500 questions per day for the whole site. Change those with `CHAT_PER_IP_DAILY` and `CHAT_SITE_DAILY` if you need to. The defaults are in `.env.example`.
+
+## 8. Cutover
+
+Issue 13 moves the live site from GitHub Pages to Vercel. Before that cutover, set `IP_HASH_SALT` in Vercel for both Preview and Production. Chat stays unavailable on either environment until the salt is set.
