@@ -119,6 +119,13 @@ describe("layout shell", () => {
     expect(html).not.toContain("fonts.gstatic.com");
     expect(main).toContain("@fontsource/source-serif-4/latin-400.css");
     expect(main).toContain("@fontsource/inter/latin-400.css");
+    const shell = read("frontend/src/styles/shell.css");
+    expect(shell).toContain("font-size: 18px;");
+    expect(shell).toContain("line-height: 1.65;");
+    expect(shell).toContain("font-size: 19px;");
+    expect(shell).toContain("padding-top: 48px;");
+    expect(shell).toContain("padding-bottom: 64px;");
+    expect(shell).not.toContain("padding: 48px 0 64px;");
     expect(main).toContain("@fontsource/jetbrains-mono/latin-400.css");
     expect(main).not.toContain("@mui/material");
     expect(ui).not.toContain("@mui/material");

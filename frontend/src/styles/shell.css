@@ -336,7 +336,8 @@ a {
 }
 
 .not-found {
-  padding: 48px 0 64px;
+  padding-top: 48px;
+  padding-bottom: 64px;
 }
 
 .not-found h1 {
