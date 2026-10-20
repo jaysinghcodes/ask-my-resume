@@ -19,7 +19,7 @@ export function ContactPage() {
         mx: "auto",
         px: { xs: 1.5, sm: 2 },
         py: { xs: 3, sm: 4 },
-        pt: { xs: 7, sm: 8 },
+        pt: { xs: 3, sm: 4 },
         pb: { xs: 4, sm: 5 },
         boxSizing: "border-box",
       }}

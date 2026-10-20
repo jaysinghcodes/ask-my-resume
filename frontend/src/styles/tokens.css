@@ -1,0 +1,18 @@
+:root {
+  --bg: #fcfbf9;
+  --ink: #191919;
+  --text: #2b2b2b;
+  --muted: #6b6b6b;
+  --faint: #9a9a9a;
+  --hair: #eae6e1;
+  --card: #ffffff;
+  --wash: #f5f1ed;
+  --accent: #8a5a44;
+  --sans: "Inter", system-ui, sans-serif;
+  --serif: "Source Serif 4", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px rgba(60, 40, 20, 0.05);
+  --reading: 720px;
+  --wide: 1040px;
+  --nav-h: 64px;
+}

@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect } from "react";
-import { Box } from "@mui/material";
-import { API_URL, CHAT_ERROR_MESSAGE } from "../config/constants";
-import { ChatHeader, EmptyState, ChatInput, MessagesList } from "../components";
+import { useEffect, useRef, useState } from "react";
+import { API_URL, CHAT_ERROR_MESSAGE, SUGGESTED_QUESTIONS } from "../config/constants";
+import { Message, ReadingColumn } from "../components";
 
 /**
  * @typedef {{ role: string, content: string }} ChatMessage
@@ -13,10 +12,18 @@ export function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const messagesEndRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const inputRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, loading, error]);
+
+  function resizeInput() {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 160) + "px";
+  }
 
   async function requestAnswer(history) {
     setError("");
@@ -55,6 +62,7 @@ export function ChatPage() {
     const newMessages = [...messages, { role: "user", content: question }];
     setMessages(newMessages);
     setInput("");
+    if (inputRef.current) inputRef.current.style.height = "auto";
     requestAnswer(newMessages);
   }
 
@@ -70,66 +78,79 @@ export function ChatPage() {
     }
   }
 
+  const showThread = messages.length > 0 || loading || Boolean(error);
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-        width: "100%",
-        maxWidth: 860,
-        mx: "auto",
-        px: { xs: 1.5, sm: 2 },
-        pt: 1,
-        pb: { xs: 2, sm: 0 },
-        boxSizing: "border-box",
-        minWidth: 0,
-      }}
-    >
-      <ChatHeader />
+    <ReadingColumn className="ask-section">
+      <p className="kicker">Ask Jay</p>
+      <h1>Ask about my experience</h1>
+      <p className="ask-sub">
+        An assistant that answers from my resume, project docs and repos, and cites where each
+        answer came from.
+      </p>
 
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          overflowY: "auto",
-          overflowX: "hidden",
-          py: { xs: 2, sm: 3 },
-          minHeight: 0,
-          WebkitOverflowScrolling: "touch",
-          "&::-webkit-scrollbar": { width: 4 },
-          "&::-webkit-scrollbar-track": { background: "transparent" },
-          "&::-webkit-scrollbar-thumb": {
-            bgcolor: "divider",
-            borderRadius: 2,
-          },
-        }}
-      >
-        {messages.length === 0 && !loading ? (
-          <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <Box sx={{ flex: 1, minHeight: 24 }} />
-            <EmptyState onAsk={sendMessage} />
-          </Box>
-        ) : (
-          <MessagesList
-            messages={messages}
-            loading={loading}
-            messagesEndRef={messagesEndRef}
+      <div className="ask-card">
+        <form
+          className="ask-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            sendMessage(input);
+          }}
+        >
+          <textarea
+            ref={inputRef}
+            rows={1}
+            value={input}
+            placeholder="Ask about a role, a project, or paste a job description"
+            aria-label="Ask about a role, a project, or paste a job description"
+            disabled={loading}
+            onChange={(event) => {
+              setInput(event.target.value);
+              resizeInput();
+            }}
+            onKeyDown={handleKeyDown}
           />
-        )}
-      </Box>
+          <button className="ask-go" type="submit" disabled={loading || input.trim() === ""}>
+            Ask
+          </button>
+        </form>
 
-      <ChatInput
-        value={input}
-        onChange={setInput}
-        onSend={sendMessage}
-        onKeyDown={handleKeyDown}
-        loading={loading}
-        error={error}
-        onRetry={retry}
-        onDismissError={() => setError("")}
-      />
-    </Box>
+        <div className="chips">
+          {SUGGESTED_QUESTIONS.map((question) => (
+            <button
+              key={question}
+              type="button"
+              disabled={loading}
+              onClick={() => sendMessage(question)}
+            >
+              {question}
+            </button>
+          ))}
+        </div>
+
+        {showThread && (
+          <div className="convo">
+            {messages.map((message, index) => (
+              <Message key={`${message.role}-${index}`} role={message.role} content={message.content} />
+            ))}
+            {loading && <p className="ask-status">Looking that up.</p>}
+            {error && (
+              <div className="ask-error" role="alert">
+                <p>{error}</p>
+                <button type="button" className="ask-retry" onClick={retry} disabled={loading}>
+                  Try again
+                </button>
+                <button type="button" className="ask-dismiss" onClick={() => setError("")}>
+                  Dismiss
+                </button>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+
+        <div className="ask-foot">Answers are grounded in the resume.</div>
+      </div>
+    </ReadingColumn>
   );
 }
