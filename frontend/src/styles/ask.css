@@ -3,16 +3,6 @@
   padding-bottom: 56px;
 }
 
-.kicker {
-  margin: 0;
-  font-family: var(--sans);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
 .ask-section h1 {
   margin: 8px 0 10px;
   font-family: var(--sans);
