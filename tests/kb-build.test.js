@@ -399,14 +399,31 @@ describe("knowledge base build", () => {
       "bullets.json": [bullet({
         id: "rec-12345678",
         as_of: "2026-10-18",
-        display_text: "Class of 2024. On 2026-10-18 the launch shipped.",
-        resume_text: "Shipped in 2026. Room 5555.",
+        display_text: "Class of 2024. On 2026-10-18 the launch shipped. Logged 2026-10-19T21:07:00Z.",
+        resume_text: "Shipped in 2026. Room 5555. Build abc1234.",
         story: { context: "Ticket 123456789 closed." },
+        metrics: [{ value: 2026, label: "year" }, { value: 75, label: "share" }],
       })],
     }), { KB_BANNED_TERMS: "Acme Bank" });
 
     expect(result.ok).toBe(true);
     expect(requireKb(result).bullets[0].id).toBe("rec-12345678");
+  });
+
+  it("passes an allowlisted id and still fails a different phone number", () => {
+    const allowedId = ["1234567", "890123"].join("");
+    const listed = build(tempKb({
+      "phone-allowlist.txt": `${allowedId}\tfixture id, not a phone number\n`,
+      "bullets.json": [bullet({ display_text: `Ref ${allowedId} is public.` })],
+    }));
+    expect(listed.ok).toBe(true);
+
+    const stillPhone = build(tempKb({
+      "phone-allowlist.txt": `${allowedId}\tfixture id, not a phone number\n`,
+      "bullets.json": [bullet({ display_text: `Call ${digitGroups().join(" ")} today.` })],
+    }));
+    expect(stillPhone.ok).toBe(false);
+    expect(stillPhone.errors.join("\n")).toMatch(/field=display_text: phone number/);
   });
 
   it("passes a short plus code that is not an international number", () => {
@@ -417,6 +434,124 @@ describe("knowledge base build", () => {
     }));
 
     expect(result.ok).toBe(true);
+  });
+
+  it.each([
+    ["resume_text", "resume_text"],
+    ["notes", "notes"],
+    ["display_text", "display_text"],
+  ])("fails unicode dashes in %s", (label, field) => {
+    for (const code of [0x2010, 0x2011, 0x2012, 0x2013, 0x2014, 0x2015, 0x2212]) {
+      const dash = String.fromCodePoint(code);
+      const dir = tempKb({
+        "bullets.json": [bullet({
+          [field]: `Call ${digitGroups().join(dash)} today.`,
+        })],
+      });
+      const result = build(dir);
+      expect(result.ok, label).toBe(false);
+      expect(result.errors.join("\n")).toMatch(new RegExp(`field=${field}: phone number`));
+      expect(outputMissing(dir)).toBe(true);
+    }
+  });
+
+  it("fails a phone number used as a key", () => {
+    const key = ["555", "555", "0123"].join("");
+    const dir = tempKb({
+      "bullets.json": [bullet({
+        story: { [key]: "call" },
+      })],
+    });
+    const result = build(dir);
+    expect(result.ok).toBe(false);
+    expect(result.errors.join("\n")).toMatch(new RegExp(`field=story\\.${key}: phone number`));
+    expect(outputMissing(dir)).toBe(true);
+
+    const spacedKey = `${plusMark()}1 ${digitGroups().join(" ")}`;
+    const parenKey = `(${digitGroups()[0]}) ${digitGroups()[1]}-${digitGroups()[2]}`;
+    for (const phoneKey of [spacedKey, parenKey]) {
+      const nested = build(tempKb({
+        "bullets.json": [bullet({
+          metrics: [{ [phoneKey]: "call", value: "1" }],
+        })],
+      }));
+      expect(nested.ok).toBe(false);
+      expect(nested.errors.join("\n")).toMatch(/field=metrics\[0\].*: phone number/);
+    }
+  });
+
+  it("fails a phone number stored as a JSON number", () => {
+    const ten = Number(["555", "555", "0123"].join(""));
+    const eleven = Number(`1${["555", "555", "0123"].join("")}`);
+    const metric = tempKb({
+      "bullets.json": [bullet({ metrics: [{ value: ten }] })],
+    });
+    const metricResult = build(metric);
+    expect(metricResult.ok).toBe(false);
+    expect(metricResult.errors.join("\n")).toMatch(/field=metrics\[0\]\.value: phone number/);
+    expect(outputMissing(metric)).toBe(true);
+
+    const profile = tempKb({
+      "profile.json": record({
+        id: "profile",
+        full_name: "Jay Singh",
+        contact_number: eleven,
+      }),
+    });
+    const profileResult = build(profile);
+    expect(profileResult.ok).toBe(false);
+    expect(profileResult.errors.join("\n")).toMatch(/field=contact_number: phone number/);
+    expect(outputMissing(profile)).toBe(true);
+  });
+
+  it.each([
+    ["slashes", () => digitGroups().join("/")],
+    ["underscores", () => digitGroups().join("_")],
+    ["commas", () => digitGroups().join(",")],
+    ["a space between every digit", () => digitGroups().join("").split("").join(" ")],
+    ["a dot between every digit", () => digitGroups().join("").split("").join(".")],
+    ["uneven hyphen", () => `${digitGroups()[0]}-${digitGroups()[1]}${digitGroups()[2]}`],
+    ["uneven space", () => `${digitGroups()[0]} ${digitGroups()[1]}${digitGroups()[2]}`],
+    ["trailing group", () => `${digitGroups()[0]}${digitGroups()[1]}-${digitGroups()[2]}`],
+    ["glued extension", () => `${digitGroups().join("-")}x12`],
+    ["glued letters", () => `call${digitGroups().join("")}`],
+    ["fullwidth digits", () => fullwidthDigits(digitGroups().join(""))],
+    ["arabic indic digits", () => indicDigits(digitGroups().join(""), 0x0660)],
+    ["extended arabic indic digits", () => indicDigits(digitGroups().join(""), 0x06F0)],
+    ["fullwidth plus", () => `\uFF0B${fullwidthDigits(`1${digitGroups().join("")}`)}`],
+    ["fullwidth brackets", () => `\uFF08${fullwidthDigits(digitGroups()[0])}\uFF09${fullwidthDigits(digitGroups()[1])}-${fullwidthDigits(digitGroups()[2])}`],
+    ["zero width space", () => digitGroups().join("\u200B")],
+    ["soft hyphen", () => digitGroups().join("\u00AD")],
+    ["percent encoded tel", () => `tel:%2B1${digitGroups().join("")}`],
+    ["uk national", () => ["020", "7946", "0958"].join(" ")],
+    ["uk mobile", () => ["07700", "900123"].join(" ")],
+    ["india national", () => ["98765", "43210"].join(" ")],
+    ["idd prefix", () => ["0044", "20", "7946", "0958"].join(" ")],
+  ])("fails a %s phone bypass", (_label, makeText) => {
+    const dir = tempKb({
+      "bullets.json": [bullet({ display_text: `Call ${makeText()} today.` })],
+    });
+    const result = build(dir);
+    expect(result.ok).toBe(false);
+    expect(result.errors.join("\n")).toMatch(/field=display_text: phone number/);
+    expect(outputMissing(dir)).toBe(true);
+  });
+
+  it.each([
+    ["no space", "Worked with AcmeBank today."],
+    ["zero width space", `Worked with Acme${"\u200B"}Bank today.`],
+    ["soft hyphen", `Worked with Acme${"\u00AD"}Bank today.`],
+    ["cyrillic a", `Worked with Acme B${"\u0430"}nk today.`],
+    ["cyrillic capital a", `Worked with ${"\u0410"}cme Bank today.`],
+    ["fullwidth letters", `Worked with ${fullwidthLetters("Acme Bank")} today.`],
+  ])("fails a banned term hidden by %s", (_label, displayText) => {
+    const dir = tempKb({
+      "bullets.json": [bullet({ display_text: displayText })],
+    });
+    const result = build(dir, { KB_BANNED_TERMS: "Acme Bank" });
+    expect(result.ok).toBe(false);
+    expect(result.errors.join("\n")).toMatch(/field=display_text: banned term/);
+    expect(outputMissing(dir)).toBe(true);
   });
 
   it("fails a phone number on an unsure record", () => {
@@ -642,6 +777,12 @@ describe("knowledge base build", () => {
     expect(setup).toMatch(/\.env/);
     expect(setup).toMatch(/kb-build\.js/);
     expect(setup).toMatch(/UTC calendar date/);
+
+    const phoneAllow = fs.readFileSync(path.join(root, "kb/phone-allowlist.txt"), "utf8");
+    for (const line of phoneAllow.split(/\r?\n/)) {
+      if (!line.trim() || line.trim().startsWith("#")) continue;
+      expect(line).toMatch(/\S.*\t\S/);
+    }
   });
 });
 
@@ -706,6 +847,38 @@ function inGroups() {
 
 function plusMark() {
   return "+";
+}
+
+/**
+ * @param {string} ascii
+ */
+function fullwidthDigits(ascii) {
+  return [...ascii].map((ch) => {
+    if (ch < "0" || ch > "9") return ch;
+    return String.fromCodePoint(0xFF10 + Number(ch));
+  }).join("");
+}
+
+/**
+ * @param {string} ascii
+ * @param {number} zero
+ */
+function indicDigits(ascii, zero) {
+  return [...ascii].map((ch) => {
+    if (ch < "0" || ch > "9") return ch;
+    return String.fromCodePoint(zero + Number(ch));
+  }).join("");
+}
+
+/**
+ * @param {string} ascii
+ */
+function fullwidthLetters(ascii) {
+  return [...ascii].map((ch) => {
+    if (ch >= "A" && ch <= "Z") return String.fromCodePoint(0xFF21 + ch.charCodeAt(0) - 65);
+    if (ch >= "a" && ch <= "z") return String.fromCodePoint(0xFF41 + ch.charCodeAt(0) - 97);
+    return ch;
+  }).join("");
 }
 
 /**
