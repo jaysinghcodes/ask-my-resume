@@ -44,9 +44,9 @@ describe("layout shell", () => {
 
     const home = read("frontend/src/sections.js");
     expect(home).toContain('id: "ask"');
-    expect(home).not.toContain('id: "experience"');
-    expect(home).not.toContain('id: "projects"');
-    expect(home).not.toContain('id: "contact"');
+    expect(home).toContain('id: "experience"');
+    expect(home).toContain('id: "projects"');
+    expect(home).toContain('id: "contact"');
   });
 
   it("builds the contact list from public profile links", () => {
@@ -99,7 +99,7 @@ describe("layout shell", () => {
     expect(footer).toContain("Knowledge base updated");
     expect(fs.existsSync(path.join(root, "frontend", "src", "pages", "AboutPage.jsx"))).toBe(false);
     expect(fs.existsSync(path.join(root, "frontend", "src", "components", "ExperienceSection.jsx"))).toBe(
-      false,
+      true,
     );
   });
 
