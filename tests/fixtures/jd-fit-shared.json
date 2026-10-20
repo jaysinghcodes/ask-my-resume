@@ -1,0 +1,508 @@
+{
+  "about": "Shared JD fit fixtures (Atlas ruling, PR #30 r4, point 4). tests/ask.test.jsx runs each one through the page (layoutAnswer) and tests/jd-fit.test.js through the checker (renderedJdFit and checkJdFitAnswer); both must give exactly these sections and items. {A} {B} {W} {C3} stand for KB source ids.",
+  "ids": {
+    "A": "bullet-captech-consultant-4",
+    "B": "project-cleat",
+    "W": "role-osu-wexner",
+    "C3": "bullet-captech-consultant-3"
+  },
+  "fixtures": [
+    {
+      "id": "r4_1_bullet_and_numbered",
+      "rule": "r4 point 1: an item is a bullet or numbered line with a valid KB cite, under an allowed heading",
+      "text": "Strong matches\n- AWS {A}\n1. Go services {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS",
+            "Go services"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "r4_1_uncited_bullet_drops_alone",
+      "rule": "r4 point 1: an item is a bullet or numbered line with a valid KB cite, under an allowed heading",
+      "text": "Strong matches\n- Kafka\n- Go services {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "Go services"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_1_bare_number_is_not_a_cite",
+      "rule": "r4 point 1: an item is a bullet or numbered line with a valid KB cite, under an allowed heading",
+      "text": "Strong matches\n- AWS [1]\n- Go services {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "Go services"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_1_bare_number_next_to_id",
+      "rule": "r4 point 1: an item is a bullet or numbered line with a valid KB cite, under an allowed heading",
+      "text": "Strong matches\n- AWS [1] {A}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "r4_1_unknown_id",
+      "rule": "r4 point 1: an item is a bullet or numbered line with a valid KB cite, under an allowed heading",
+      "text": "Strong matches\n- Kafka clusters [kafka-expert-1]",
+      "sections": [],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_1_item_before_any_heading",
+      "rule": "r4 point 1: an item is a bullet or numbered line with a valid KB cite, under an allowed heading",
+      "text": "- Kafka {B}\n\nStrong matches\n- AWS {A}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_1_plain_cited_line_is_not_an_item",
+      "rule": "r4 point 1: an item is a bullet or numbered line with a valid KB cite, under an allowed heading",
+      "text": "Strong matches\nAWS Lambda services in Python and Go {C3}",
+      "sections": [],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_1_nested_bullet_child",
+      "rule": "r4 point 1: an item is a bullet or numbered line with a valid KB cite, under an allowed heading",
+      "text": "Strong matches\n- Cloud\n  - AWS Lambda {A}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS Lambda"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_2_sentence_closes",
+      "rule": "r4 QA line 1: \"Here are the requirements he has not met yet\" closes its section",
+      "text": "Strong matches\n- AWS {A}\nHere are the requirements he has not met yet\n- Kafka: used SQS queues instead {B}\n\nPartial matches\n- Healthcare data in React {W}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        },
+        {
+          "heading": "Partial matches",
+          "items": [
+            "Healthcare data in React"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_2_colon_closes",
+      "rule": "r4 QA line 1: \"Where he would need to ramp up:\" closes its section",
+      "text": "Strong matches\n- AWS {A}\n\nWhere he would need to ramp up:\n- Kafka: used SQS queues instead {B}\n\nPartial matches\n- Healthcare data in React {W}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        },
+        {
+          "heading": "Partial matches",
+          "items": [
+            "Healthcare data in React"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_2_hint_closes",
+      "rule": "r4 QA line 1: \"Key highlights:\" closes its section",
+      "text": "Strong matches\n- AWS {A}\n\nKey highlights:\n- Cost cut 75% {A}\n\nPartial matches\n- Healthcare data in React {W}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        },
+        {
+          "heading": "Partial matches",
+          "items": [
+            "Healthcare data in React"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_2_long_gap_sentence",
+      "rule": "r4 point 2: any other line closes the section and never renders; nothing renders until the next allowed heading",
+      "text": "Strong matches\n- AWS {A}\nThe role also asks for things outside his record\n- Kafka: used SQS queues instead {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_2_not_a_fit_then_plain_cited",
+      "rule": "r4 QA line 2: \"Not a fit [id]\" followed by a plain cited line renders neither line",
+      "text": "Strong matches\n- AWS {A}\n\nNot a fit {W}\nKafka: used SQS instead {B}\n\nPartial matches\n- Healthcare data in React {W}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        },
+        {
+          "heading": "Partial matches",
+          "items": [
+            "Healthcare data in React"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_2_not_a_fit_then_bullets",
+      "rule": "r4 point 2: any other line closes the section and never renders; nothing renders until the next allowed heading",
+      "text": "Strong matches\n- AWS {A}\n\nNot a fit {W}\n- Kafka: used SQS queues instead {B}\n\nPartial matches\n- Healthcare data in React {W}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        },
+        {
+          "heading": "Partial matches",
+          "items": [
+            "Healthcare data in React"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_2_closing_line",
+      "rule": "r4 point 2: any other line closes the section and never renders; nothing renders until the next allowed heading",
+      "text": "Strong matches\n- AWS {A}\n- Go services {B}\nOverall a strong fit.",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS",
+            "Go services"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_2_intro_line_closes",
+      "rule": "r4 point 2: any other line closes the section and never renders; nothing renders until the next allowed heading",
+      "text": "Strong matches\nHere are the clear matches:\n- AWS {A}\n\nPartial matches\n- Go services {B}",
+      "sections": [
+        {
+          "heading": "Partial matches",
+          "items": [
+            "Go services"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_2_gaps_heading",
+      "rule": "r4 point 2: any other line closes the section and never renders; nothing renders until the next allowed heading",
+      "text": "Strong matches\n- AWS {A}\n\nGaps\n- Kafka {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_3_count",
+      "rule": "r4 point 3: allowed heading tolerance from r3 (case, level, bold, colon, count) still applies",
+      "text": "Strong matches (2)\n- AWS {A}\n- Go services {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS",
+            "Go services"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "r4_3_bold_colon",
+      "rule": "r4 point 3: allowed heading tolerance from r3 (case, level, bold, colon, count) still applies",
+      "text": "**Strong matches:**\n- AWS {A}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "r4_3_bold_inline_item",
+      "rule": "r4 point 3: allowed heading tolerance from r3 (case, level, bold, colon, count) still applies",
+      "text": "**Strong matches:** AWS {A}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "r4_3_md_lower",
+      "rule": "r4 point 3: allowed heading tolerance from r3 (case, level, bold, colon, count) still applies",
+      "text": "## strong matches\n- AWS {A}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "r4_3_caps_count_colon",
+      "rule": "r4 point 3: allowed heading tolerance from r3 (case, level, bold, colon, count) still applies",
+      "text": "STRONG MATCHES (3):\n- AWS {A}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "r4_3_setext_allowed",
+      "rule": "r4 point 3: allowed heading tolerance from r3 (case, level, bold, colon, count) still applies",
+      "text": "Strong matches\n===\n- AWS {A}\n\nPartial matches\n---\n- Healthcare data in React {W}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        },
+        {
+          "heading": "Partial matches",
+          "items": [
+            "Healthcare data in React"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "r4_fail_numbered_cited",
+      "rule": "r4 fail: a numbered or setext heading, cited or not, is an unknown heading",
+      "text": "Strong matches\n- AWS serverless work on a banking platform {A}\n\n1. Not a fit {W}\n- Kafka: used SQS queues instead {B}\n\nPartial matches\n- Healthcare data in React {W}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS serverless work on a banking platform"
+          ]
+        },
+        {
+          "heading": "Partial matches",
+          "items": [
+            "Healthcare data in React"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_fail_numbered_uncited",
+      "rule": "r4 fail: a numbered or setext heading, cited or not, is an unknown heading",
+      "text": "Strong matches\n- AWS {A}\n1. Not a fit\n- Kafka {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_fail_numbered_cited_nested",
+      "rule": "r4 fail: a numbered or setext heading, cited or not, is an unknown heading",
+      "text": "Strong matches\n- AWS {A}\n\n1. Not a fit {W}\n   - Kafka: SQS {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_fail_setext_cited",
+      "rule": "r4 fail: a numbered or setext heading, cited or not, is an unknown heading",
+      "text": "Strong matches\n- AWS {A}\n\nNot a fit {W}\n---\n- Kafka: SQS {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "r4_fail_setext_uncited",
+      "rule": "r4 fail: a numbered or setext heading, cited or not, is an unknown heading",
+      "text": "Strong matches\n- AWS {A}\n\nGaps\n===\n- Kafka: SQS {B}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "fail"
+    },
+    {
+      "id": "opt_crlf",
+      "rule": "r5 optional: CRLF, bold label Closest item, Strong matches [1]",
+      "text": "Strong matches\r\n- AWS {A}\r\n\r\nPartial matches\r- Healthcare data in React {W}\r\n",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        },
+        {
+          "heading": "Partial matches",
+          "items": [
+            "Healthcare data in React"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "opt_bold_label_closest",
+      "rule": "r5 optional: CRLF, bold label Closest item, Strong matches [1]",
+      "text": "Closest experience\n- **Kubernetes:** container orchestration with AWS ECS {A}",
+      "sections": [
+        {
+          "heading": "Closest experience",
+          "items": [
+            "Kubernetes: container orchestration with AWS ECS"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "opt_heading_with_bare_number",
+      "rule": "r5 optional: CRLF, bold label Closest item, Strong matches [1]",
+      "text": "Strong matches [1]\n- AWS {A}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS"
+          ]
+        }
+      ],
+      "checker": "pass"
+    },
+    {
+      "id": "good_full",
+      "rule": "r4 point 1: an item is a bullet or numbered line with a valid KB cite, under an allowed heading",
+      "text": "Strong matches\n- AWS Lambda services in Python and Go {C3}\n\nPartial matches\n- Healthcare data in React {W}\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS {A}",
+      "sections": [
+        {
+          "heading": "Strong matches",
+          "items": [
+            "AWS Lambda services in Python and Go"
+          ]
+        },
+        {
+          "heading": "Partial matches",
+          "items": [
+            "Healthcare data in React"
+          ]
+        },
+        {
+          "heading": "Closest experience",
+          "items": [
+            "Kubernetes: container orchestration with AWS ECS"
+          ]
+        }
+      ],
+      "checker": "pass"
+    }
+  ]
+}
