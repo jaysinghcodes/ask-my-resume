@@ -4,6 +4,8 @@ import { knowledgeBase } from "../data/knowledgeBase";
 import { streamChat } from "../ask/askClient.js";
 import {
   ASK_COPY,
+  NARROW_INPUT_QUERY,
+  askPlaceholder,
   atMessageCap,
   buildChatBody,
   featuredChips,
@@ -11,6 +13,7 @@ import {
   historyFor,
   normalizeSources,
 } from "../ask/askModel.js";
+import { useMediaQuery } from "../ask/useMediaQuery.js";
 import { AskAnswer } from "../components/AskAnswer";
 import { JdFitForm } from "../components/JdFitForm";
 import { ReadingColumn } from "../components/ReadingColumn";
@@ -44,6 +47,7 @@ export function ChatPage({ id = "ask" }) {
   const turnsRef = useRef(turns);
   const abortRef = useRef(/** @type {AbortController | null} */ (null));
   const inputRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
+  const placeholder = askPlaceholder(useMediaQuery(NARROW_INPUT_QUERY));
   const jdLinkRef = useRef(/** @type {HTMLButtonElement | null} */ (null));
   const restartRef = useRef(/** @type {HTMLButtonElement | null} */ (null));
 
@@ -260,8 +264,8 @@ export function ChatPage({ id = "ask" }) {
                 ref={inputRef}
                 rows={1}
                 value={input}
-                placeholder={ASK_COPY.placeholder}
-                aria-label={ASK_COPY.placeholder}
+                placeholder={placeholder}
+                aria-label={placeholder}
                 onChange={(event) => {
                   setInput(event.target.value);
                   resizeInput();
