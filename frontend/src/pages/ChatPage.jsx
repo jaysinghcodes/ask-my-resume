@@ -100,6 +100,7 @@ export function ChatPage({ id = "ask" }) {
           }}
         >
           <textarea
+            id="ask-input"
             ref={inputRef}
             rows={1}
             value={input}

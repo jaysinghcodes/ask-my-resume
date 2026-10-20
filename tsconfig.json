@@ -19,6 +19,7 @@
     "lib/**/*.js",
     "scripts/**/*.js",
     "tests/**/*.js",
+    "tests/**/*.jsx",
     "types/**/*.d.ts",
     "frontend/src/**/*.js",
     "frontend/src/**/*.jsx",
