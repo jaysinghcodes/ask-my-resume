@@ -14,3 +14,5 @@ export { EducationSection } from "./EducationSection";
 export { ContactSection } from "./ContactSection";
 export { HomeResume } from "./HomeResume";
 export { askAbout } from "./askAbout";
+export { Hero } from "./Hero";
+export { ImpactStrip } from "./ImpactStrip";

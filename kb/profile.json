@@ -18,9 +18,12 @@
   "work_preferences": "Open to remote and relocation for the right role.",
   "contact_blurb": "Recruiters, hiring managers, and anyone curious about working together, reach out anytime.",
   "photo": {
-    "path": "",
+    "path": "/jay-singh-72.webp",
+    "path_2x": "/jay-singh-144.webp",
     "alt": "Jay Singh",
-    "status": "Jay approved a headshot; image file not yet provided"
+    "width": 72,
+    "height": 72,
+    "status": "Approved headshot, exported at 72 and 144."
   },
   "links": [
     {
