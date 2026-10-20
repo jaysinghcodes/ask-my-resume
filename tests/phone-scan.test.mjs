@@ -298,6 +298,43 @@ test("a line separator before a hit keeps the reported line", () => {
   });
 });
 
+test("an emoji before a number on the same line is a phone hit", () => {
+  assertHit(`\u{1F4DE} ${us("-")}`);
+  const file = path.join(os.tmpdir(), "phone-scan-emoji-same-line.txt");
+  fs.writeFileSync(file, `\u{1F4DE} ${us("-")}\n`);
+  const result = runScan([file]);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, new RegExp(`${path.basename(file)}:1\\n`));
+  assert.doesNotMatch(`${result.stdout}\n${result.stderr}`, /555/);
+});
+
+test("an emoji on an earlier line does not hide a phone hit", () => {
+  const call = ["555", "555", "0123"].join(" ");
+  const hits = findPhoneHits(`note \u{1F680}\nCall ${call}\n`);
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0].line, 2);
+});
+
+test("many astral characters before a final hit stay a phone hit", () => {
+  const call = ["555", "555", "0123"].join(" ");
+  const rocket = "\u{1F680}";
+  const lines = Array.from({ length: 10 }, () => `note ${rocket}`);
+  const prefix = `${"\u{20000}".repeat(40)}${"\u{100000}".repeat(20)}`;
+  const hits = findPhoneHits(`${lines.join("\n")}\n${prefix}Call ${call}\n`);
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0].line, 11);
+});
+
+test("an explicit path resolves from the working directory", () => {
+  const result = spawnSync(process.execPath, [scanner, "fixtures/phone-scan/clean/clean.txt"], {
+    cwd: path.join(root, "tests"),
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /no phone numbers/);
+  assert.doesNotMatch(result.stderr, /ENOENT/);
+});
+
 test("a large file scans without a stack overflow", () => {
   const line = "note\n";
   const count = Math.ceil((1024 * 1024) / line.length);

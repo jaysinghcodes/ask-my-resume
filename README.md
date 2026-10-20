@@ -46,7 +46,7 @@ If `MODEL_ID` or `ANTHROPIC_API_KEY` is missing, the chat shows "Something went 
 
 ## Deployment
 
-Create the Vercel project from [docs/SETUP.md](docs/SETUP.md). Name it `ask-jay` in the same account as Cleat. Set `ANTHROPIC_API_KEY` and `MODEL_ID` for Production and Preview. `.github/workflows/deploy.yml` still publishes the frontend to GitHub Pages and is left in place on purpose. That Pages build keeps Vite base `/ask-my-resume/`. When `VERCEL` is set, Vite uses base `/` so preview assets resolve at the site root.
+Create the Vercel project from [docs/SETUP.md](docs/SETUP.md). Name it `ask-jay` in the same account as Cleat. Set `ANTHROPIC_API_KEY` and `MODEL_ID` for Production and Preview. `.github/workflows/deploy.yml` still publishes the frontend to GitHub Pages and is left in place on purpose.
 
 ### Phone scan
 

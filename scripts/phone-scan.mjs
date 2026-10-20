@@ -19,6 +19,7 @@
  * A path scoped allowlist line applies that token only in the named file.
  * UTF-16 LE, UTF-16 BE, and UTF-8 files with a BOM are decoded and scanned.
  * Output is the file path and line number only.
+ * Each normalized item is one UTF-16 code unit, so a regex offset is an item index.
  */
 
 import { execFileSync, spawnSync } from "node:child_process";
@@ -173,6 +174,16 @@ function prepareText(input) {
 }
 
 /**
+ * @param {{ ch: string, line: number }[]} out
+ * @param {string} text
+ * @param {number} line
+ */
+function pushUnits(out, text, line) {
+  for (let i = 0; i < text.length; i += 1) out.push({ ch: text[i], line });
+}
+
+/**
+ * One item per UTF-16 code unit. Regex match indexes then line up with the list.
  * @param {string} input
  * @returns {{ ch: string, line: number }[]}
  */
@@ -181,19 +192,23 @@ export function normalizeChars(input) {
   /** @type {{ ch: string, line: number }[]} */
   const out = [];
   let line = 1;
-  for (const ch of source) {
+  let offset = 0;
+  while (offset < source.length) {
+    const code = source.codePointAt(offset) ?? 0;
+    const width = code > 0xffff ? 2 : 1;
+    const ch = source.slice(offset, offset + width);
+    offset += width;
     if (ch === "\n") {
       line += 1;
       out.push({ ch: "\n", line });
       continue;
     }
-    const code = ch.codePointAt(0) ?? 0;
     if (code < 128) {
       if (ch === "\t" || ch === "\f" || ch === "\v" || ch === " ") out.push({ ch: " ", line });
       else out.push({ ch, line });
       continue;
     }
-    for (const part of foldChar(ch)) out.push({ ch: part, line });
+    pushUnits(out, foldChar(ch), line);
   }
 
   /** @type {{ ch: string, line: number }[]} */
@@ -219,7 +234,8 @@ function blankMatches(items, regex, accept) {
   for (const match of text.matchAll(regex)) {
     if (accept && !accept(match[0])) continue;
     const start = match.index ?? 0;
-    for (let i = start; i < start + match[0].length; i += 1) {
+    const end = start + match[0].length;
+    for (let i = start; i < end; i += 1) {
       copy[i] = { ch: "a", line: copy[i].line };
     }
   }
@@ -263,8 +279,9 @@ function dropSeparators(items) {
     SEPARATOR.lastIndex = 0;
     for (const match of next.matchAll(SEPARATOR)) {
       const start = match.index ?? 0;
+      const end = start + match[0].length;
       appendSlice(kept, current, last, start);
-      last = start + match[0].length;
+      last = end;
     }
     appendSlice(kept, current, last, current.length);
     current = kept;
@@ -309,7 +326,7 @@ function collectPhoneHits(text, allowed = []) {
   PHONE_RUN.lastIndex = 0;
   for (const match of body.matchAll(PHONE_RUN)) {
     const start = match.index ?? 0;
-    const line = items[start]?.line || 1;
+    const line = items[start].line;
     hits.push({ line, digits: match[0] });
   }
   return hits;
@@ -600,7 +617,7 @@ export function main(argv = process.argv.slice(2)) {
     }
   } else {
     for (const arg of argv) {
-      const absolute = path.resolve(root, arg);
+      const absolute = path.resolve(process.cwd(), arg);
       for (const file of explicitFiles(absolute)) {
         const rel = toRel(root, file);
         if (shouldSkipRepoPath(rel, { explicit: true })) continue;
