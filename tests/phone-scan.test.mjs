@@ -328,9 +328,7 @@ test("a binary file without a bom is skipped", () => {
 });
 
 function isFictionalPhone(digits) {
-  for (let i = 0; i + 10 <= digits.length; i += 1) {
-    if (digits.slice(i, i + 10).slice(3, 6) === "555") return true;
-  }
+  if (/^(?:1|44|91)?\d{3}555\d{4}$/.test(digits)) return true;
   if (/^01632\d{6}$/.test(digits)) return true;
   if (/^4401632\d{6}$/.test(digits)) return true;
   if (/^07700900\d{3}$/.test(digits)) return true;
@@ -339,16 +337,32 @@ function isFictionalPhone(digits) {
 }
 
 test("fictional 555 is the exchange", () => {
-  const exchange = ["212", "555", "0123"].join("");
-  const withCountry = ["1", exchange].join("");
+  const exchange = ["214", "555", "0123"].join("");
+  const other = "0".repeat(10);
   const area = ["555", "123", "4567"].join("");
   const line = ["212", "123", "5555"].join("");
-  const later = ["99", exchange].join("");
   assert.equal(isFictionalPhone(exchange), true);
-  assert.equal(isFictionalPhone(withCountry), true);
-  assert.equal(isFictionalPhone(later), true);
+  assert.equal(isFictionalPhone(["1", exchange].join("")), true);
+  assert.equal(isFictionalPhone(["44", exchange].join("")), true);
+  assert.equal(isFictionalPhone(["91", exchange].join("")), true);
+  assert.equal(isFictionalPhone(["01632", "960000"].join("")), true);
+  assert.equal(isFictionalPhone(["44", "01632", "960000"].join("")), true);
+  assert.equal(isFictionalPhone(["07700900", "123"].join("")), true);
+  assert.equal(isFictionalPhone(["447700900", "123"].join("")), true);
   assert.equal(isFictionalPhone(area), false);
   assert.equal(isFictionalPhone(line), false);
+  assert.equal(isFictionalPhone(other), false);
+
+  function assertJoinedRunRejected(label, text) {
+    const runs = phoneDigitRuns(text);
+    assert.equal(runs.length, 1, label);
+    assert.equal(isFictionalPhone(runs[0]), false, label);
+  }
+  assertJoinedRunRejected("packed", `Call ${exchange}${other}`);
+  assertJoinedRunRejected("reversed", `Call ${other}${exchange}`);
+  assertJoinedRunRejected("space", `Call ${exchange} ${other}`);
+  assertJoinedRunRejected("dash", `Call ${exchange}-${other}`);
+  assertJoinedRunRejected("word", `Call${exchange}${other}now`);
 });
 
 function fixtureFiles(dir) {
