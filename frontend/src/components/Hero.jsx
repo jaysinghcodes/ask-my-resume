@@ -8,7 +8,9 @@ import "../styles/hero.css";
  */
 export function Hero(props) {
   const profile = props.profile ?? knowledgeBase.profile ?? {};
-  const bullets = props.bullets ?? knowledgeBase.bullets ?? [];
+  const bullets =
+    props.bullets ??
+    /** @type {import("./heroModel.js").Bullet[]} */ (knowledgeBase.bullets ?? []);
   const content = heroContent(profile);
   const items = impactItems(bullets);
   const photo = content.photo;
