@@ -63,7 +63,7 @@ describe("hero content from the knowledge base", () => {
   it("reads headline option A, the lede, and the status line from profile", () => {
     const content = heroContent(profile);
     expect(content.headline).toBe("AI native software engineer.");
-    expect(content.headlineSupport).toBe("Cloud platforms, data infrastructure and production AI.");
+    expect(content.headlineSupport).toBe("Cloud platforms, data infrastructure and production AI, built side by side with clients.");
     expect(content.lede).toBe(
       "I ship end to end, from architecture through deployment and operations, across fintech and large scale enterprise environments.",
     );
@@ -138,7 +138,7 @@ describe("Hero markup", () => {
     expect(markup).not.toContain("loading=");
     expect(markup).toContain('fetchpriority="high"');
     expect(markup).toContain("AI native software engineer.");
-    expect(markup).toContain("Cloud platforms, data infrastructure and production AI.");
+    expect(markup).toContain("Cloud platforms, data infrastructure and production AI, built side by side with clients.");
     expect(markup).toContain("<b>Software Engineer Consultant</b> at CapTech Consulting");
     expect(markup).toContain("Chicago, IL");
     expect(markup).toContain("Open to new roles");
