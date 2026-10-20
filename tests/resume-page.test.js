@@ -12,6 +12,7 @@ import { navItems } from "../frontend/src/nav-items.js";
 import {
   buildResumePage,
   questionForTopic,
+  skillGroups,
 } from "../frontend/src/resume/pageModel.js";
 import { HOME_SECTIONS } from "../frontend/src/sections.js";
 import { buildKnowledgeBase } from "../lib/kb-build.js";
@@ -102,6 +103,24 @@ describe("resume page", () => {
     expect(html.match(/<li>/g)).toHaveLength(11);
     expect(html).toContain('id="experience"');
     expect(html).toContain('id="role-osu-wexner"');
+    for (const id of [
+      "role-captech-consultant",
+      "role-procrewz-salesforce-intern",
+      "role-captech-intern",
+      "role-osu-wexner",
+      "project-cleat",
+      "project-mission-control",
+      "project-ask-my-resume",
+    ]) {
+      const tag = html.match(new RegExp(`<article\\b[^>]*\\bid="${id}"[^>]*>`));
+      expect(tag, id).toBeTruthy();
+      expect(tag?.[0]).toContain('tabindex="-1"');
+    }
+    const css = fs.readFileSync(path.join(root, "frontend/src/styles/resume.css"), "utf8");
+    expect(css).toMatch(/\.role\s*\{[^}]*scroll-margin-top:\s*calc\(var\(--nav-h\)/s);
+    expect(css).toMatch(/\.project-card\s*\{[^}]*scroll-margin-top:\s*calc\(var\(--nav-h\)/s);
+    expect(css).toMatch(/\.role li\s*\{[^}]*font-size:\s*17\.5px;[^}]*line-height:\s*1\.6;/s);
+    expect(css).toMatch(/\.role li\s*\{[^}]*font-size:\s*17px;/s);
     expect(html).toContain("Ask about this role");
     expect(html).not.toContain("Supported production systems using Splunk");
     expect(html).not.toContain("contractor onboarding");
@@ -162,14 +181,54 @@ describe("resume page", () => {
     ]);
     expect(page.skills[0].skills).toEqual([
       "Python",
-      "Go",
       "TypeScript",
+      "JavaScript",
       "SQL",
       "Java",
-      "JavaScript",
+      "Go",
       "HTML and CSS",
       "YAML",
     ]);
+    expect(page.skills[1].skills).toEqual([
+      "Claude API (Anthropic SDK)",
+      "OpenAI API",
+      "MCP (Model Context Protocol)",
+      "RAG",
+      "Vector embeddings",
+      "pgvector",
+      "LLM evals",
+      "Agentic workflows",
+      "Databricks",
+      "Snowflake",
+      "PostgreSQL",
+      "Pandas",
+    ]);
+    expect(page.skills[2].skills).toEqual([
+      "AWS (Lambda, Fargate, ECS, SQS, SNS, RDS)",
+      "Docker",
+      "GitHub Actions",
+      "Vercel",
+      "Supabase",
+      "React",
+      "Next.js",
+      "React Native",
+      "Node.js",
+      "NestJS",
+      "Express",
+      "Prisma",
+      "Spring Boot",
+      "GraphQL",
+    ]);
+    const shuffled = skillGroups(/** @type {any} */ ({
+      skills: [
+        { group: "Languages", display_name: "Go", on_resume: true, confidence: "verified", public: true },
+        { group: "Languages", display_name: "YAML", on_resume: true, confidence: "verified", public: true },
+        { group: "Languages", display_name: "C", on_resume: true, confidence: "unsure", public: true },
+        { group: "Languages", display_name: "Python", on_resume: true, confidence: "verified", public: true },
+        { group: "Languages", display_name: "TypeScript", on_resume: true, confidence: "verified", public: true },
+      ],
+    }));
+    expect(shuffled.map((group) => group.skills)).toEqual([["Python", "TypeScript", "Go", "YAML"]]);
     expect(page.skills.flatMap((group) => group.skills)).not.toContain("C");
     expect(page.skills.flatMap((group) => group.skills)).not.toContain("PyTorch");
     expect(page.skills.flatMap((group) => group.skills)).not.toContain("New Relic");

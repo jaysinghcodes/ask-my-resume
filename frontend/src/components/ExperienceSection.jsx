@@ -11,7 +11,7 @@ export function ExperienceSection({ id = "experience", knowledgeBase = defaultKb
   return (
     <Section id={id} className="experience-section" kicker="Experience" title="Where I've worked">
       {roles.map((role) => (
-        <article id={role.id} key={role.id} className="role">
+        <article id={role.id} key={role.id} tabIndex={-1} className="role">
           <div className="role-head">
             <div>
               <h3>{role.title}</h3>
