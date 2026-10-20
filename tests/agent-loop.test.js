@@ -10,24 +10,34 @@ import {
 
 /**
  * @param {string} id
+ * @param {string} [preamble]
  */
-function toolStream(id) {
+function toolStream(id, preamble = "") {
   return {
-    /** @param {string} _event @param {unknown} _listener */
-    on(_event, _listener) {
+    /** @type {((delta: string) => void) | null} */
+    _onText: null,
+    /**
+     * @param {string} event
+     * @param {(delta: string) => void} listener
+     */
+    on(event, listener) {
+      if (event === "text") this._onText = listener;
       return this;
     },
     async finalMessage() {
+      if (preamble) this._onText?.(preamble);
+      /** @type {Array<{ type: string, text?: string, id?: string, name?: string, input?: { query: string } }>} */
+      const content = [];
+      if (preamble) content.push({ type: "text", text: preamble });
+      content.push({
+        type: "tool_use",
+        id,
+        name: "search_resume",
+        input: { query: "skills" },
+      });
       return {
         stop_reason: "tool_use",
-        content: [
-          {
-            type: "tool_use",
-            id,
-            name: "search_resume",
-            input: { query: "skills" },
-          },
-        ],
+        content,
       };
     },
   };
@@ -152,7 +162,7 @@ describe("streamAgenticLoop", () => {
     vi.restoreAllMocks();
   });
 
-  it("emits text deltas before the answer finishes and does not repeat them", async () => {
+  it("emits final answer deltas only after the turn is not a tool call", async () => {
     /** @type {(value?: void) => void} */
     let release = () => {};
     const hold = new Promise((resolve) => {
@@ -171,14 +181,41 @@ describe("streamAgenticLoop", () => {
       (part) => parts.push(part),
     );
 
-    await vi.waitFor(() => {
-      expect(parts).toEqual([{ type: "delta", text: "Jay " }]);
-    });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(parts).toEqual([]);
     release();
     await expect(pending).resolves.toBe("Jay has AWS experience.");
     expect(parts).toEqual([
       { type: "delta", text: "Jay " },
       { type: "delta", text: "has AWS experience." },
+    ]);
+  });
+
+  it("never streams text written before a tool call", async () => {
+    const preamble = "Let me check the resume.";
+    const stream = vi
+      .fn()
+      .mockImplementationOnce(() => toolStream("tool_1", preamble))
+      .mockImplementationOnce(() => textStream(["The resume lists AWS."]));
+    /** @type {import("../lib/claude.js").StreamPart[]} */
+    const parts = [];
+    const result = await streamAgenticLoop(
+      /** @type {any} */ ({ messages: { stream } }),
+      {
+        systemPrompt: "system",
+        messages: [{ role: "user", content: "Skills?" }],
+        model: "model-from-env",
+      },
+      (part) => parts.push(part),
+    );
+
+    const deltas = parts.filter((part) => part.type === "delta").map((part) => part.text).join("");
+    expect(deltas).toBe("The resume lists AWS.");
+    expect(result).toBe("The resume lists AWS.");
+    expect(deltas).not.toContain(preamble);
+    expect(result).not.toContain(preamble);
+    expect(parts.filter((part) => part.type === "status")).toEqual([
+      { type: "status", text: "Searching the resume" },
     ]);
   });
 
@@ -207,10 +244,9 @@ describe("streamAgenticLoop", () => {
     );
 
     await vi.waitFor(() => {
-      expect(parts.some((part) => part.type === "delta")).toBe(true);
+      expect(parts[0]).toEqual({ type: "status", text: "Searching the resume" });
     });
-    expect(parts[0]).toEqual({ type: "status", text: "Searching the resume" });
-    expect(parts.map((part) => ("text" in part ? part.text : "")).join("")).not.toContain("answer.");
+    expect(parts.some((part) => part.type === "delta")).toBe(false);
     expect(stream).toHaveBeenCalledWith(
       expect.objectContaining({ model: "model-from-env", max_tokens: 128 }),
       undefined,
@@ -218,6 +254,36 @@ describe("streamAgenticLoop", () => {
     release();
     await pending;
     expect(parts.map((part) => part.text).join("")).toContain("Grounded answer.");
+    expect(parts.filter((part) => part.type === "delta").map((part) => part.text).join("")).toBe(
+      "Grounded answer.",
+    );
+  });
+
+  it("does not return preamble text when the tool cap is reached", async () => {
+    let calls = 0;
+    const preamble = "Let me check the resume.";
+    const stream = vi.fn(() => {
+      calls += 1;
+      if (calls > MAX_TOOL_ROUNDS) throw new Error("loop continued past 5 tool rounds");
+      return toolStream(`tool_${calls}`, preamble);
+    });
+    /** @type {import("../lib/claude.js").StreamPart[]} */
+    const parts = [];
+    await expect(
+      streamAgenticLoop(
+        /** @type {any} */ ({ messages: { stream } }),
+        {
+          systemPrompt: "system",
+          messages: [{ role: "user", content: "Skills?" }],
+          model: "model-from-env",
+        },
+        (part) => parts.push(part),
+      ),
+    ).rejects.toBeInstanceOf(ToolRoundLimitError);
+    expect(stream).toHaveBeenCalledTimes(MAX_TOOL_ROUNDS);
+    expect(parts.some((part) => part.type === "delta")).toBe(false);
+    expect(JSON.stringify(parts)).not.toContain(preamble);
+    expect(parts.filter((part) => part.type === "status")).toHaveLength(MAX_TOOL_ROUNDS);
   });
 
   it("names project doc search for a tool other than the resume", () => {

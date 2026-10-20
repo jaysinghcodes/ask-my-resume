@@ -14,6 +14,7 @@ vi.mock("../lib/resume.js", () => ({
 }));
 
 import { POST } from "../api/chat.js";
+import { toApiMessages } from "../frontend/src/chatHistory.js";
 import { FRIENDLY_CHAT_ERROR, formatSse } from "../lib/chat.js";
 import { createClient, streamAgenticLoop } from "../lib/claude.js";
 import { FRIENDLY, resetLimitState } from "../lib/limits.js";
@@ -304,5 +305,39 @@ describe("POST /api/chat", () => {
     expect(second.status).toBe(429);
     expect(events[0]?.data.code).toBe("daily_cap");
     expect(events[0]?.data.text).toBe(FRIENDLY.daily_cap);
+  });
+
+  it("answers question 7 from the history window that starts on a user turn", async () => {
+    /** @type {{ role: string, content: string }[]} */
+    const history = [];
+    for (let index = 1; index <= 6; index += 1) {
+      history.push({ role: "user", content: `Question ${index}` });
+      history.push({ role: "ai", content: `Answer ${index}` });
+    }
+    history.push({ role: "user", content: "Question 7" });
+    const snapshot = history.map((message) => ({ ...message }));
+    const payload = toApiMessages(history);
+
+    expect(history).toEqual(snapshot);
+    expect(history).toHaveLength(13);
+    expect(payload.length).toBeLessThanOrEqual(12);
+    expect(payload[0]?.role).toBe("user");
+    expect(payload.at(-1)).toEqual({ role: "user", content: "Question 7" });
+    expect(payload.some((message) => message.role === "ai")).toBe(false);
+
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    process.env.MODEL_ID = "model-from-env";
+    process.env.IP_HASH_SALT = "salt";
+    const response = await POST(chatRequest({ messages: payload }));
+    const events = await readEvents(response);
+    expect(response.status).toBe(200);
+    expect(events.some((event) => event.event === "delta")).toBe(true);
+    expect(events.at(-1)?.event).toBe("done");
+    expect(events.some((event) => event.event === "error")).toBe(false);
+    expect(streamAgenticLoop).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ messages: payload }),
+      expect.any(Function),
+    );
   });
 });

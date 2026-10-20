@@ -8,8 +8,10 @@ import {
   IP_TTL_SECONDS,
   consumeQuota,
   createCounterStore,
+  hashCallCount,
   hashIp,
   inspectMemory,
+  listMemoryKeys,
   readCaps,
   resetLimitState,
   upstashStore,
@@ -42,6 +44,9 @@ const ENV_KEYS = [
   "IP_HASH_SALT",
   "UPSTASH_REDIS_REST_URL",
   "UPSTASH_REDIS_REST_TOKEN",
+  "KV_REST_API_URL",
+  "KV_REST_API_TOKEN",
+  "PREVIEW_HOST_SUFFIX",
   "VERCEL_ENV",
   "VERCEL_URL",
   "VERCEL_PROJECT_PRODUCTION_URL",
@@ -134,16 +139,16 @@ describe("chat limits", () => {
   });
 
   it("keeps the friendly messages exact", () => {
-    expect(FRIENDLY.rate_limited).toBe(
-      "You've asked a lot of questions in a short time. Try again in a few minutes, or email jaggys44@gmail.com.",
-    );
-    expect(FRIENDLY.daily_cap).toBe(
-      "Ask Jay has reached its limit for today. Email jaggys44@gmail.com and Jay will get back to you.",
-    );
-    expect(FRIENDLY.too_long).toBe(
-      "That's longer than Ask Jay can read. Trim it to about 8,000 characters and try again.",
-    );
-    expect(FRIENDLY.server).toBe("Something went wrong getting that answer. Try again.");
+    expect(FRIENDLY).toEqual({
+      rate_limited:
+        "You've asked a lot of questions in a short time. Try again in a few minutes, or email jaggys44@gmail.com.",
+      daily_cap:
+        "Ask Jay has reached its limit for today. Email jaggys44@gmail.com and Jay will get back to you.",
+      too_long:
+        "That's longer than Ask Jay can read. Trim it to about 8,000 characters and try again.",
+      server: "Something went wrong getting that answer. Try again.",
+      invalid: "Ask Jay could not read that message. Try again.",
+    });
   });
 
   it("rejects each invalid or oversized body with the right code", () => {
@@ -188,6 +193,14 @@ describe("chat limits", () => {
         caps,
       ),
     ).toEqual({ ok: false, code: "invalid" });
+    expect(validateChatBody({ messages: [{ role: "user", content: "" }] }, caps)).toEqual({
+      ok: false,
+      code: "invalid",
+    });
+    expect(validateChatBody({ messages: [{ role: "user", content: "   " }] }, caps)).toEqual({
+      ok: false,
+      code: "invalid",
+    });
   });
 
   it("returns those rejection codes from POST /api/chat", async () => {
@@ -245,10 +258,18 @@ describe("chat limits", () => {
 
     process.env.ANTHROPIC_API_KEY = "test-key";
     process.env.MODEL_ID = "model-from-env";
+    const evilPreview = await POST(
+      chatRequest(
+        { messages: [{ role: "user", content: "Hi" }] },
+        { origin: "https://ask-jay-evil.vercel.app" },
+      ),
+    );
+    expect(evilPreview.status).toBe(403);
+
     const preview = await POST(
       chatRequest(
         { messages: [{ role: "user", content: "Hi" }] },
-        { origin: "https://ask-jay-git-cursor-team.vercel.app" },
+        { origin: "https://ask-jay-git-cursor-team-singh-solutions.vercel.app" },
       ),
     );
     expect(preview.status).toBe(200);
@@ -261,6 +282,53 @@ describe("chat limits", () => {
       ),
     );
     expect(otherProject.status).toBe(403);
+  });
+
+  it("rejects an http origin for the production host and allows http only for localhost in development", async () => {
+    process.env.VERCEL_ENV = "production";
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = "ask-jay.vercel.app";
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    process.env.MODEL_ID = "model-from-env";
+    process.env.IP_HASH_SALT = "salt";
+    const body = { messages: [{ role: "user", content: "Hi" }] };
+
+    const httpProd = await POST(chatRequest(body, { origin: "http://ask-jay.vercel.app" }));
+    expect(httpProd.status).toBe(403);
+    expect(await httpProd.json()).toEqual({ code: "forbidden" });
+
+    const httpLocalDeployed = await POST(chatRequest(body, { origin: "http://localhost:5173" }));
+    expect(httpLocalDeployed.status).toBe(403);
+
+    const httpsProd = await POST(chatRequest(body, { origin: "https://ask-jay.vercel.app" }));
+    expect(httpsProd.status).toBe(200);
+    await httpsProd.text();
+
+    delete process.env.VERCEL_ENV;
+    const httpLocal = await POST(chatRequest(body, { origin: "http://localhost:5173" }));
+    expect(httpLocal.status).toBe(200);
+    await httpLocal.text();
+
+    const httpLocalAddress = await POST(chatRequest(body, { origin: "http://127.0.0.1:5173" }));
+    expect(httpLocalAddress.status).toBe(200);
+    await httpLocalAddress.text();
+  });
+
+  it("rejects empty content before it uses a question", async () => {
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    process.env.MODEL_ID = "model-from-env";
+    process.env.IP_HASH_SALT = "salt";
+    process.env.CHAT_PER_IP_DAILY = "1";
+    const blank = await POST(chatRequest({ messages: [{ role: "user", content: "   " }] }));
+    expect(blank.status).toBe(400);
+    expect(await blank.text()).toContain(
+      `data: ${JSON.stringify({ code: "invalid", text: FRIENDLY.invalid })}`,
+    );
+    expect(hashCallCount()).toBe(0);
+    expect(listMemoryKeys()).toEqual([]);
+
+    const next = await POST(chatRequest({ messages: [{ role: "user", content: "Hi" }] }));
+    expect(next.status).toBe(200);
+    await next.text();
   });
 
   it("enforces the per IP cap and the daily cap on a mocked Redis without storing the raw IP", async () => {
@@ -325,6 +393,55 @@ describe("chat limits", () => {
     expect(bodies).toContainEqual(["INCR", `chat:ip:${hash}:2026-10-20`]);
     expect(bodies).toContainEqual(["EXPIRE", `chat:ip:${hash}:2026-10-20`, "86400", "NX"]);
     expect(fetchImpl.mock.calls[0]?.[1]?.headers?.Authorization).toBe("Bearer secret-token");
+  });
+
+  it("reads the Upstash pair before the KV pair", async () => {
+    /** @type {string[]} */
+    const urls = [];
+    const fetchImpl = vi.fn(async (url) => {
+      urls.push(String(url));
+      return new Response(JSON.stringify({ result: 1 }), { status: 200 });
+    });
+    const store = createCounterStore(
+      {
+        UPSTASH_REDIS_REST_URL: "https://upstash.example",
+        UPSTASH_REDIS_REST_TOKEN: "upstash-token",
+        KV_REST_API_URL: "https://kv.example",
+        KV_REST_API_TOKEN: "kv-token",
+      },
+      /** @type {any} */ (fetchImpl),
+    );
+    await store.incr("chat:site:2026-10-20");
+    expect(urls).toEqual(["https://upstash.example"]);
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  it("uses the KV pair when the Upstash pair is absent", async () => {
+    /** @type {string[]} */
+    const urls = [];
+    /** @type {string[]} */
+    const authorizations = [];
+    const fetchImpl = vi.fn(async (url, init) => {
+      urls.push(String(url));
+      const headers = init && typeof init === "object" && "headers" in init ? init.headers : null;
+      const authorization =
+        headers && typeof headers === "object" && "Authorization" in headers
+          ? headers.Authorization
+          : "";
+      authorizations.push(String(authorization));
+      return new Response(JSON.stringify({ result: 1 }), { status: 200 });
+    });
+    const store = createCounterStore(
+      {
+        KV_REST_API_URL: "https://kv.example/",
+        KV_REST_API_TOKEN: "kv-token",
+      },
+      /** @type {any} */ (fetchImpl),
+    );
+    await store.incr("chat:site:2026-10-20");
+    expect(urls).toEqual(["https://kv.example"]);
+    expect(authorizations).toEqual(["Bearer kv-token"]);
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   it("falls back to in memory counters, logs once, and still enforces the cap", async () => {
@@ -395,16 +512,78 @@ describe("chat limits", () => {
     expect(logged).not.toContain(RAW_IP);
   });
 
+  it("fails closed in production when IP_HASH_SALT is missing and does not hash or store", async () => {
+    process.env.VERCEL_ENV = "production";
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = "ask-jay.vercel.app";
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    process.env.MODEL_ID = "model-from-env";
+    const fetchImpl = vi.fn(async () => new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchImpl);
+    const headers = { origin: "https://ask-jay.vercel.app", "x-forwarded-for": RAW_IP };
+    const body = { messages: [{ role: "user", content: "Hi" }] };
+
+    const response = await POST(chatRequest(body, headers));
+    expect(response.status).toBe(503);
+    expect(await response.text()).toContain(
+      `data: ${JSON.stringify({ code: "server", text: FRIENDLY.server })}`,
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(hashCallCount()).toBe(0);
+    expect(listMemoryKeys()).toEqual([]);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(String(vi.mocked(console.error).mock.calls[0]?.[0])).toBe(
+      "IP_HASH_SALT is unset. Chat is unavailable until the salt is set.",
+    );
+    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain(RAW_IP);
+
+    const again = await POST(chatRequest(body, headers));
+    expect(again.status).toBe(503);
+    await again.text();
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(hashCallCount()).toBe(0);
+    expect(listMemoryKeys()).toEqual([]);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("warns and uses a development salt when IP_HASH_SALT is missing outside production", async () => {
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    process.env.MODEL_ID = "model-from-env";
+    const headers = { "x-forwarded-for": RAW_IP };
+    const body = { messages: [{ role: "user", content: "Hi" }] };
+
+    const response = await POST(chatRequest(body, headers));
+    expect(response.status).toBe(200);
+    await response.text();
+    expect(hashCallCount()).toBe(1);
+    expect(console.warn).toHaveBeenCalledWith("IP_HASH_SALT is unset. Using a development salt.");
+    const keys = listMemoryKeys();
+    expect(keys.length).toBeGreaterThan(0);
+    expect(keys.join(" ")).not.toContain(RAW_IP);
+    expect(JSON.stringify(vi.mocked(console.warn).mock.calls)).not.toContain(RAW_IP);
+
+    vi.mocked(console.warn).mockClear();
+    const second = await POST(chatRequest(body, headers));
+    expect(second.status).toBe(200);
+    await second.text();
+    expect(console.warn).not.toHaveBeenCalled();
+    expect(listMemoryKeys().join(" ")).not.toContain(RAW_IP);
+  });
+
   it("documents the firewall rule and the Upstash Marketplace step", () => {
     const setup = fs.readFileSync(path.join(root, "docs", "SETUP.md"), "utf8");
     expect(setup).toContain("Upstash");
     expect(setup).toContain("Marketplace");
     expect(setup).toContain("free tier");
     expect(setup).toContain("UPSTASH_REDIS_REST_URL");
+    expect(setup).toContain("KV_REST_API_URL");
+    expect(setup).toContain("KV_REST_API_TOKEN");
+    expect(setup).toContain("midnight UTC");
     expect(setup).toContain("20 requests per 10 minutes per IP");
     expect(setup).toContain("/api/chat");
     expect(setup).toContain("fixed window");
     expect(setup).toContain("Firewall");
+    expect(setup).toContain("429");
+    expect(setup).not.toContain("Set the action to deny");
     expect(setup).not.toMatch(/[—–→←↓↑⇒]/);
   });
 });

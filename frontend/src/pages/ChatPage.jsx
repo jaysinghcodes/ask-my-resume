@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { API_URL, CHAT_ERROR_MESSAGE, SUGGESTED_QUESTIONS } from "../config/constants";
+import { toApiMessages } from "../chatHistory";
 import { Message, ReadingColumn } from "../components";
 
 /**
@@ -63,19 +64,6 @@ async function readEventStream(response, onEvent) {
   if (buffer.trim()) dispatchEvent(buffer, onEvent);
 }
 
-/**
- * @param {ChatMessage[]} history
- * @returns {{ role: string, content: string }[]}
- */
-function toApiMessages(history) {
-  return history
-    .filter((message) => message.content.trim() !== "")
-    .map((message) => ({
-      role: message.role === "ai" ? "assistant" : message.role,
-      content: message.content,
-    }));
-}
-
 export function ChatPage() {
   const [messages, setMessages] = useState(/** @type {ChatMessage[]} */ ([]));
   const [input, setInput] = useState("");
@@ -84,10 +72,17 @@ export function ChatPage() {
   const [error, setError] = useState("");
   const messagesEndRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const inputRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
+  const abortRef = useRef(/** @type {AbortController | null} */ (null));
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading, status, error]);
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   function resizeInput() {
     const el = inputRef.current;
@@ -116,6 +111,9 @@ export function ChatPage() {
    * @param {ChatMessage[]} history
    */
   async function requestAnswer(history) {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setError("");
     setStatus("Looking that up.");
     setLoading(true);
@@ -127,7 +125,9 @@ export function ChatPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: toApiMessages(history) }),
+        signal: controller.signal,
       });
+      if (controller.signal.aborted) return;
 
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("text/event-stream")) {
@@ -137,6 +137,7 @@ export function ChatPage() {
       }
 
       await readEventStream(res, (event, data) => {
+        if (controller.signal.aborted) return;
         if (event === "status" && typeof data.text === "string" && data.text.trim()) {
           setStatus(data.text);
           return;
@@ -154,16 +155,20 @@ export function ChatPage() {
         }
       });
 
+      if (controller.signal.aborted) return;
       if (sawError || answer.trim() === "") {
         setMessages(history);
         if (!sawError) setError(CHAT_ERROR_MESSAGE);
       }
     } catch {
+      if (controller.signal.aborted) return;
       setMessages(history);
       setError(CHAT_ERROR_MESSAGE);
     } finally {
-      setStatus("");
-      setLoading(false);
+      if (abortRef.current === controller) {
+        setStatus("");
+        setLoading(false);
+      }
     }
   }
 
