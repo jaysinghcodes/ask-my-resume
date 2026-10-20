@@ -22,6 +22,9 @@ jobs:
       - name: Install scanner dependencies
         run: npm ci
 
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
       - name: Scan committed files for phone numbers
         run: npm run phone:scan
 
