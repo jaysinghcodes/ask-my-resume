@@ -4,14 +4,18 @@
  *
  * Decode percent escapes, then HTML entities (&nbsp;, &#160;, &#xA0;, and
  * other named entities). Normalize each character with NFKC, strip Unicode
- * Cf, fold Arabic Indic digits to ASCII (NFKC leaves them unchanged), and
- * map U+2010 to U+2015 and U+2212 to an ASCII hyphen. Collapse whitespace,
- * drop separators that sit between digits (space, dash, dot, slash,
+ * Cf, fold every Unicode decimal digit to ASCII from DerivedNumericValues,
+ * and map U+2010 to U+2015 and U+2212 to an ASCII hyphen. Within a line,
+ * whitespace matches collapseSpace in lib/text-normalize.js (tab, form
+ * feed, vertical tab, and the Unicode spaces). Line breaks (LF, CR,
+ * U+2028, U+2029) stay separate, so digit groups on two lines do not join.
+ * Drop separators that sit between digits (space, dash, dot, slash,
  * underscore, comma, parentheses), then fail any run of 10 or more digits.
  * A neighboring letter or x does not exempt that run. tel links fail the
  * same way. A hex hash of 7 to 40 characters is kept only when it contains
  * a letter and every long digit run sits strictly inside the token. UUIDs,
  * ISO dates, and exact tokens in scripts/phone-scan-allowlist.txt are kept.
+ * UTF-16 LE, UTF-16 BE, and UTF-8 files with a BOM are decoded and scanned.
  * Output is the file path and line number only.
  */
 
@@ -22,7 +26,19 @@ import { fileURLToPath } from "node:url";
 import { decode } from "html-entities";
 
 const FIXTURE_DIR = "tests/fixtures/phone-scan";
+const UNICODE_DATA_DIR = "scripts/unicode";
 const ALLOWLIST_REL = "scripts/phone-scan-allowlist.txt";
+const DECIMAL_DIGITS_PATH = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "unicode",
+  "DerivedNumericValues.txt",
+);
+
+/**
+ * Same character set as collapseSpace in lib/text-normalize.js, without the
+ * line breaks. Line breaks must not join digits across lines.
+ */
+const INLINE_SPACE = /[\t\f\v \u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]/;
 
 const LOCKFILE_BASENAMES = new Set([
   "package-lock.json",
@@ -66,20 +82,70 @@ function decodePercents(text) {
   return text.replace(/%([0-9a-fA-F]{2})/g, (_match, hex) => String.fromCharCode(Number.parseInt(hex, 16)));
 }
 
+/** @type {Map<string, string>} */
+const decimalDigitMap = loadDecimalDigits(fs.readFileSync(DECIMAL_DIGITS_PATH, "utf8"));
+
+/**
+ * @param {string} text
+ * @returns {Map<string, string>}
+ */
+function loadDecimalDigits(text) {
+  /** @type {Map<string, string>} */
+  const map = new Map();
+  for (const line of text.split("\n")) {
+    if (!line.includes("# Nd")) continue;
+    const parts = line.split(";");
+    const integer = (parts[3] || "").split("#")[0].trim();
+    if (!/^\d$/.test(integer)) continue;
+    map.set(codePoint(parts[0]), integer);
+  }
+  return map;
+}
+
+/**
+ * @param {string} field
+ * @returns {string}
+ */
+function codePoint(field) {
+  return String.fromCodePoint(Number.parseInt(field.trim(), 16));
+}
+
+/**
+ * @param {string} text
+ * @returns {string}
+ */
+function foldDecimalDigits(text) {
+  let out = "";
+  for (const ch of text) out += decimalDigitMap.get(ch) ?? ch;
+  return out;
+}
+
+/**
+ * @param {string} text
+ * @returns {string}
+ */
+function foldDashes(text) {
+  return text.replace(/[\u2010-\u2015\u2212]/g, "-");
+}
+
+/**
+ * @param {string} text
+ * @returns {string}
+ */
+function breakLines(text) {
+  return text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/[\u2028\u2029]/g, "\n");
+}
+
 /**
  * @param {string} ch
  * @returns {string}
  */
 function foldChar(ch) {
   if (/\p{Cf}/u.test(ch)) return "";
-  let next = ch.normalize("NFKC").replace(/\p{Cf}/gu, "");
-  next = next.replace(/[\u2010-\u2015\u2212]/g, "-");
+  const next = foldDashes(foldDecimalDigits(ch.normalize("NFKC").replace(/\p{Cf}/gu, "")));
   let folded = "";
   for (const part of next) {
-    const cp = part.codePointAt(0) ?? 0;
-    if (cp >= 0x0660 && cp <= 0x0669) folded += String(cp - 0x0660);
-    else if (cp >= 0x06f0 && cp <= 0x06f9) folded += String(cp - 0x06f0);
-    else if (/\p{Zs}/u.test(part) || part === "\n" || part === "\t") folded += " ";
+    if (INLINE_SPACE.test(part)) folded += " ";
     else folded += part;
   }
   return folded;
@@ -90,7 +156,7 @@ function foldChar(ch) {
  * @returns {{ ch: string, line: number }[]}
  */
 export function normalizeChars(input) {
-  const source = decode(decodePercents(String(input).replace(/\r\n/g, "\n").replace(/\r/g, "\n")));
+  const source = breakLines(decode(decodePercents(breakLines(String(input)))));
   /** @type {{ ch: string, line: number }[]} */
   const out = [];
   let line = 1;
@@ -187,7 +253,12 @@ function isSafeHexHash(token) {
  * @param {string[]} [allowed]
  * @returns {{ line: number, rule: string }[]}
  */
-export function findPhoneHits(text, allowed = []) {
+/**
+ * @param {string} text
+ * @param {string[]} [allowed]
+ * @returns {{ line: number, digits: string }[]}
+ */
+function collectPhoneHits(text, allowed = []) {
   let items = normalizeChars(text);
   items = blankMatches(items, ISO_DATE);
   items = blankMatches(items, UUID_TOKEN);
@@ -196,17 +267,40 @@ export function findPhoneHits(text, allowed = []) {
   items = blankMatches(items, HEX_HASH, isSafeHexHash);
 
   const body = items.map((item) => item.ch).join("");
-  /** @type {Map<number, string>} */
-  const byLine = new Map();
+  /** @type {{ line: number, digits: string }[]} */
+  const hits = [];
   PHONE_RUN.lastIndex = 0;
   for (const match of body.matchAll(PHONE_RUN)) {
     const start = match.index ?? 0;
     const line = items[start]?.line || 1;
-    if (!byLine.has(line)) byLine.set(line, "digits");
+    hits.push({ line, digits: match[0] });
+  }
+  return hits;
+}
+
+/**
+ * @param {string} text
+ * @param {string[]} [allowed]
+ * @returns {{ line: number, rule: string }[]}
+ */
+export function findPhoneHits(text, allowed = []) {
+  /** @type {Map<number, string>} */
+  const byLine = new Map();
+  for (const hit of collectPhoneHits(text, allowed)) {
+    if (!byLine.has(hit.line)) byLine.set(hit.line, "digits");
   }
   return [...byLine.entries()]
     .sort((a, b) => a[0] - b[0])
     .map(([line, rule]) => ({ line, rule }));
+}
+
+/**
+ * Digit runs the scanner would flag. Used to check fixtures stay fictional.
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function phoneDigitRuns(text) {
+  return collectPhoneHits(text).map((hit) => hit.digits);
 }
 
 /**
@@ -245,6 +339,8 @@ export function shouldSkipRepoPath(rel, options = {}) {
   if (parts.includes("node_modules") || parts.includes(".git")) return true;
   if (LOCKFILE_BASENAMES.has(path.posix.basename(norm))) return true;
   if (!options.explicit && (norm === FIXTURE_DIR || norm.startsWith(`${FIXTURE_DIR}/`))) return true;
+  // The Unicode data file holds large numeric values. The loader still reads it.
+  if (!options.explicit && (norm === UNICODE_DATA_DIR || norm.startsWith(`${UNICODE_DATA_DIR}/`))) return true;
   return false;
 }
 
@@ -254,11 +350,20 @@ export function shouldSkipRepoPath(rel, options = {}) {
  * @returns {{ line: number, rule: string }[]}
  */
 export function scanFile(file, allowed = []) {
+  const text = readScanText(file);
+  if (text === null) return [];
+  return findPhoneHits(text, allowed);
+}
+
+/**
+ * @param {string} file
+ * @returns {string | null}
+ */
+export function readScanText(file) {
   const ext = path.extname(file).toLowerCase();
-  if (SKIP_EXT.has(ext)) return [];
-  if (ext === ".pdf") return findPhoneHits(readPdfText(file), allowed);
-  if (looksBinary(file)) return [];
-  return findPhoneHits(fs.readFileSync(file, "utf8"), allowed);
+  if (SKIP_EXT.has(ext)) return null;
+  if (ext === ".pdf") return readPdfText(file);
+  return readTextFile(file);
 }
 
 /**
@@ -283,15 +388,50 @@ function readPdfText(file) {
  * @param {string} file
  * @returns {boolean}
  */
-function looksBinary(file) {
+/**
+ * BOM text is scanned. A NUL in the first 8000 bytes, with no BOM, stays binary.
+ * @param {string} file
+ * @returns {string | null}
+ */
+function readTextFile(file) {
   const fd = fs.openSync(file, "r");
   try {
-    const buf = Buffer.alloc(8000);
-    const n = fs.readSync(fd, buf, 0, 8000, 0);
-    return buf.subarray(0, n).includes(0);
+    const head = Buffer.alloc(8000);
+    const n = fs.readSync(fd, head, 0, 8000, 0);
+    const prefix = head.subarray(0, n);
+    if (hasUtf16Bom(prefix)) return decodeUtf16File(file, prefix[0] === 0xff ? "le" : "be");
+    if (prefix.includes(0)) return null;
   } finally {
     fs.closeSync(fd);
   }
+  const buf = fs.readFileSync(file);
+  if (buf.length >= 3 && buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf) {
+    return buf.subarray(3).toString("utf8");
+  }
+  return buf.toString("utf8");
+}
+
+/**
+ * @param {Buffer} prefix
+ * @returns {boolean}
+ */
+function hasUtf16Bom(prefix) {
+  if (prefix.length < 2) return false;
+  const le = prefix[0] === 0xff && prefix[1] === 0xfe;
+  const be = prefix[0] === 0xfe && prefix[1] === 0xff;
+  return le || be;
+}
+
+/**
+ * @param {string} file
+ * @param {"le" | "be"} endian
+ * @returns {string}
+ */
+function decodeUtf16File(file, endian) {
+  const buf = fs.readFileSync(file);
+  const body = Buffer.from(buf.subarray(2));
+  if (endian === "be") body.swap16();
+  return body.toString("utf16le");
 }
 
 /**

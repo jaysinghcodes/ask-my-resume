@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  base: process.env.VERCEL ? "/" : "/ask-my-resume/",
   server: {
     proxy: {
       // Same origin /api paths. vercel dev listens on 3000 and serves the functions.
