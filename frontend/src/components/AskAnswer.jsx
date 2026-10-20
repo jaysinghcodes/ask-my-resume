@@ -68,10 +68,11 @@ function SourceLabel({ source }) {
  *   text: string,
  *   sources: import("../ask/askModel.js").Source[] | null,
  *   streaming: boolean,
+ *   jdFit?: boolean,
  * }} props
  */
-export function AskAnswer({ turnId, text, sources, streaming }) {
-  const layout = layoutAnswer(text, sources, { streaming });
+export function AskAnswer({ turnId, text, sources, streaming, jdFit = false }) {
+  const layout = layoutAnswer(text, sources, { streaming, jdFit });
   const linked = !streaming && layout.sources.length > 0;
   return (
     <div className="turn-a">

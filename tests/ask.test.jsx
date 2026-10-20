@@ -9,6 +9,8 @@ import kb from "../kb/kb.json";
 import {
   ASK_COPY,
   FRIENDLY,
+  JD_FIT_SECTIONS,
+  jdFitBlocks,
   JD_MAX_CHARS,
   MAX_THREAD_MESSAGES,
   askTarget,
@@ -139,11 +141,93 @@ describe("citations and sources", () => {
     expect(loose(layout.blocks[0]).inline.map((p) => p.text).join("")).toBe("Jay built it");
   });
 
-  it("lays out the three JD fit parts as headings", () => {
-    const text = "Strong matches\n- AWS [1]\n\nPartial matches\n- Go [1]\n\nGaps\n- Kotlin";
-    const layout = layoutAnswer(text, normalizeSources(sources));
+  it("lays out the three JD fit parts as headings, with Closest experience and no Gaps", () => {
+    const text = "Strong matches\n- AWS [1]\n\nPartial matches\n- Go [1]\n\nClosest experience\n- Kubernetes: container orchestration with AWS ECS [1]";
+    const layout = layoutAnswer(text, normalizeSources(sources), { jdFit: true });
     const headings = layout.blocks.filter((b) => b.type === "heading").map((b) => loose(b).inline[0].text);
-    expect(headings).toEqual(["Strong matches", "Partial matches", "Gaps"]);
+    expect(headings).toEqual(["Strong matches", "Partial matches", "Closest experience"]);
+    expect(JD_FIT_SECTIONS).toEqual(headings);
+    const closest = loose(layout.blocks.at(-1)).items[0];
+    expect(closest.map((p) => p.text ?? `^${p.n}`).join("")).toBe("Kubernetes: container orchestration with AWS ECS^1");
+  });
+
+  it("never shows a Gaps section or missing wording in a JD fit answer", () => {
+    const text = [
+      "Strong matches",
+      "- AWS Lambda services [1]",
+      "- Kotlin is missing from his resume [1]",
+      "",
+      "Closest experience",
+      "- Kubernetes: container orchestration with AWS ECS [1]",
+      "- Kafka: event streaming",
+      "",
+      "Gaps",
+      "- Kotlin",
+      "- Rust",
+      "",
+      "Missing skills",
+      "- Scala",
+      "",
+      "He has no experience with Elixir.",
+    ].join("\n");
+    const layout = layoutAnswer(text, normalizeSources(sources), { jdFit: true });
+    const flat = JSON.stringify(layout.blocks);
+    for (const word of ["Gaps", "Missing", "missing", "Kotlin", "Rust", "Scala", "Kafka", "Elixir", "no experience"]) {
+      expect(flat, word).not.toContain(word);
+    }
+    expect(layout.blocks.filter((b) => b.type === "heading").map((b) => loose(b).inline[0].text)).toEqual([
+      "Strong matches",
+      "Closest experience",
+    ]);
+    const html = render(createElement(AskAnswer, { turnId: "t9", text, sources: normalizeSources(sources), streaming: false, jdFit: true }));
+    expect(html).not.toMatch(/gaps|missing|kotlin|kafka/i);
+    expect(html).toContain("Closest experience");
+  });
+
+  it("drops a heading left empty after the JD fit rules", () => {
+    const blocks = jdFitBlocks(layoutAnswer("Closest experience\n- Kafka: event streaming\n\nStrong matches\n- AWS [1]", normalizeSources(sources)).blocks);
+    expect(blocks.map((b) => b.type)).toEqual(["heading", "ul"]);
+    expect(loose(blocks[0]).inline[0].text).toBe("Strong matches");
+  });
+
+  it("leaves normal answers alone", () => {
+    const layout = layoutAnswer("Gaps\n- none [1]", normalizeSources(sources));
+    expect(layout.blocks.map((b) => b.type)).toEqual(["heading", "ul"]);
+  });
+
+  it("lists only cited sources, numbered by first citation", () => {
+    const three = normalizeSources([
+      ...sources,
+      { id: "bullet-captech-consultant-1", label: "Resume · CapTech Consulting · bullet 1", href: "#role-captech-consultant" },
+    ]);
+    const layout = layoutAnswer("Built Cleat [doc-cleat-arch]. Cut cost 75% [bullet-captech-consultant-4].", three);
+    expect(layout.sources.map((s) => [s.n, s.label])).toEqual([
+      [1, "Cleat · architecture doc"],
+      [2, "Resume · CapTech Consulting · bullet 4"],
+    ]);
+    const numeric = layoutAnswer("Migrated to AWS [3]. Cut cost 75% [1]. Again [3].", three);
+    expect(numeric.sources.map((s) => s.label)).toEqual(["Resume · CapTech Consulting · bullet 1", "Resume · CapTech Consulting · bullet 4"]);
+    const cites = loose(numeric.blocks[0]).inline.filter((p) => p.type === "cite").map((p) => p.n);
+    expect(cites).toEqual([1, 2, 1]);
+    expect(layoutAnswer("No citations here.", three).sources).toEqual([]);
+  });
+
+  it("attaches the superscript to the word or punctuation before it with no space", () => {
+    /** @param {string} text */
+    const flat = (text) =>
+      loose(layoutAnswer(text, normalizeSources(sources)).blocks[0])
+        .inline.map((p) => (p.type === "cite" ? `^${p.n}` : p.text))
+        .join("");
+    expect(flat("Cut cost 75% [bullet-captech-consultant-4].")).toBe("Cut cost 75%.^1");
+    expect(flat("Cut cost 75%.[bullet-captech-consultant-4]")).toBe("Cut cost 75%.^1");
+    expect(flat("Cut cost 75%[bullet-captech-consultant-4], then more.")).toBe("Cut cost 75%,^1 then more.");
+    expect(flat("Two sources [bullet-captech-consultant-4] [doc-cleat-arch].")).toBe("Two sources.^1^2");
+    expect(flat("Ends here [doc-cleat-arch]")).toBe("Ends here^1");
+    const html = render(createElement(AskAnswer, { turnId: "t2", text: "Cut cost 75% [bullet-captech-consultant-4].", sources: normalizeSources(sources), streaming: false }));
+    expect(html).toContain('<span>Cut cost 75%.</span><sup class="cite">');
+    const css = read("frontend/src/styles/ask.css");
+    expect(css).toMatch(/\.turn-a sup \{[^}]*margin-left: 0;/);
+    expect(css).toMatch(/\.turn-a sup a \{[^}]*padding: 0 1px 0 0;/);
   });
 
   it("keeps only page anchors and https links", () => {
@@ -157,7 +241,7 @@ describe("citations and sources", () => {
     const html = render(
       createElement(AskAnswer, {
         turnId: "t1",
-        text: "Cut cost 75% [bullet-captech-consultant-4].",
+        text: "Cut cost 75% [bullet-captech-consultant-4]. Built Cleat [doc-cleat-arch].",
         sources: normalizeSources(sources),
         streaming: false,
       }),

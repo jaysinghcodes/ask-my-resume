@@ -309,6 +309,7 @@ export function ChatPage({ id = "ask" }) {
                     text={turn.answer}
                     sources={turn.sources}
                     streaming={turn.state !== "done"}
+                    jdFit={turn.mode === "jd_fit"}
                   />
                 ) : null}
                 {turn.status && (turn.state === "waiting" || turn.state === "streaming") ? (

@@ -168,10 +168,13 @@ const CITE = "\u0000";
  * Number the citations in an answer and lay it out in blocks.
  * Markers are numbered in the order they first appear. A numeric marker points at that
  * entry of the sources list. Once sources have arrived, a marker that matches no source
- * is dropped. While streaming, a half received marker at the end is hidden.
+ * is dropped, and a source that is never cited is left out of the list.
+ * A superscript attaches to the word or punctuation before it with no space, and moves
+ * after punctuation that directly follows it: "75% [1]." reads "75%.¹".
+ * While streaming, a half received marker at the end is hidden.
  * @param {string} text
  * @param {Source[] | null} sources `null` while the sources event has not arrived.
- * @param {{ streaming?: boolean }} [options]
+ * @param {{ streaming?: boolean, jdFit?: boolean }} [options] `jdFit` applies the JD fit rules (see jdFitBlocks).
  * @returns {{ blocks: Block[], sources: NumberedSource[] }}
  */
 export function layoutAnswer(text, sources, options = {}) {
@@ -214,14 +217,10 @@ export function layoutAnswer(text, sources, options = {}) {
     return `${CITE}${numberFor(key, source)}${CITE}`;
   });
 
-  if (known) {
-    known.forEach((source, index) => {
-      const key = sourceKey(source, index);
-      if (!numbers.has(key)) numberFor(key, source);
-    });
-  }
-
-  return { blocks: toBlocks(tidy(marked)), sources: list };
+  // Only cited sources are listed, numbered by first citation so they match the superscripts.
+  const attached = attachCites(tidy(marked));
+  const blocks = toBlocks(attached);
+  return { blocks: options.jdFit ? jdFitBlocks(blocks) : blocks, sources: list };
 }
 
 /**
@@ -240,8 +239,28 @@ function tidy(text) {
   return text.replace(/[ \t]+([.,;:!?])/g, "$1");
 }
 
+/**
+ * Pull each run of superscripts onto the text before it and after any punctuation that
+ * follows it, so "75% [1]." and "75%[1]." both read "75%.¹". Line breaks are kept.
+ * @param {string} text
+ */
+function attachCites(text) {
+  return text.replace(CITE_RUN, (_match, cites, punct) => `${punct}${cites.replace(/[ \t]+/g, "")}`);
+}
+
+const CITE_RUN = new RegExp(`[ \\t]*((?:[ \\t]*${CITE}\\d+${CITE})+)([.,;:!?]*)`, "g");
+
 const HEADING = /^(?:#{1,4}\s+)?(?:\*\*)?([^*\n]{1,60}?)(?:\*\*)?:?$/;
-const JD_HEADINGS = /^(strong matches|partial matches|gaps)$/i;
+const JD_HEADINGS = /^(strong matches|partial matches|closest experience|gaps|missing skills?|missing)$/i;
+
+/** The JD fit sections, in order. Jay's ruling: never a Gaps section. */
+export const JD_FIT_SECTIONS = ["Strong matches", "Partial matches", "Closest experience"];
+
+/** A heading that reports gaps or missing skills. Its whole section is dropped. */
+const GAP_HEADING = /\b(gaps?|missing|lacking|not (?:a )?match(?:ed)?|not covered|weak(?:nesses)?)\b/i;
+/** Wording that reports a missing skill. A line or item with it is dropped. */
+const GAP_WORDING =
+  /\b(gaps?|missing|lacks?|lacking|no (?:direct )?experience|not (?:in|on) (?:the |his )?(?:knowledge base|kb|resume)|does(?:n't| not) have|has(?:n't| not) (?:used|worked))\b/i;
 const BULLET = /^\s*[-*\u2022]\s+(.*)$/;
 const NUMBERED = /^\s*\d+[.)]\s+(.*)$/;
 
@@ -255,6 +274,50 @@ function headingText(line) {
   const match = HEADING.exec(trimmed);
   if (match && JD_HEADINGS.test(match[1].trim())) return match[1].trim();
   return null;
+}
+
+/**
+ * JD fit answers never show gaps (Jay's ruling for #30):
+ *   a Gaps or Missing section is dropped with everything under it,
+ *   any paragraph or item that reports a missing skill is dropped,
+ *   under "Closest experience" an item without a citation is dropped, since each one
+ *   must name a real, cited skill. A heading left with nothing under it is dropped too.
+ * @param {Block[]} blocks
+ * @returns {Block[]}
+ */
+export function jdFitBlocks(blocks) {
+  /** @type {Block[]} */
+  const out = [];
+  let section = "";
+  let skipping = false;
+  for (const block of blocks) {
+    if (block.type === "heading") {
+      section = inlineText(block.inline).trim().toLowerCase();
+      skipping = GAP_HEADING.test(section);
+      if (!skipping) out.push(block);
+      continue;
+    }
+    if (skipping) continue;
+    if (block.type === "ul" || block.type === "ol") {
+      const items = block.items.filter((item) => {
+        if (GAP_WORDING.test(inlineText(item))) return false;
+        if (section === "closest experience" && !item.some((part) => part.type === "cite")) return false;
+        return true;
+      });
+      if (items.length) out.push({ type: block.type, items });
+      continue;
+    }
+    if ("inline" in block && GAP_WORDING.test(inlineText(block.inline))) continue;
+    out.push(block);
+  }
+  return out.filter((block, index) => block.type !== "heading" || (out[index + 1] && out[index + 1].type !== "heading"));
+}
+
+/**
+ * @param {Inline[]} parts
+ */
+function inlineText(parts) {
+  return parts.map((part) => (part.type === "cite" ? "" : part.text)).join("");
 }
 
 /**

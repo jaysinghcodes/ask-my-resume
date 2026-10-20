@@ -219,13 +219,14 @@
   font-weight: 600;
   line-height: 0;
   color: var(--accent);
-  margin-left: 2px;
+  /* The superscript sits right against the word or punctuation before it ("75%.¹"). */
+  margin-left: 0;
 }
 
 .turn-a sup a {
   color: inherit;
   text-decoration: none;
-  padding: 0 1px;
+  padding: 0 1px 0 0;
   border-radius: 3px;
 }
 
