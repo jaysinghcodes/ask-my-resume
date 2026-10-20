@@ -1,4 +1,4 @@
-import { Box, Button, Stack, Typography } from "@mui/material";
+import { Button, Stack, Typography } from "@mui/material";
 import { SUGGESTED_QUESTIONS } from "../config/constants";
 
 export function EmptyState({ onAsk }) {
