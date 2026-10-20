@@ -12,7 +12,7 @@ import {
   renderedJdFit,
 } from "../lib/jd-fit.js";
 import { JD_FIT_SECTIONS as PAGE_SECTIONS, layoutAnswer, normalizeSources } from "../frontend/src/ask/askModel.js";
-import { allowedJdHeading, reportsMissing } from "../lib/jd-fit-rules.js";
+import { allowedJdHeading, reportsMissing, traceJdFit } from "../lib/jd-fit-rules.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cases = JSON.parse(fs.readFileSync(path.join(root, "evals/jd-fit.cases.json"), "utf8")).cases;
@@ -148,11 +148,33 @@ describe("JD fit evals", () => {
     }
   });
 
+  it("never passes an answer whose bullets the page drops (r5 QA F1)", () => {
+    const shared = JSON.parse(fs.readFileSync(path.join(root, "tests/fixtures/jd-fit-shared.json"), "utf8"));
+    const ids = /** @type {Record<string, string>} */ (shared.ids);
+    const texts = [
+      ...shared.fixtures.map((/** @type {{ text: string }} */ f) => f.text.replace(/\{(\w+)\}/g, (_m, key) => `[${ids[key]}]`)),
+      ...cases.flatMap((evalCase) => [evalCase.good_answer, ...evalCase.bad_answers]),
+    ];
+    for (const text of texts) {
+      const trace = traceJdFit(text, /\[([A-Za-z][\w.:-]{0,79})\](?!\()/g, (id) => sourceIds.includes(id));
+      if (checkJdFitAnswer(text, { sourceIds }).length === 0) {
+        expect(trace.dropped, text).toEqual([]);
+        expect(trace.closers, text).toEqual([]);
+      }
+    }
+    expect(parseJdFitAnswer("> Strong matches\n- AWS [bullet-captech-consultant-4]", { sourceIds })).toEqual([]);
+    expect(checkJdFitAnswer("> Strong matches\n- AWS [bullet-captech-consultant-4]", { sourceIds })).toContain(
+      'item dropped after "> Strong matches": AWS',
+    );
+  });
+
   it("page and checker import the same parser", () => {
     const page = fs.readFileSync(path.join(root, "frontend/src/ask/askModel.js"), "utf8");
     const checker = fs.readFileSync(path.join(root, "lib/jd-fit.js"), "utf8");
     expect(page).toMatch(/import \{[^}]*\brenderJdFit\b[^}]*\} from "\.\.\/\.\.\/\.\.\/lib\/jd-fit-rules\.js"/);
-    expect(checker).toMatch(/import \{[^}]*\brenderJdFit\b[^}]*\bwalkJdFit\b[^}]*\} from "\.\/jd-fit-rules\.js"/);
+    expect(checker).toMatch(/import \{[^}]*\brenderJdFit\b[^}]*\btraceJdFit\b[^}]*\} from "\.\/jd-fit-rules\.js"/);
+    // The checker counts items only through the shared trace, never through its own walk.
+    expect(checker).not.toMatch(/\bwalkJdFit\b/);
     expect(page).not.toMatch(/function walkJdFit|HEADING_HINT/);
   });
 
