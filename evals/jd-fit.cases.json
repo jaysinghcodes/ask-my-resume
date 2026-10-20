@@ -102,6 +102,34 @@
         "Closest experience\n- None [bullet-captech-consultant-4]",
         "Closest experience\n- N/A [bullet-captech-consultant-4]"
       ]
+    },
+    {
+      "id": "atlas-r3",
+      "note": "Atlas ruling, PR #30 r3: a cited line that starts a block is still an unknown heading; a bare number is not a cite; heading matching ignores case, level, bold, a trailing colon and a trailing count; an uncited intro line drops only itself. The bad answers include Sentinel's r3 cited heading probes.",
+      "job_description": "Backend engineer. Requirements: AWS, Python, Go, Kubernetes, Kafka.",
+      "expect": {
+        "sections_allowed": [
+          "Strong matches",
+          "Partial matches",
+          "Closest experience"
+        ],
+        "closest": {
+          "Kubernetes": "bullet-captech-consultant-4"
+        },
+        "omit": []
+      },
+      "good_answer": "Strong matches (2)\nHere are the clear matches:\n- AWS Lambda services in Python and Go [bullet-captech-consultant-3]\n\n## partial matches\n- Healthcare data in React [role-osu-wexner]\n\n**Closest experience:** Kubernetes: container orchestration with AWS ECS [bullet-captech-consultant-4]",
+      "bad_answers": [
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nNot a fit [role-osu-wexner]\n- Kafka: used SQS instead [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\nConcerns: [role-osu-wexner]\n- Kafka: used SQS instead [project-cleat]",
+        "Strong matches\n- AWS serverless work on a banking platform [bullet-captech-consultant-4]\n\nNot a fit [role-osu-wexner]\n- Kafka: used SQS queues instead [project-cleat]\n\nPartial matches\n- Healthcare data in React [role-osu-wexner]",
+        "Strong matches\n- AWS [1]",
+        "Strong matches\n- AWS [1]\n- Go [9]",
+        "**Strong matches:** AWS [bullet-captech-consultant-4]\n**Gaps:** Kafka [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n1. Not a fit\n- Kafka [project-cleat]",
+        "Strong matches\n- AWS [bullet-captech-consultant-4]\n\n| Requirement | Status |\n| Kafka | partial [project-cleat] |",
+        "Overall a solid fit for the backend role [bullet-captech-consultant-4].\n\nStrong matches\n- AWS [bullet-captech-consultant-4]"
+      ]
     }
   ]
 }
