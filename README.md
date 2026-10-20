@@ -10,6 +10,12 @@ The live demo above is the current GitHub Pages site. This repo is set up as one
 
 Instead of a static resume PDF, anyone can ask about experience, skills, and role fit. Claude calls a `search_resume` tool and answers from the resume text.
 
+## How it works
+
+Ask Jay is a chat on this site. You ask about Jay Singh's experience, projects, or skills. The page sends the question to the chat API on this site. Claude calls a resume search tool, reads the knowledge base, and writes the answer from those records. It can call the tool again if it needs more, and it stops after at most 5 rounds.
+
+The project cards link here for this explanation. A page on the site will replace this section later.
+
 ## Architecture
 
 The Vite app in `frontend/` builds to static files. `api/chat.js` (POST) and `api/health.js` (GET) are Node.js Vercel Functions on Fluid compute, with a 60 second max duration. They import the shared logic in `lib/`. The phone free resume PDF is `frontend/public/Jay-Singh-Resume-Oct-2026.pdf`.

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { API_URL, CHAT_ERROR_MESSAGE, SUGGESTED_QUESTIONS } from "../config/constants";
 import { toApiMessages } from "../chatHistory";
-import { Message, ReadingColumn } from "../components";
+import { Message } from "../components/Message";
+import { ReadingColumn } from "../components/ReadingColumn";
 
 /**
  * @typedef {{ role: string, content: string }} ChatMessage
@@ -64,7 +65,7 @@ async function readEventStream(response, onEvent) {
   if (buffer.trim()) dispatchEvent(buffer, onEvent);
 }
 
-export function ChatPage() {
+export function ChatPage({ id = "ask" }) {
   const [messages, setMessages] = useState(/** @type {ChatMessage[]} */ ([]));
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -198,9 +199,10 @@ export function ChatPage() {
   const showThread = messages.length > 0 || loading || Boolean(error);
 
   return (
-    <ReadingColumn className="ask-section">
+    <section id={id} className="ask-section">
+      <ReadingColumn>
       <p className="kicker">Ask Jay</p>
-      <h1>Ask about my experience</h1>
+      <h1 tabIndex={-1}>Ask about my experience</h1>
       <p className="ask-sub">
         An assistant that answers from my resume, project docs and repos, and cites where each
         answer came from.
@@ -215,6 +217,7 @@ export function ChatPage() {
           }}
         >
           <textarea
+            id="ask-input"
             ref={inputRef}
             rows={1}
             value={input}
@@ -272,6 +275,7 @@ export function ChatPage() {
 
         <div className="ask-foot">Answers are grounded in the resume.</div>
       </div>
-    </ReadingColumn>
+      </ReadingColumn>
+    </section>
   );
 }

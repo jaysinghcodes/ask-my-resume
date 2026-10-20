@@ -12,13 +12,18 @@
     "noImplicitAny": false,
     "skipLibCheck": true,
     "types": ["node"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "react-router-dom": ["frontend/node_modules/react-router-dom"]
+    }
   },
   "include": [
     "api/**/*.js",
     "lib/**/*.js",
     "scripts/**/*.js",
     "tests/**/*.js",
+    "tests/**/*.jsx",
     "types/**/*.d.ts",
     "frontend/src/**/*.js",
     "frontend/src/**/*.jsx",
