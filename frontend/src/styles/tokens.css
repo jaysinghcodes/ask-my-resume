@@ -10,6 +10,9 @@
   --card: #ffffff;
   --wash: #f5f1ed;
   --accent: #8a5a44;
+  --accentSoft: #f3eae4;
+  /* Mockup faint #9a9a9a fails AA on this background, so dates and tags use muted. */
+  --faint: #6b6b6b;
   --sans: "Inter", system-ui, sans-serif;
   --serif: "Source Serif 4", Georgia, serif;
   --mono: "JetBrains Mono", ui-monospace, monospace;
