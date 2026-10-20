@@ -9,12 +9,20 @@
       {
         "value": "80",
         "unit": "percent",
-        "meaning": "share of the organization affected by the platform migration"
+        "meaning": "share of the organization affected by the platform migration",
+        "display": "80%",
+        "label": "Of the organization impacted by the AWS migration",
+        "tags": "Cloud native services",
+        "impact_order": 4
       },
       {
         "value": "9 months to 1 week",
         "unit": "time",
-        "meaning": "reduction in the time it took to launch a new financial product"
+        "meaning": "reduction in the time it took to launch a new financial product",
+        "display": "9 mo to 1 wk",
+        "label": "Product launch timelines on a core banking modernization",
+        "tags": "CapTech · Top 10 U.S. bank",
+        "impact_order": 1
       }
     ],
     "skills": [
@@ -88,7 +96,11 @@
       {
         "value": "7.8",
         "unit": "million USD per year",
-        "meaning": "projected annual value from reduced operational costs and higher account opening completion rates"
+        "meaning": "projected annual value from reduced operational costs and higher account opening completion rates",
+        "display": "$7.8M",
+        "label": "Projected annual value from data standardization",
+        "tags": "Databricks · Snowflake",
+        "impact_order": 2
       }
     ],
     "skills": [
@@ -229,7 +241,11 @@
       {
         "value": "75",
         "unit": "percent",
-        "meaning": "reduction in infrastructure costs after the ECS and database throughput changes"
+        "meaning": "reduction in infrastructure costs after the ECS and database throughput changes",
+        "display": "75%",
+        "label": "Lower infrastructure cost after 6 months of New Relic analysis",
+        "tags": "AWS ECS · DB throughput",
+        "impact_order": 3
       }
     ],
     "skills": [

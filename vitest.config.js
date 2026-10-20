@@ -12,11 +12,12 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: "react-dom", replacement: path.join(frontendModules, "react-dom") },
+      { find: "react-router-dom", replacement: path.join(frontendModules, "react-router-dom") },
       { find: "react", replacement: path.join(frontendModules, "react") },
     ],
   },
   test: {
     environment: "node",
-    include: ["tests/**/*.test.js"],
+    include: ["tests/**/*.test.js", "tests/**/*.test.jsx"],
   },
 });
