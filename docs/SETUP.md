@@ -28,9 +28,43 @@ Set both variables for Production and for Preview.
 
 `MODEL_ID` is required. The app has no hardcoded model. If either variable is missing, `/api/chat` returns a friendly error and `/api/health` returns `{ "status": "ok", "configured": false }`. When both are set, health returns `{ "status": "ok", "configured": true }`. Health never calls Claude.
 
+`KB_BANNED_TERMS` is the comma separated list from section 5. It is not an API key. Set it locally, as a GitHub Actions secret, and as a Vercel environment variable.
+
 ## 4. Preview deploys
 
 Confirm preview deploys are on for pull requests. That is the default with the Git integration.
+
+## 5. Banned terms for the knowledge base
+
+The knowledge base build reads `KB_BANNED_TERMS`. The value is a comma separated list of terms that must not appear in a public field. Real client names belong in this list, not in the repo.
+
+If the variable is missing or blank, the build prints a warning and still succeeds. Set it in all three places below so the check actually runs.
+
+### Local
+
+1. Copy `.env.example` to `.env` if you have not already.
+2. Replace the placeholder on `KB_BANNED_TERMS` with your comma separated list.
+3. `npm run kb:build` loads `.env` when the variable is not already set in the shell.
+4. `npm run build` runs the knowledge base build before the Vite build.
+
+### GitHub Actions
+
+1. Open the repository on GitHub.
+2. Open Settings, then Secrets and variables, then Actions.
+3. Choose New repository secret.
+4. Name it `KB_BANNED_TERMS`.
+5. Paste the same comma separated list.
+6. Save the secret.
+
+`.github/workflows/ci.yml` passes this secret into the build. A missing secret warns and does not fail the build.
+
+### Vercel
+
+1. Open the Vercel project from step 2.
+2. Open Settings, then Environment Variables.
+3. Add `KB_BANNED_TERMS` for Production and for Preview.
+4. Use the same comma separated list.
+5. Redeploy so the build sees the variable.
 
 ## Where shared logic lives
 
@@ -65,4 +99,4 @@ npm test
 npm run build
 ```
 
-Copy `.env.example` to `.env` and fill in both variables before `npx vercel dev`.
+Copy `.env.example` to `.env` and fill in `ANTHROPIC_API_KEY`, `MODEL_ID`, and `KB_BANNED_TERMS` before `npx vercel dev`. Section 5 explains the banned terms list.

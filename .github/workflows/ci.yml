@@ -31,5 +31,12 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Build knowledge base
+        env:
+          KB_BANNED_TERMS: ${{ secrets.KB_BANNED_TERMS }}
+        run: npm run kb:build
+
       - name: Build
+        env:
+          KB_BANNED_TERMS: ${{ secrets.KB_BANNED_TERMS }}
         run: npm run build

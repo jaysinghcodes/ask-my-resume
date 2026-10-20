@@ -1,0 +1,20 @@
+{
+  "$id": "https://ask-jay.local/schema/never_say.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "allOf": [
+      { "$ref": "https://ask-jay.local/schema/common.json#/$defs/record" },
+      { "$ref": "https://ask-jay.local/schema/common.json#/$defs/noPhone" },
+      {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "topic": { "type": "string" },
+          "rule": { "type": "string" },
+          "suggested_redirect": { "type": "string" }
+        }
+      }
+    ]
+  }
+}

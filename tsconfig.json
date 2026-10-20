@@ -17,6 +17,7 @@
   "include": [
     "api/**/*.js",
     "lib/**/*.js",
+    "scripts/**/*.js",
     "tests/**/*.js",
     "types/**/*.d.ts",
     "frontend/src/**/*.js",

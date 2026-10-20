@@ -1,0 +1,25 @@
+{
+  "$id": "https://ask-jay.local/schema/skills.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "allOf": [
+      { "$ref": "https://ask-jay.local/schema/common.json#/$defs/record" },
+      { "$ref": "https://ask-jay.local/schema/common.json#/$defs/noPhone" },
+      {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "group": { "type": "string" },
+          "name": { "type": "string" },
+          "evidence_ids": { "type": "array", "items": { "type": "string" } },
+          "on_resume": { "type": "boolean" },
+          "level_internal": { "type": "string" },
+          "level_public": { "type": "boolean" },
+          "display_name": { "type": "string" },
+          "evidence_note": { "type": "string" }
+        }
+      }
+    ]
+  }
+}
