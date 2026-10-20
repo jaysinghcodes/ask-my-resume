@@ -6,13 +6,13 @@
 /** The production URL from T1. */
 export const SITE_URL = "https://ask-jay.vercel.app";
 
-export const SITE_TITLE = "Jay Singh · AI native software engineer";
+export const SITE_TITLE = "Jay Singh · AI native forward deployed engineer";
 
 export const OG_IMAGE = {
   path: "/og-image.png",
   width: 1200,
   height: 630,
-  alt: "Jay Singh, AI native software engineer",
+  alt: "Jay Singh, AI native forward deployed engineer",
 };
 
 /**

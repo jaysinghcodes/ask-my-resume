@@ -112,7 +112,7 @@ describe("layout shell", () => {
       .map((name) => read(path.join("frontend", "src", String(name))))
       .join("\n");
 
-    expect(html).toContain("Jay Singh · AI native software engineer");
+    expect(html).toContain("Jay Singh · AI native forward deployed engineer");
     expect(html).toContain('name="viewport"');
     // T13: font preloads competed with the first paint on mobile, so fonts load from the inlined CSS.
     expect(html).not.toContain('as="font"');
