@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { findPhoneHits, parseAllowlist, shouldSkipRepoPath } from "../scripts/phone-scan.mjs";
+import { findPhoneHits, parseAllowlist, phoneDigitRuns, readScanText, shouldSkipRepoPath } from "../scripts/phone-scan.mjs";
 import { buildTinyPdf } from "../scripts/tiny-pdf.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -215,6 +215,7 @@ test("repo scan skips fixtures, lockfiles, and node_modules", () => {
   assert.equal(shouldSkipRepoPath("frontend/package-lock.json"), true);
   assert.equal(shouldSkipRepoPath("mcp-server/node_modules/express/index.js"), true);
   assert.equal(shouldSkipRepoPath("frontend/public/Jay-Singh-Resume-Oct-2026.pdf"), false);
+  assert.equal(shouldSkipRepoPath("scripts/unicode/DerivedNumericValues.txt"), true);
   assert.equal(
     shouldSkipRepoPath("tests/fixtures/phone-scan/bad/numbers.txt", { explicit: true }),
     false,
@@ -226,4 +227,102 @@ test("default repo scan passes", () => {
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /no phone numbers/);
   assert.doesNotMatch(`${result.stdout}\n${result.stderr}`, /555/);
+});
+
+function scriptDigits(zero) {
+  const head = "5".repeat(6);
+  const tail = "0123";
+  return [...`${head}${tail}`].map((digit) => String.fromCodePoint(zero + Number(digit))).join("");
+}
+
+test("devanagari, bengali, thai, and nko digits fail", () => {
+  assertHit(scriptDigits(0x0966));
+  assertHit(scriptDigits(0x09e6));
+  assertHit(scriptDigits(0x0e50));
+  assertHit(scriptDigits(0x07c0));
+  assertFixtureFails("bad/digits.txt");
+});
+
+test("form feed and vertical tab join digits inside a line", () => {
+  assertHit(["555", "555", "0123"].join("\f"));
+  assertHit(["555", "555", "0123"].join("\v"));
+  assertFixtureFails("bad/inline-space.txt");
+});
+
+test("digit groups on consecutive lines do not fail", () => {
+  const groups = ["555", "555", "0123"];
+  assertClean(groups.join("\n"));
+  assertClean(groups.join("\r\n"));
+  assertClean(groups.join("\u2028"));
+  assertClean(groups.join("\u2029"));
+  const result = runScan([path.join(fixtures, "clean/line-breaks.txt")]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /no phone numbers/);
+});
+
+test("utf-16 and utf-8 bom fixtures fail the scan", () => {
+  for (const name of ["bad/utf16le.txt", "bad/utf16be.txt", "bad/utf8bom.txt"]) {
+    const result = runScan([path.join(fixtures, name)]);
+    assert.notEqual(result.status, 0, name);
+    assert.match(result.stdout, /\.txt:\d+/);
+    assert.doesNotMatch(`${result.stdout}\n${result.stderr}`, /555/);
+  }
+});
+
+test("a binary file without a bom is skipped", () => {
+  const file = path.join(os.tmpdir(), "phone-scan-binary.bin");
+  const digits = ["555", "555", "0123"].join("");
+  fs.writeFileSync(file, Buffer.concat([Buffer.from(`Call ${digits}`, "utf8"), Buffer.from([0])]));
+  const result = runScan([file]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /no phone numbers/);
+});
+
+function isFictionalPhone(digits) {
+  if (digits.includes("555")) return true;
+  if (/^01632\d{6}$/.test(digits)) return true;
+  if (/^4401632\d{6}$/.test(digits)) return true;
+  if (/^07700900\d{3}$/.test(digits)) return true;
+  if (/^447700900\d{3}$/.test(digits)) return true;
+  return false;
+}
+
+function fixtureFiles(dir) {
+  /** @type {string[]} */
+  const files = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...fixtureFiles(full));
+    else if (entry.isFile()) files.push(full);
+  }
+  return files;
+}
+
+test("fixture phone numbers stay in the fictional range", () => {
+  const files = fixtureFiles(fixtures);
+  assert.ok(files.length > 0);
+  for (const file of files) {
+    const text = readScanText(file);
+    if (text === null) continue;
+    for (const digits of phoneDigitRuns(text)) {
+      assert.equal(isFictionalPhone(digits), true, path.relative(root, file));
+    }
+  }
+});
+
+test("private pdf names are ignored and the public pdf is not", () => {
+  function ignorePattern(rel) {
+    const result = spawnSync("git", ["check-ignore", "-v", "--no-index", "--", rel], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    if (result.status !== 0) return "";
+    const matched = result.stdout.match(/:\d+:(.*)\t/);
+    return matched ? matched[1] : "";
+  }
+  assert.equal(ignorePattern("mcp-server/x/a.PDF").startsWith("!"), false);
+  assert.notEqual(ignorePattern("mcp-server/x/a.PDF"), "");
+  assert.equal(ignorePattern("Jay_RESUME.pdf").startsWith("!"), false);
+  assert.notEqual(ignorePattern("Jay_RESUME.pdf"), "");
+  assert.equal(ignorePattern("frontend/public/Jay-Singh-Resume-Oct-2026.pdf").startsWith("!"), true);
 });

@@ -14,17 +14,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Install poppler
         run: sudo apt-get update && sudo apt-get install -y poppler-utils
 
       - name: Install scanner dependencies
         run: npm ci
-
-      - name: Install MCP server dependencies
-        working-directory: mcp-server
-        run: npm install
 
       - name: Scan committed files for phone numbers
         run: npm run phone:scan
