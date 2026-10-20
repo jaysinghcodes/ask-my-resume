@@ -1,0 +1,81 @@
+{
+  "$id": "https://ask-jay.local/schema/common.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defs": {
+    "source": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        }
+      ]
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "source", "as_of", "confidence", "public", "notes"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "as_of": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "confidence": {
+          "enum": ["verified", "unsure"]
+        },
+        "public": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "noPhone": {
+      "type": ["object", "array", "string", "number", "boolean", "null"],
+      "allOf": [
+        {
+          "if": { "type": "object" },
+          "then": {
+            "propertyNames": {
+              "not": {
+                "enum": ["phone", "private.phone"]
+              }
+            },
+            "patternProperties": {
+              "^[\\s\\S]*$": {
+                "$ref": "#/$defs/noPhone"
+              }
+            }
+          }
+        },
+        {
+          "if": { "type": "array" },
+          "then": {
+            "items": {
+              "$ref": "#/$defs/noPhone"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
