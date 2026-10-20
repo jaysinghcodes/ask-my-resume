@@ -19,6 +19,50 @@ const MONTHS = [
 
 const SKILL_GROUPS = ["Languages", "AI and data", "Cloud and frameworks"];
 
+/** Resume order for verified, on-resume skills. Names match display_name. */
+const RESUME_SKILL_ORDER = {
+  Languages: [
+    "Python",
+    "TypeScript",
+    "JavaScript",
+    "SQL",
+    "Java",
+    "Go",
+    "HTML and CSS",
+    "YAML",
+  ],
+  "AI and data": [
+    "Claude API (Anthropic SDK)",
+    "OpenAI API",
+    "MCP (Model Context Protocol)",
+    "RAG",
+    "Vector embeddings",
+    "pgvector",
+    "LLM evals",
+    "Agentic workflows",
+    "Databricks",
+    "Snowflake",
+    "PostgreSQL",
+    "Pandas",
+  ],
+  "Cloud and frameworks": [
+    "AWS (Lambda, Fargate, ECS, SQS, SNS, RDS)",
+    "Docker",
+    "GitHub Actions",
+    "Vercel",
+    "Supabase",
+    "React",
+    "Next.js",
+    "React Native",
+    "Node.js",
+    "NestJS",
+    "Express",
+    "Prisma",
+    "Spring Boot",
+    "GraphQL",
+  ],
+};
+
 const CONTACT_LABELS = new Set(["Email", "LinkedIn", "GitHub", "Resume"]);
 
 const REPO = "ask-my-resume";
@@ -74,6 +118,7 @@ const HOW_IT_WORKS = `https://github.com/jaysinghcodes/${REPO}/blob/main/README.
  * @property {string} [name]
  * @property {string} [display_name]
  * @property {boolean} [on_resume]
+ * @property {string} [confidence]
  * @property {boolean} [public]
  */
 
@@ -451,7 +496,7 @@ export function skillGroups(kb) {
   /** @type {Map<string, string[]>} */
   const groups = new Map();
   for (const skill of kb.skills || []) {
-    if (skill.on_resume !== true || skill.public === false) continue;
+    if (skill.on_resume !== true || skill.public === false || skill.confidence !== "verified") continue;
     const name = skill.display_name || skill.name;
     if (!name || !skill.group) continue;
     const list = groups.get(skill.group) || [];
@@ -462,12 +507,32 @@ export function skillGroups(kb) {
   const ordered = [];
   for (const group of SKILL_GROUPS) {
     const skills = groups.get(group);
-    if (skills && skills.length > 0) ordered.push({ group, skills });
+    if (skills && skills.length > 0) ordered.push({ group, skills: sortResumeSkills(group, skills) });
   }
   for (const [group, skills] of groups) {
-    if (!SKILL_GROUPS.includes(group) && skills.length > 0) ordered.push({ group, skills });
+    if (!SKILL_GROUPS.includes(group) && skills.length > 0) {
+      ordered.push({ group, skills: sortResumeSkills(group, skills) });
+    }
   }
   return ordered;
+}
+
+/**
+ * @param {string} group
+ * @param {string[]} names
+ * @returns {string[]}
+ */
+function sortResumeSkills(group, names) {
+  const order = RESUME_SKILL_ORDER[group] || [];
+  const rank = new Map(order.map((name, index) => [name, index]));
+  return names
+    .map((name, index) => ({ name, index }))
+    .sort((a, b) => {
+      const aRank = rank.has(a.name) ? /** @type {number} */ (rank.get(a.name)) : order.length + a.index;
+      const bRank = rank.has(b.name) ? /** @type {number} */ (rank.get(b.name)) : order.length + b.index;
+      return aRank - bRank;
+    })
+    .map((item) => item.name);
 }
 
 /**

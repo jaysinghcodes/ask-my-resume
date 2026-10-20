@@ -5,7 +5,7 @@ import { AskLink } from "./AskLink";
  */
 export function ProjectCard({ project }) {
   return (
-    <article id={project.id} className="project-card">
+    <article id={project.id} tabIndex={-1} className="project-card">
       <div className="project-image">
         <img
           src={project.image}
