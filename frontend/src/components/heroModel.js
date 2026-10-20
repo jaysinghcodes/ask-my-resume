@@ -117,39 +117,3 @@ export function impactItems(bullets) {
   items.sort((a, b) => a.order - b.order);
   return items;
 }
-
-/**
- * @typedef {Object} AskDocument
- * @property {(id: string) => any} getElementById
- * @property {any} [defaultView]
- */
-
-/**
- * Scroll to #ask and move focus to the chat input.
- * @param {{ preventDefault: () => void, currentTarget: { ownerDocument?: AskDocument | null } | null }} event
- */
-export function focusAskInput(event) {
-  const node = event.currentTarget;
-  const doc =
-    node && typeof node === "object" && "ownerDocument" in node
-      ? node.ownerDocument || null
-      : typeof document !== "undefined"
-        ? document
-        : null;
-  if (!doc || typeof doc.getElementById !== "function") return;
-
-  const section = doc.getElementById("ask");
-  const byId = doc.getElementById("ask-input");
-  const nested = section ? section.querySelector("textarea, input") : null;
-  const input = /** @type {HTMLElement | null} */ (byId || nested);
-  if (!section && !input) return;
-
-  event.preventDefault();
-  const view = doc.defaultView;
-  const reduce = Boolean(view && view.matchMedia && view.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  if (section) section.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-  input?.focus({ preventScroll: true });
-  if (view && view.history && typeof view.history.pushState === "function" && view.location && view.location.hash !== "#ask") {
-    view.history.pushState(null, "", "#ask");
-  }
-}

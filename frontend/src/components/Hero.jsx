@@ -1,5 +1,6 @@
+import { Link } from "react-router-dom";
 import { knowledgeBase } from "../data/knowledgeBase.js";
-import { focusAskInput, heroContent, impactItems } from "./heroModel.js";
+import { heroContent, impactItems } from "./heroModel.js";
 import { ImpactStrip } from "./ImpactStrip.jsx";
 import "../styles/hero.css";
 
@@ -58,9 +59,9 @@ export function Hero(props) {
           <a className="hero-button hero-button-primary" href={content.resumeHref} download>
             Download resume
           </a>
-          <a className="hero-button" href="#ask" onClick={focusAskInput}>
+          <Link className="hero-button" to={{ hash: "ask" }} state={{ focus: "ask-input" }}>
             Ask Jay a question
-          </a>
+          </Link>
           <a className="hero-button" href={content.emailHref}>
             Email me
           </a>
