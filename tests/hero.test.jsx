@@ -3,12 +3,14 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
+import { describe, expect, it } from "vitest";
 import profile from "../kb/profile.json";
 import bullets from "../kb/bullets.json";
 import { Hero } from "../frontend/src/components/Hero.jsx";
 import { ImpactStrip } from "../frontend/src/components/ImpactStrip.jsx";
-import { focusAskInput, heroContent, impactItems } from "../frontend/src/components/heroModel.js";
+import { heroContent, impactItems } from "../frontend/src/components/heroModel.js";
+import { focusIdFromState } from "../frontend/src/components/ScrollToHash.jsx";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -36,7 +38,7 @@ const IMPACT = [
 ];
 
 function html(element) {
-  return renderToStaticMarkup(element);
+  return renderToStaticMarkup(createElement(MemoryRouter, null, element));
 }
 
 /**
@@ -146,7 +148,7 @@ describe("Hero markup", () => {
     expect(markup).toContain('href="/Jay-Singh-Resume-Oct-2026.pdf"');
     expect(markup).toContain("download");
     expect(markup).toContain(">Download resume<");
-    expect(markup).toContain('href="#ask"');
+    expect(markup).toContain('href="/#ask"');
     expect(markup).toContain(">Ask Jay a question<");
     expect(markup).toContain('href="mailto:jaggys44@gmail.com"');
     expect(markup).toContain(">Email me<");
@@ -204,49 +206,22 @@ describe("headshot files", () => {
 });
 
 describe("Ask Jay a question", () => {
-  it("scrolls to #ask and focuses the chat input", () => {
-    const scrollIntoView = vi.fn();
-    const focus = vi.fn();
-    const pushState = vi.fn();
-    const preventDefault = vi.fn();
-    const section = { scrollIntoView, querySelector: () => null };
-    const input = { focus };
-    /** @type {Record<string, object>} */
-    const ids = { ask: section, "ask-input": input };
-    const doc = {
-      getElementById(id) {
-        return ids[id] || null;
-      },
-      defaultView: {
-        matchMedia: () => ({ matches: true }),
-        history: { pushState },
-        location: { hash: "" },
-      },
-    };
-
-    focusAskInput({
-      preventDefault,
-      currentTarget: { ownerDocument: doc },
-    });
-
-    expect(preventDefault).toHaveBeenCalledOnce();
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "auto", block: "start" });
-    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
-    expect(pushState).toHaveBeenCalledWith(null, "", "#ask");
-  });
-
-  it("leaves the link alone when the ask section is not on the page", () => {
-    const preventDefault = vi.fn();
-    focusAskInput({
-      preventDefault,
-      currentTarget: {
-        ownerDocument: {
-          getElementById: () => null,
-          defaultView: null,
-        },
-      },
-    });
-    expect(preventDefault).not.toHaveBeenCalled();
+  it("routes to #ask through the router and asks ScrollToHash to focus the input", () => {
+    const hero = fs.readFileSync(path.join(root, "frontend/src/components/Hero.jsx"), "utf8");
+    const model = fs.readFileSync(path.join(root, "frontend/src/components/heroModel.js"), "utf8");
+    const scroll = fs.readFileSync(path.join(root, "frontend/src/components/ScrollToHash.jsx"), "utf8");
+    const nav = fs.readFileSync(path.join(root, "frontend/src/components/SiteNav.jsx"), "utf8");
+    expect(hero).toContain('to={{ hash: "ask" }}');
+    expect(hero).toContain('state={{ focus: "ask-input" }}');
+    expect(hero).not.toContain("focusAskInput");
+    expect(model).not.toContain("pushState");
+    expect(scroll).toContain('focus === "ask-input"');
+    expect(scroll).toContain('id === "ask"');
+    expect(scroll).toContain('querySelector("h1, h2")');
+    expect(nav).toContain("scrollToId(item.id)");
+    expect(focusIdFromState({ focus: "ask-input" })).toBe("ask-input");
+    expect(focusIdFromState(null)).toBe("");
+    expect(focusIdFromState({ focus: "heading" })).toBe("");
   });
 });
 
