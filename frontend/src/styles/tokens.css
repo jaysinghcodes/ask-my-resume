@@ -3,8 +3,10 @@
   --ink: #191919;
   --text: #2b2b2b;
   --muted: #6b6b6b;
-  --faint: #9a9a9a;
   --hair: #eae6e1;
+  --ask-input-size: 16px;
+  --ask-input-leading: 1.45;
+  --ask-input-pad-y: 10px;
   --card: #ffffff;
   --wash: #f5f1ed;
   --accent: #8a5a44;
