@@ -3,7 +3,7 @@
  * Nothing here touches the DOM, so the tests can cover it directly.
  */
 
-import { JD_FIT_SECTIONS, reportsMissing, walkJdFit } from "../../../lib/jd-fit-rules.js";
+import { JD_FIT_SECTIONS, renderJdFit } from "../../../lib/jd-fit-rules.js";
 
 export { JD_FIT_SECTIONS };
 
@@ -286,43 +286,18 @@ function headingText(line) {
 }
 
 /**
- * The JD fit allowlist (Atlas's ruling, Oct 20 2026), applied before layout. The answer is
- * read like a structured parser (walkJdFit in lib/jd-fit-rules.js, shared with the server
- * check): cites stripped, then each line is an allowed heading, an item, an intro sentence
- * or anything else.
- *   Only Strong matches, Partial matches and Closest experience render, in canonical form.
- *   Anything else that isn't an item, cited or not, before or after the first allowed
- *     heading, starts skipping until the next allowed heading.
- *   An uncited intro sentence is dropped on its own; an uncited item is dropped in every
- *     section; an item that reports a missing skill is dropped (shared word list).
- *   An allowed heading left with nothing under it is dropped.
+ * The JD fit rules on the page: renderJdFit from lib/jd-fit-rules.js, the one parser the
+ * T7 checker uses too (Atlas ruling, PR #30 r4: fail closed). Only bullet or numbered
+ * items with a cite, under an allowed heading, render; any other line closes its section.
  * @param {string} text the answer with cite markers in place
  * @returns {string}
  */
 export function jdFitText(text) {
   /** @type {string[]} */
   const out = [];
-  /** @type {string | null} */
-  let pending = null;
-  let skipping = true;
-  for (const line of walkJdFit(text, CITE_ONE)) {
-    if (line.kind === "heading") {
-      pending = line.heading;
-      skipping = false;
-      continue;
-    }
-    if (line.kind === "unknown") {
-      skipping = true;
-      continue;
-    }
-    if (line.kind !== "item" || skipping || !line.cited) continue;
-    const plain = line.text.split(CITE).filter((_part, index) => index % 2 === 0).join("");
-    if (reportsMissing(plain)) continue;
-    if (pending) {
-      out.push("", pending, "");
-      pending = null;
-    }
-    out.push(`${line.indent}${line.numbered ? "1. " : "- "}${line.text}`);
+  for (const section of renderJdFit(text, CITE_ONE)) {
+    out.push("", section.heading, "");
+    for (const item of section.items) out.push(`${item.indent}${item.numbered ? "1. " : "- "}${item.text}`);
   }
   return out.join("\n");
 }
