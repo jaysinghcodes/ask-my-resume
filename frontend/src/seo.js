@@ -34,11 +34,14 @@ export function siteDescription(profile) {
   return String(profile?.summary ?? "").replace(/\s+/g, " ").trim();
 }
 
-/** @type {Record<string, { title: string, description?: string }>} */
+/**
+ * Per route head values. `noindex` routes get a robots noindex tag and no canonical.
+ * @type {Record<string, { title: string, description?: string, noindex?: boolean }>}
+ */
 export const ROUTE_META = {
   home: { title: SITE_TITLE },
   contact: { title: "Contact · Jay Singh", description: "Email, LinkedIn and GitHub for Jay Singh." },
-  notFound: { title: "Page not found · Jay Singh", description: "That page doesn't exist." },
+  notFound: { title: "Page not found · Jay Singh", description: "That page doesn't exist.", noindex: true },
 };
 
 /**

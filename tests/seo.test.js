@@ -13,7 +13,9 @@ import {
   siteDescription,
 } from "../frontend/src/seo.js";
 import { canHydrate } from "../frontend/src/can-hydrate.js";
-import { checkCopy, extractCopy, parseBannedTerms } from "../scripts/copy-check.mjs";
+import os from "os";
+import { REQUIRED_SNAPSHOTS, checkCopy, extractCopy, extractSourceCopy, main as copyCheck, parseBannedTerms } from "../scripts/copy-check.mjs";
+import { applyPageMeta } from "../frontend/src/usePageMeta.js";
 import { BROWSER_KB_OMIT, browserKb } from "../frontend/vite.config.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -230,5 +232,161 @@ describe("prerender and accessibility shell", () => {
     const full = JSON.parse(fs.readFileSync(kbPath, "utf8"));
     for (const key of BROWSER_KB_OMIT) expect(kb).not.toHaveProperty(key);
     expect(kb.profile).toEqual(full.profile);
+  });
+});
+
+describe("copy check covers every route and the page source", () => {
+  /**
+   * A throwaway tree shaped like the repo after a build: dist/index.html, the route
+   * snapshots in dist-copy and a copy of frontend/src.
+   * @param {(dir: string) => void} [mutate]
+   */
+  function tree(mutate) {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "copy-check-"));
+    fs.mkdirSync(path.join(dir, "frontend/dist"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "frontend/dist/index.html"), `<html><head>${seoHeadHtml(profile)}</head><body><h1>Jay</h1></body></html>`);
+    fs.mkdirSync(path.join(dir, "frontend/dist-copy"), { recursive: true });
+    for (const name of REQUIRED_SNAPSHOTS) {
+      const body = name === "not-found.html" ? '<main id="main"><div class="reading not-found"><h1>That page doesn\'t exist.</h1></div></main>' : "<main><p>Fine copy.</p></main>";
+      fs.writeFileSync(path.join(dir, "frontend/dist-copy", name), `<html><body>${body}</body></html>`);
+    }
+    fs.cpSync(path.join(root, "frontend/src"), path.join(dir, "frontend/src"), { recursive: true });
+    mutate?.(dir);
+    return dir;
+  }
+  const quiet = { env: {} };
+  /** @param {string} dir */
+  const run = (dir) => {
+    const log = console.log;
+    const err = console.error;
+    console.log = () => {};
+    console.error = () => {};
+    try {
+      return copyCheck({ ...quiet, base: dir });
+    } finally {
+      console.log = log;
+      console.error = err;
+    }
+  };
+
+  it("passes on the real source and clean snapshots", () => {
+    expect(run(tree())).toBe(0);
+  });
+
+  it("fails when the rendered 404 heading has an arrow", () => {
+    const dir = tree((d) => {
+      const file = path.join(d, "frontend/dist-copy/not-found.html");
+      fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace("That page doesn't exist.", "That page doesn't exist \u2192 go home"));
+    });
+    expect(run(dir)).toBe(1);
+  });
+
+  it("fails when the 404 heading in NotFoundPage.jsx has an arrow or a dash", () => {
+    for (const bad of ["That page doesn't exist \u2192", "That page doesn't exist -> home", "That page \u2014 gone"]) {
+      const dir = tree((d) => {
+        const file = path.join(d, "frontend/src/pages/NotFoundPage.jsx");
+        fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace("That page doesn't exist.", bad));
+      });
+      expect(run(dir), bad).toBe(1);
+    }
+  });
+
+  it("fails when ContactPage copy has a dash", () => {
+    const dir = tree((d) => {
+      const file = path.join(d, "frontend/src/pages/ContactPage.jsx");
+      fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace("Get in touch", "Get in touch \u2014 now"));
+    });
+    expect(run(dir)).toBe(1);
+  });
+
+  it("fails when a route snapshot is missing", () => {
+    const dir = tree((d) => fs.rmSync(path.join(d, "frontend/dist-copy/not-found.html")));
+    expect(run(dir)).toBe(2);
+  });
+
+  it("reads JSX text, copy attributes and prose strings, not code", () => {
+    const items = extractSourceCopy(
+      [
+        'import x from "./a b";',
+        'const COPY = { title: "Ask about my experience", cls: "ask-go is-busy" };',
+        'export function A() { return <p className="hero-lede x" aria-label="Open the menu">Hello there <b>{name}</b></p>; }',
+        'document.querySelector("meta[name=description]"); window.matchMedia("(max-width: 359px)");',
+        'const re = /a -> b/;',
+      ].join("\n"),
+      "a.jsx",
+    );
+    expect(items).toEqual(["Ask about my experience", "Open the menu", "Hello there"]);
+  });
+});
+
+describe("404 head", () => {
+  /** A tiny document stand in with a head, a title and a canonical link. */
+  function fakeDoc() {
+    /** @type {any[]} */
+    const head = [];
+    const el = (/** @type {string} */ tag) => {
+      /** @type {Record<string, string>} */
+      const attrs = {};
+      const node = {
+        tag,
+        attrs,
+        setAttribute: (/** @type {string} */ k, /** @type {string} */ v) => (attrs[k] = v),
+        getAttribute: (/** @type {string} */ k) => attrs[k],
+        remove: () => head.splice(head.indexOf(node), 1),
+      };
+      return node;
+    };
+    const find = (/** @type {string} */ sel) => {
+      const m = /^(\w+)\[(\w+)="([^"]+)"\]$/.exec(sel);
+      return head.find((n) => m && n.tag === m[1] && n.attrs[m[2]] === m[3]) ?? null;
+    };
+    const canonical = el("link");
+    canonical.setAttribute("rel", "canonical");
+    canonical.setAttribute("href", `${SITE_URL}/`);
+    const description = el("meta");
+    description.setAttribute("name", "description");
+    head.push(canonical, description);
+    return { title: "", head: { appendChild: (/** @type {any} */ n) => head.push(n) }, querySelector: find, createElement: el, nodes: head };
+  }
+
+  it("gives the 404 page its own title, robots noindex and no canonical, then restores home", () => {
+    const doc = fakeDoc();
+    const restore = applyPageMeta(loose(doc), ROUTE_META.notFound, "home description");
+    expect(doc.title).toBe("Page not found · Jay Singh");
+    expect(doc.querySelector('meta[name="robots"]')?.getAttribute("content")).toBe("noindex");
+    expect(doc.querySelector('link[rel="canonical"]')).toBe(null);
+    expect(doc.querySelector('meta[name="description"]')?.getAttribute("content")).toBe("That page doesn't exist.");
+    restore();
+    expect(doc.querySelector('meta[name="robots"]')).toBe(null);
+    expect(doc.querySelector('link[rel="canonical"]')?.getAttribute("href")).toBe(`${SITE_URL}/`);
+  });
+
+  it("leaves robots and the canonical alone on indexable routes", () => {
+    const doc = fakeDoc();
+    applyPageMeta(loose(doc), ROUTE_META.home, "home description");
+    expect(doc.title).toBe(SITE_TITLE);
+    expect(doc.querySelector('meta[name="robots"]')).toBe(null);
+    expect(doc.querySelector('link[rel="canonical"]')?.getAttribute("href")).toBe(`${SITE_URL}/`);
+    expect(ROUTE_META.notFound.noindex).toBe(true);
+    expect(ROUTE_META.home.noindex).toBeUndefined();
+    expect(ROUTE_META.contact.noindex).toBeUndefined();
+  });
+});
+
+describe("headline wording in the head", () => {
+  it("uses the forward deployed headline and never the old one", () => {
+    expect(SITE_TITLE).toBe("Jay Singh · AI native forward deployed engineer");
+    expect(OG_IMAGE.alt).toBe("Jay Singh, AI native forward deployed engineer");
+    const head = `${read("frontend/index.html")}\n${seoHeadHtml(profile)}`;
+    expect(head).not.toMatch(/AI native software engineer/i);
+    expect(head).toContain("<title>Jay Singh · AI native forward deployed engineer</title>");
+  });
+});
+
+describe("font swap without layout shift", () => {
+  it("falls back to a width matched Times face while Source Serif 4 loads", () => {
+    const css = read("frontend/src/styles/tokens.css");
+    expect(css).toMatch(/font-family: "Source Serif 4 Fallback";[^}]*local\("Times New Roman"\)[^}]*local\("Liberation Serif"\)[^}]*size-adjust: 118\.6%;/);
+    expect(css).toContain('--serif: "Source Serif 4", "Source Serif 4 Fallback", Georgia, serif;');
   });
 });

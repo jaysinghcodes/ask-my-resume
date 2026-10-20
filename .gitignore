@@ -4,6 +4,7 @@ node_modules/
 dist/
 frontend/dist/
 frontend/dist-ssr/
+frontend/dist-copy/
 .DS_Store
 .vercel
 kb/kb.json
