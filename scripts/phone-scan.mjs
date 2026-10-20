@@ -28,8 +28,10 @@ import { decode } from "html-entities";
 
 const FIXTURE_DIR = "tests/fixtures/phone-scan";
 const UNICODE_DATA_FILES = new Set([
-  "scripts/unicode/DerivedNumericValues.txt",
+  "lib/unicode/CaseFolding.txt",
+  "lib/unicode/confusables.txt",
   "lib/unicode/DerivedNumericValues.txt",
+  "scripts/unicode/DerivedNumericValues.txt",
 ]);
 const ALLOWLIST_REL = "scripts/phone-scan-allowlist.txt";
 const DECIMAL_DIGITS_PATH = path.join(
@@ -158,10 +160,23 @@ function foldChar(ch) {
 
 /**
  * @param {string} input
+ * @returns {string}
+ */
+function prepareText(input) {
+  let text = String(input);
+  if (text.includes("\r")) text = breakLines(text);
+  if (text.includes("%")) text = decodePercents(text);
+  if (text.includes("&")) text = decode(text);
+  if (text.includes("\r")) text = breakLines(text);
+  return text;
+}
+
+/**
+ * @param {string} input
  * @returns {{ ch: string, line: number }[]}
  */
 export function normalizeChars(input) {
-  const source = breakLines(decode(decodePercents(breakLines(String(input)))));
+  const source = prepareText(input);
   /** @type {{ ch: string, line: number }[]} */
   const out = [];
   let line = 1;
@@ -169,6 +184,12 @@ export function normalizeChars(input) {
     if (ch === "\n") {
       line += 1;
       out.push({ ch: "\n", line });
+      continue;
+    }
+    const code = ch.codePointAt(0) ?? 0;
+    if (code < 128) {
+      if (ch === "\t" || ch === "\f" || ch === "\v" || ch === " ") out.push({ ch: " ", line });
+      else out.push({ ch, line });
       continue;
     }
     for (const part of foldChar(ch)) out.push({ ch: part, line });
@@ -354,8 +375,8 @@ export function shouldSkipRepoPath(rel, options = {}) {
   if (parts.includes("node_modules") || parts.includes(".git")) return true;
   if (LOCKFILE_BASENAMES.has(path.posix.basename(norm))) return true;
   if (!options.explicit && (norm === FIXTURE_DIR || norm.startsWith(`${FIXTURE_DIR}/`))) return true;
-  // Exact paths only. #18 and #20 add lib/unicode/DerivedNumericValues.txt.
-  // Merging the two copies into one shared module is a follow-up in #23.
+  // Exact paths only. Do not skip the rest of lib/unicode or scripts/unicode.
+  // Merging the two DerivedNumericValues copies into one shared module is a follow-up in #23.
   if (!options.explicit && UNICODE_DATA_FILES.has(norm)) return true;
   return false;
 }

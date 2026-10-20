@@ -217,6 +217,8 @@ test("repo scan skips fixtures, lockfiles, and node_modules", () => {
   assert.equal(shouldSkipRepoPath("frontend/public/Jay-Singh-Resume-Oct-2026.pdf"), false);
   assert.equal(shouldSkipRepoPath("scripts/unicode/DerivedNumericValues.txt"), true);
   assert.equal(shouldSkipRepoPath("lib/unicode/DerivedNumericValues.txt"), true);
+  assert.equal(shouldSkipRepoPath("lib/unicode/CaseFolding.txt"), true);
+  assert.equal(shouldSkipRepoPath("lib/unicode/confusables.txt"), true);
   assert.equal(shouldSkipRepoPath("scripts/unicode/notes.txt"), false);
   assert.equal(shouldSkipRepoPath("lib/unicode/notes.txt"), false);
   assert.equal(
