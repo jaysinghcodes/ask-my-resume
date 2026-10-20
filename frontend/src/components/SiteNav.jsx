@@ -1,131 +1,138 @@
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { RESUME_HREF } from "../config/constants";
+import { navItems } from "../nav-items";
+import { HOME_SECTIONS } from "../sections";
+import { MobileMenu } from "./MobileMenu";
+import { scrollToId } from "./ScrollToHash";
 
-const LINKS = [
-  { to: "/#experience", label: "Experience" },
-  { to: "/#projects", label: "Projects" },
-  { to: "/", label: "Ask Jay", match: "/" },
-  { to: "/contact", label: "Contact", match: "/contact" },
-];
+const LINKS = navItems(HOME_SECTIONS);
 
 /**
- * @param {ParentNode} root
- * @returns {HTMLElement[]}
+ * @param {HTMLElement} node
  */
-function focusable(root) {
-  return /** @type {HTMLElement[]} */ ([
-    ...root.querySelectorAll("a[href], button:not([disabled])"),
-  ]);
+function visibleRatio(node) {
+  const rect = node.getBoundingClientRect();
+  const viewTop = 72;
+  const viewBottom = window.innerHeight * 0.65;
+  const top = Math.max(rect.top, viewTop);
+  const bottom = Math.min(rect.bottom, viewBottom);
+  return Math.max(0, bottom - top);
 }
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
+  const [activeId, setActiveId] = useState(/** @type {string | null} */ (null));
   const location = useLocation();
   const menuButtonRef = useRef(/** @type {HTMLButtonElement | null} */ (null));
-  const panelRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const wasOpen = useRef(false);
+  const restoreFocus = useRef(false);
+
+  const currentId = location.pathname === "/contact" ? "contact" : location.pathname === "/" ? activeId : null;
+
+  useLayoutEffect(() => {
+    if (location.pathname !== "/") {
+      setActiveId(null);
+      return undefined;
+    }
+
+    const nodes = HOME_SECTIONS.map((section) => document.getElementById(section.id)).filter(
+      (node) => node instanceof HTMLElement,
+    );
+    if (nodes.length === 0) {
+      setActiveId(null);
+      return undefined;
+    }
+
+    const order = new Map(HOME_SECTIONS.map((section, index) => [section.id, index]));
+    /** @type {Map<string, number>} */
+    const ratios = new Map();
+
+    function pick() {
+      let best = /** @type {string | null} */ (null);
+      let bestRatio = 0;
+      for (const [id, ratio] of ratios) {
+        const better =
+          ratio > bestRatio ||
+          (ratio === bestRatio && best !== null && (order.get(id) ?? 0) < (order.get(best) ?? 0));
+        if (better) {
+          best = id;
+          bestRatio = ratio;
+        }
+      }
+      setActiveId(best);
+    }
+
+    for (const node of nodes) ratios.set(node.id, visibleRatio(node));
+    pick();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          ratios.set(entry.target.id, entry.isIntersecting ? entry.intersectionRatio : 0);
+        }
+        pick();
+      },
+      {
+        rootMargin: "-72px 0px -35% 0px",
+        threshold: [0, 0.15, 0.4, 0.75, 1],
+      },
+    );
+    for (const node of nodes) observer.observe(node);
+    return () => observer.disconnect();
+  }, [location.pathname, location.hash]);
 
   useEffect(() => {
     setOpen(false);
   }, [location.pathname, location.hash]);
 
   useEffect(() => {
-    if (!open) {
-      if (wasOpen.current) menuButtonRef.current?.focus();
-      wasOpen.current = false;
+    if (open) {
+      wasOpen.current = true;
       return undefined;
     }
-
-    wasOpen.current = true;
-    const panel = panelRef.current;
-    const first = panel ? focusable(panel)[0] : null;
-    (first ?? panel)?.focus();
-
-    function onKey(event) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        setOpen(false);
-        return;
-      }
-      if (event.key !== "Tab" || !panelRef.current) return;
-      const items = focusable(panelRef.current);
-      if (items.length === 0) {
-        event.preventDefault();
-        return;
-      }
-      const firstItem = items[0];
-      const lastItem = items[items.length - 1];
-      const active = document.activeElement;
-      const inside = panelRef.current.contains(active);
-      if (event.shiftKey && (active === firstItem || !inside)) {
-        event.preventDefault();
-        lastItem.focus();
-      } else if (!event.shiftKey && (active === lastItem || !inside)) {
-        event.preventDefault();
-        firstItem.focus();
-      }
+    if (wasOpen.current && restoreFocus.current) {
+      menuButtonRef.current?.focus();
     }
-
-    document.addEventListener("keydown", onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
-    };
+    wasOpen.current = false;
+    restoreFocus.current = false;
+    return undefined;
   }, [open]);
 
-  function close() {
+  const onClose = useCallback((restore) => {
+    restoreFocus.current = restore;
     setOpen(false);
-  }
+  }, []);
 
-  const sheet =
-    open &&
-    createPortal(
-      <div className="sheet" onClick={close}>
-        <div
-          ref={panelRef}
-          id="site-menu"
-          className="sheet-panel"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Menu"
-          tabIndex={-1}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <button type="button" className="sheet-close" onClick={close}>
-            Close
-          </button>
-          {LINKS.map((item) => (
-            <Link key={item.label} to={item.to} onClick={close}>
-              {item.label}
-            </Link>
-          ))}
-          <span className="nav-resume">Resume</span>
-        </div>
-      </div>,
-      document.body,
-    );
+  function onLinkClick(event, item) {
+    const hash = `#${item.id}`;
+    if (item.to === `/#${item.id}` && location.pathname === "/" && location.hash === hash) {
+      event.preventDefault();
+      scrollToId(item.id);
+    }
+    onClose(false);
+  }
 
   return (
     <header className="nav">
       <div className="wide nav-inner">
-        <Link className="wordmark" to="/">
+        <Link className="wordmark" to={{ pathname: "/", hash: "" }}>
           Jay Singh
         </Link>
         <nav className="nav-links" aria-label="Primary">
           {LINKS.map((item) => (
             <Link
-              key={item.label}
+              key={item.id}
               to={item.to}
-              aria-current={item.match === location.pathname ? "page" : undefined}
+              aria-current={item.id === currentId ? (item.to.startsWith("/#") ? "location" : "page") : undefined}
+              onClick={(event) => onLinkClick(event, item)}
             >
               {item.label}
             </Link>
           ))}
-          <span className="moon" aria-hidden="true" />
-          <span className="nav-resume">Resume</span>
+          <a className="nav-resume" href={RESUME_HREF} target="_blank" rel="noopener noreferrer">
+            Resume
+          </a>
         </nav>
         <button
           ref={menuButtonRef}
@@ -138,7 +145,14 @@ export function SiteNav() {
           Menu
         </button>
       </div>
-      {sheet}
+      <MobileMenu
+        open={open}
+        currentId={currentId}
+        onClose={onClose}
+        onLinkClick={onLinkClick}
+        links={LINKS}
+        resumeHref={RESUME_HREF}
+      />
     </header>
   );
 }
