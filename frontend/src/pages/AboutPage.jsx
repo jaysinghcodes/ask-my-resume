@@ -50,8 +50,9 @@ export function AboutPage() {
       <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.8 }}>
         Instead of a static resume PDF, this project lets recruiters and hiring
         managers have a real conversation about Jay's background. Ask about
-        skills, experience, projects, or fit for a role — Claude uses an MCP
-        tool to search his actual resume and give grounded, specific answers.
+        skills, experience, projects, or fit for a role. Claude calls a search
+        tool, the tool returns the resume text, and Claude writes the answer
+        from that text.
       </Typography>
 
       <Typography
@@ -86,9 +87,9 @@ export function AboutPage() {
       </Typography>
       <Paper variant="outlined" sx={codeBlockSx}>
         <Box component="pre">
-          {`kb/
+          {`public resume PDF
     ↓
-api/chat.js                    ← reads the knowledge base
+api/chat.js                    ← loads the resume text
     ↑
 Claude API                     ← calls the tool, forms responses
     ↑
@@ -97,9 +98,9 @@ React frontend (Vite)          ← chat UI`}
       </Paper>
 
       <Typography variant="body2" sx={{ mt: 2, color: "text.secondary" }}>
-        The chat function reads the knowledge base and the public resume PDF in
-        frontend/public. It exposes a search tool, and Claude decides when to
-        call the tool, gets that source, and writes the answer.
+        The chat function loads the public resume PDF in frontend/public. It
+        exposes a search tool. Claude decides when to call the tool, gets the
+        resume text, and writes the answer.
       </Typography>
 
       <Typography
