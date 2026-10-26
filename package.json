@@ -19,7 +19,7 @@
     "copy:check": "node scripts/copy-check.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "0.27.3",
+    "@anthropic-ai/sdk": "0.135.0",
     "ajv": "^8.20.0",
     "html-entities": "^2.6.0",
     "pdf-parse": "1.1.4"
