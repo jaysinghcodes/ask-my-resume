@@ -1,10 +1,12 @@
 import { contact } from "virtual:kb";
+import { usePageMeta } from "../usePageMeta";
 
 const note = [contact.location ? `Based in ${contact.location}` : "", contact.workPreferences]
   .filter(Boolean)
   .join(" · ");
 
 export function ContactPage() {
+  usePageMeta("contact");
   return (
     <section className="contact-page">
       <div className="reading">

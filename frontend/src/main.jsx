@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import "@fontsource/source-serif-4/latin-400.css";
 import "@fontsource/source-serif-4/latin-600.css";
 import "@fontsource/inter/latin-400.css";
@@ -13,14 +13,24 @@ import "./styles/shell.css";
 import "./styles/ask.css";
 import "./styles/resume.css";
 import App from "./App.jsx";
+import { canHydrate } from "./can-hydrate.js";
 
 const root = document.getElementById("root");
 if (!root) {
   throw new Error("Missing root element");
 }
 
-ReactDOM.createRoot(root).render(
+const app = (
   <React.StrictMode>
     <App />
-  </React.StrictMode>,
+  </React.StrictMode>
 );
+
+// The build prerenders the home page into #root so the hero paints before the script runs.
+// Hydrate it only where it matches: the home path with no hash. Anywhere else, render fresh.
+if (canHydrate(root, window.location)) {
+  hydrateRoot(root, app);
+} else {
+  root.textContent = "";
+  createRoot(root).render(app);
+}

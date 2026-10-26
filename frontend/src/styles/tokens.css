@@ -1,3 +1,13 @@
+/* While Source Serif 4 loads, the lede renders in a Times metric font scaled to the same
+   width, so it wraps to the same lines and the hero buttons don't move when the font swaps
+   (the r1 CLS of 0.016 on div.hero-ctas). 118.6% is the measured width ratio. */
+@font-face {
+  font-family: "Source Serif 4 Fallback";
+  src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Liberation Serif");
+  font-weight: 400;
+  size-adjust: 118.6%;
+}
+
 :root {
   --bg: #fcfbf9;
   --ink: #191919;
@@ -14,7 +24,7 @@
   /* Mockup faint #9a9a9a fails AA on this background, so dates and tags use muted. */
   --faint: #6b6b6b;
   --sans: "Inter", system-ui, sans-serif;
-  --serif: "Source Serif 4", Georgia, serif;
+  --serif: "Source Serif 4", "Source Serif 4 Fallback", Georgia, serif;
   --mono: "JetBrains Mono", ui-monospace, monospace;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px rgba(60, 40, 20, 0.05);
   --reading: 720px;
