@@ -21,10 +21,10 @@ describe("short Ask placeholder below 360px (#22)", () => {
     expect(ASK_COPY.placeholder).not.toMatch(DASH_OR_ARROW);
   });
 
-  it("renders the full placeholder on the server so hydration matches", () => {
+  it("renders the short placeholder on the server so prerendered HTML never clips", () => {
     const html = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(ChatPage, { id: "ask" })));
-    expect(html).toContain(`placeholder="${ASK_COPY.placeholder}"`);
-    expect(html).toContain(`aria-label="${ASK_COPY.placeholder}"`);
-    expect(html).not.toContain(ASK_COPY.placeholderShort);
+    expect(html).toContain(`placeholder="${ASK_COPY.placeholderShort}"`);
+    expect(html).toContain(`aria-label="${ASK_COPY.placeholderShort}"`);
+    expect(html).not.toContain(ASK_COPY.placeholder);
   });
 });
