@@ -392,3 +392,25 @@ describe("scope cites (Atlas ruling, PR #34 product calls 1)", () => {
     expect(answer).toBe("Jay ships agents [bullet-captech-consultant-4] and more.");
   });
 });
+
+describe("work authorization (Atlas ruling, PR #34 product calls 3)", () => {
+  it("the prompt answers visa and sponsorship from the profile field and nothing more", () => {
+    expect(SYSTEM_PROMPT).toContain("If asked about work authorization, visa or sponsorship, answer with exactly what the profile's work_authorization field says, cited, and add nothing else.");
+    expect(SYSTEM_PROMPT).not.toMatch(/immigration or visa/);
+  });
+
+  it("the cached KB block carries the U.S. citizen answer and Jay's rule", () => {
+    const kbText = buildSystem()[1].text;
+    expect(getKb().profile.work_authorization).toBe("Jay is a U.S. citizen and does not need sponsorship.");
+    expect(kbText).toContain('"work_authorization":"Jay is a U.S. citizen and does not need sponsorship."');
+    expect(kbText).toContain("say plainly that Jay is a U.S. citizen and does not need sponsorship. Do not add anything beyond that.");
+  });
+
+  it("a mocked visa answer streams as written with the profile source", async () => {
+    fake.scripts.push([{ text: "Jay is a U.S. citizen and does not need sponsorship [profile-jay]." }]);
+    const { status, events, answer } = await ask({ messages: user("Does Jay need visa sponsorship?") });
+    expect(status).toBe(200);
+    expect(answer).toBe("Jay is a U.S. citizen and does not need sponsorship [profile-jay].");
+    expect(events.find((e) => e.event === "sources")?.data.sources).toEqual([{ id: "profile-jay", label: "Profile" }]);
+  });
+});
