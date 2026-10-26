@@ -162,13 +162,34 @@ describe("crawler files", () => {
     expect(locs).toEqual([`${SITE_URL}/`]);
   });
 
-  it("keeps static files out of the SPA rewrite", () => {
+  it("rewrites only the app routes, so unknown paths fall through to the 404 page", () => {
     const vercel = JSON.parse(read("vercel.json"));
-    const re = new RegExp(`^${vercel.rewrites[0].source}$`);
-    for (const file of ["/robots.txt", "/sitemap.xml", "/favicon.ico", "/og-image.png", "/icon.svg", "/apple-touch-icon.png", "/assets/a.js", "/api/chat"]) {
-      expect(re.test(file), file).toBe(false);
+    /** @param {string} url */
+    const rewritten = (url) =>
+      vercel.rewrites.some((/** @type {{ source: string }} */ r) => new RegExp(`^${r.source}$`).test(url));
+    for (const route of ["/about", "/contact"]) expect(rewritten(route), route).toBe(true);
+    for (const url of ["/does-not-exist", "/about/x", "/contact/x", "/nope", "/robots.txt", "/favicon.ico", "/assets/a.js", "/api/chat"]) {
+      expect(rewritten(url), url).toBe(false);
     }
-    for (const route of ["/", "/contact", "/about", "/nope"]) expect(re.test(route), route).toBe(true);
+  });
+
+  it("builds a 404 page head with the 404 title, noindex and no canonical", async () => {
+    const { renderNotFoundHead } = await import("../frontend/scripts/not-found-head.mjs");
+    const template =
+      '<html><head><title>Home</title><meta name="description" content="Home copy" />' +
+      '<link rel="canonical" href="https://ask-jay.vercel.app/" /></head><body><div id="root"></div></body></html>';
+    const out = renderNotFoundHead(template);
+    expect(out).toContain("<title>Page not found · Jay Singh</title>");
+    expect(out).toContain('<meta name="description" content="That page doesn\'t exist." />');
+    expect(out).toContain('<meta name="robots" content="noindex" />');
+    expect(out).not.toContain('rel="canonical"');
+    expect(out).toContain('<div id="root"></div>');
+  });
+
+  it("has the build write dist/404.html from the app shell", () => {
+    const src = read("frontend/scripts/prerender.mjs");
+    expect(src).toContain('"404.html"');
+    expect(src).toContain("renderNotFoundHead(template)");
   });
 
   it("ships a 1200 by 630 PNG preview and real icons", () => {

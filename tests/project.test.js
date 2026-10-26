@@ -57,11 +57,8 @@ describe("project checklist", () => {
       "frontend/public/Jay-Singh-Resume-Oct-2026.pdf",
     );
     expect(vercel.rewrites).toEqual([
-      {
-        source:
-          "/((?!api/|favicon\\.ico|robots\\.txt|sitemap\\.xml|og-image\\.png|icon\\.svg|apple-touch-icon\\.png|assets/).*)",
-        destination: "/index.html",
-      },
+      { source: "/about", destination: "/index.html" },
+      { source: "/contact", destination: "/index.html" },
     ]);
   });
 
