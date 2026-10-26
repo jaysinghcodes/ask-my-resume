@@ -18,6 +18,7 @@ export const ASK_COPY = {
   title: "Ask about my experience",
   sub: "An assistant that answers from my resume, project docs and repos, and cites where each answer came from.",
   placeholder: "Ask about a role, a project, or paste a job description",
+  placeholderShort: "Ask about a role or a project",
   ask: "Ask",
   waiting: "Looking that up",
   sources: "Sources",
@@ -33,6 +34,17 @@ export const ASK_COPY = {
   jdShow: "Show the job description",
   chipsLabel: "Suggested questions",
 };
+
+/** Below 360px the full placeholder wraps to three lines and clips, so the input shows the short one (#22). */
+export const NARROW_INPUT_QUERY = "(max-width: 359px)";
+
+/**
+ * @param {boolean} narrow true when NARROW_INPUT_QUERY matches
+ * @returns {string}
+ */
+export function askPlaceholder(narrow) {
+  return narrow ? ASK_COPY.placeholderShort : ASK_COPY.placeholder;
+}
 
 /** Friendly error text from T2, keyed by error code. Nothing technical reaches the page. */
 export const FRIENDLY = {

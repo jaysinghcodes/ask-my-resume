@@ -592,7 +592,8 @@ describe("Ask section markup", () => {
     expect(html).toContain('id="ask"');
     expect(html).toContain("<h2");
     expect(html).toContain('id="ask-input"');
-    expect(html).toContain('aria-label="Ask about a role, a project, or paste a job description"');
+    // The server render carries the short placeholder; wide screens get the full one after hydration (#22).
+    expect(html).toContain('aria-label="Ask about a role or a project"');
     expect(html).toContain('aria-live="polite"');
     expect(html).toContain('aria-label="Suggested questions"');
     expect(html).toContain("Check fit against a job description");
