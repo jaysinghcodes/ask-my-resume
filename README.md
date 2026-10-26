@@ -8,11 +8,11 @@ The live demo above is the current GitHub Pages site. This repo is set up as one
 
 ## What is this?
 
-Instead of a static resume PDF, anyone can ask about experience, skills, and role fit. Claude calls a `search_resume` tool and answers from the resume text.
+Instead of a static resume PDF, anyone can ask about experience, skills, and role fit. Claude answers from Jay's structured knowledge base and cites the record behind every claim.
 
 ## How it works
 
-Ask Jay is a chat on this site. You ask about Jay Singh's experience, projects, or skills. The page sends the question to the chat API on this site. Claude calls a resume search tool, reads the knowledge base, and writes the answer from those records. It can call the tool again if it needs more, and it stops after at most 5 rounds.
+Ask Jay is a chat on this site. You ask about Jay Singh's experience, projects, or skills. The page sends the question to the chat API on this site. Claude reads the knowledge base, searches the project docs when it needs more, and writes the answer from those records with a cite on every claim. It can call the tool again if it needs more, and it stops after at most 5 rounds.
 
 The project cards link here for this explanation. A page on the site will replace this section later.
 
@@ -61,8 +61,8 @@ Create the Vercel project from [docs/SETUP.md](docs/SETUP.md). Name it `ask-jay`
 ## Project structure
 
 - `api/chat.js` and `api/health.js`: Vercel Functions
-- `lib/`: shared server logic (`claude.js`, `tools.js`, `prompts.js`, `resume.js`, `config.js`, `chat.js`, `kb-build.js`)
-- `kb/`: knowledge base records, JSON Schemas, and generated `kb/kb.json`
+- `lib/`: shared server logic (`claude.js`, `tools.js`, `prompts.js`, `sources.js`, `kb-data.js`, `docs-index.js`, `config.js`, `chat.js`, `kb-build.js`)
+- `kb/`: knowledge base records, JSON Schemas, and generated `kb/kb.json` and `kb/docs-index.json`
 - `scripts/build-kb.js`: validates `kb/` and writes `kb/kb.json` for the Vite app and the functions
 - `frontend/`: Vite app
 - `frontend/public/Jay-Singh-Resume-Oct-2026.pdf`: phone free Oct 2026 resume
@@ -73,6 +73,6 @@ Create the Vercel project from [docs/SETUP.md](docs/SETUP.md). Name it `ask-jay`
 
 ## How the tool loop works
 
-The user asks a question. Claude may call `search_resume`. The function returns the resume text. Claude writes the answer. The loop allows at most 5 tool rounds, then it stops.
+The user asks a question. The core knowledge base rides in a cached system block. Claude may call `search_docs` for project doc chunks or `get_record` for one record in full. Claude writes the answer and ends each claim with a `[record id]` cite, which the server turns into a labeled source. The loop allows at most 5 tool rounds, then it stops.
 
 Built by [Jay Singh](https://linkedin.com/in/j-singh19). [GitHub](https://github.com/jaysinghcodes)
