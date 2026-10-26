@@ -100,7 +100,7 @@ Errors come back as one SSE `error` event:
 2. Too many messages, or a message over 8000 characters (a long job description included), returns HTTP 400 with code `too_long` and the T2 length text.
 3. A foreign Origin returns HTTP 403 with `{"code":"forbidden"}`.
 
-A good request streams `status`, `delta`, `sources` and `done` events. Each `[record id]` cite in the answer becomes one `sources` entry, `{ "id", "label", "href" }`, in first cite order. A cite to an id that is not a public record is dropped. A JD fit answer is checked before it is sent and arrives as one `delta`.
+A good request streams `status`, `delta`, `sources` and `done` events. Each `[record id]` cite in the answer becomes one `sources` entry, `{ "id", "label", "href" }`, in first cite order. A cite to an id that is not a public record is dropped from `sources` and stripped from the streamed text. With a `scope`, so is a cite outside that scope: a role scope allows the role, its bullets, and skills or achievements evidenced by them; a project scope allows the project, its doc chunks, and skills or achievements evidenced by it. A JD fit answer is checked before it is sent and arrives as one `delta`. If nothing cited is left after the filter, the stream still ends with status 200: no `delta`, `sources` with an empty list, then `done`.
 
 The dev server in `frontend/vite.config.js` proxies `/api` to `http://127.0.0.1:3000`. `npx vercel dev` serves the Vite app and the functions together on that port.
 
