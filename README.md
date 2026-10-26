@@ -56,7 +56,7 @@ Create the Vercel project from [docs/SETUP.md](docs/SETUP.md). Name it `ask-jay`
 
 ### Phone scan
 
-`npm run phone:scan` checks every committed text file and PDF for phone numbers. PDFs are read with `pdftotext` from poppler. HTML entities are decoded first, and every Unicode decimal digit folds to ASCII. A run of 10 or more digits fails after separators between digits are dropped, including `tel:` links. Digit groups on separate lines stay separate. A hex hash stays when the long digit run sits inside the whole token. Reviewed exceptions live in `scripts/phone-scan-allowlist.txt` with a reason on every entry. CI runs the same check. The scanner prints a file path and line number only.
+`npm run phone:scan` checks every committed text file and PDF for phone numbers. PDFs are read with `pdftotext` from poppler. HTML entities are decoded first, and every Unicode decimal digit folds to ASCII. A run of 10 or more digits fails after separators between digits are dropped, including `tel:` links. Digit groups on separate lines stay separate. A hex hash stays when the long digit run sits inside the whole token. Pipe, colon, tilde, middle dot and bullet also count as separators. O, o, l and I inside a digit run count as digits, spelled out digits count, and vanity numbers fail. A UUID or ISO date shape is kept only when it is a valid UUID or a real calendar date. The kb build and the scan share these rules in `lib/phone-rules.js`. Reviewed exceptions live in `scripts/phone-scan-allowlist.txt` with a reason on every entry. CI runs the same check. The scanner prints a file path and line number only.
 
 ## Project structure
 

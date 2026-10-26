@@ -1,6 +1,6 @@
 /**
- * Repo phone scan. Stay in sync with the phone bar in lib/kb-build.js
- * from PR #18 (issue #3, not on main yet).
+ * Repo phone scan. Stay in sync with the phone bar in lib/kb-build.js.
+ * Shared rule pieces live in lib/phone-rules.js.
  *
  * Decode percent escapes, then HTML entities (&nbsp;, &#160;, &#xA0;, and
  * other named entities). Normalize each character with NFKC, strip Unicode
@@ -11,11 +11,15 @@
  * still separates digit groups. Lines are counted only at LF, so CRLF is
  * one line and a lone CR does not advance the count.
  * Drop separators that sit between digits (space, dash, dot, slash,
- * underscore, comma, parentheses), then fail any run of 10 or more digits.
+ * underscore, comma, parentheses, pipe, colon, tilde, middle dot, bullet),
+ * then fail any run of 10 or more digits. O, o, l and I inside a digit run
+ * count as digits, spelled digits count, and vanity numbers (a toll free
+ * prefix and a word) fail (lib/phone-rules.js, issue #23).
  * A neighboring letter or x does not exempt that run. tel links fail the
  * same way. A hex hash of 7 to 40 characters is kept only when it contains
- * a letter and every long digit run sits strictly inside the token. UUIDs,
- * ISO dates, and exact tokens in scripts/phone-scan-allowlist.txt are kept.
+ * a letter and every long digit run sits strictly inside the token. Valid
+ * UUIDs, real calendar dates, and exact tokens in
+ * scripts/phone-scan-allowlist.txt are kept.
  * A path scoped allowlist line applies that token only in the named file.
  * UTF-16 LE, UTF-16 BE, and UTF-8 files with a BOM are decoded and scanned.
  * Output is the file path and line number only.
@@ -27,6 +31,17 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { decode } from "html-entities";
+import {
+  ISO_DATE_SOURCE,
+  SEPARATOR_CLASS,
+  SPELLED_DIGITS,
+  UUID_SOURCE,
+  findVanity,
+  isRealCalendarDate,
+  isValidUuid,
+  mapLetterDigits,
+  spelledToDigits,
+} from "../lib/phone-rules.js";
 
 const FIXTURE_DIR = "tests/fixtures/phone-scan";
 const UNICODE_DATA_FILES = new Set([
@@ -77,11 +92,13 @@ const SKIP_EXT = new Set([
   ".lockb",
 ]);
 
-const ISO_DATE = /(?<!\d)\d{4}-\d{2}-\d{2}(?:[tT]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:[zZ]|[+-]\d{2}:?\d{2})?)?(?!\d)/g;
-const UUID_TOKEN = /(?<![0-9a-fA-F])[0-9a-fA-F]{8}[-\s][0-9a-fA-F]{4}[-\s][0-9a-fA-F]{4}[-\s][0-9a-fA-F]{4}[-\s][0-9a-fA-F]{12}(?![0-9a-fA-F])/g;
+const ISO_DATE = new RegExp(ISO_DATE_SOURCE, "gi");
+const UUID_TOKEN = new RegExp(UUID_SOURCE, "gi");
+/** The scan keeps case, so only O, o, l and I stand in for digits. */
+const LETTER_DIGITS = { O: "0", o: "0", l: "1", I: "1" };
 const HEX_HASH = /(?<![0-9A-Za-z])[0-9a-fA-F]{7,40}(?![0-9A-Za-z])/g;
 const PHONE_RUN = /(?<!\d)\d{10,}(?!\d)/g;
-const SEPARATOR = /(?<=\d)[ \t./\\_,()\-\u2010-\u2015\u2212]+(?=\d)/g;
+const SEPARATOR = new RegExp(`(?<=\\d)[${SEPARATOR_CLASS}]+(?=\\d)`, "g");
 
 /**
  * @param {string} text
@@ -314,15 +331,21 @@ function isSafeHexHash(token) {
  */
 function collectPhoneHits(text, allowed = []) {
   let items = normalizeChars(text);
-  items = blankMatches(items, ISO_DATE);
-  items = blankMatches(items, UUID_TOKEN);
+  items = blankMatches(items, ISO_DATE, isRealCalendarDate);
+  items = blankMatches(items, UUID_TOKEN, isValidUuid);
   for (const token of allowed) items = blankToken(items, token);
+
+  /** @type {{ line: number, digits: string }[]} */
+  const hits = [];
+  const cased = items.map((item) => item.ch).join("");
+  for (const start of findVanity(cased)) hits.push({ line: items[start].line, digits: "vanity" });
+
+  items = replaceSpelledDigits(items);
+  items = mapItemLetters(items);
   items = dropSeparators(items);
   items = blankMatches(items, HEX_HASH, isSafeHexHash);
 
   const body = items.map((item) => item.ch).join("");
-  /** @type {{ line: number, digits: string }[]} */
-  const hits = [];
   PHONE_RUN.lastIndex = 0;
   for (const match of body.matchAll(PHONE_RUN)) {
     const start = match.index ?? 0;
@@ -330,6 +353,37 @@ function collectPhoneHits(text, allowed = []) {
     hits.push({ line, digits: match[0] });
   }
   return hits;
+}
+
+/**
+ * Swap each spelled digit word for its digits, one item per digit on the word's line.
+ * @param {{ ch: string, line: number }[]} items
+ * @returns {{ ch: string, line: number }[]}
+ */
+function replaceSpelledDigits(items) {
+  const text = items.map((item) => item.ch).join("");
+  /** @type {{ ch: string, line: number }[]} */
+  const out = [];
+  let last = 0;
+  SPELLED_DIGITS.lastIndex = 0;
+  for (const match of text.matchAll(SPELLED_DIGITS)) {
+    const start = match.index ?? 0;
+    appendSlice(out, items, last, start);
+    for (const digit of spelledToDigits(match[0])) out.push({ ch: digit, line: items[start].line });
+    last = start + match[0].length;
+  }
+  appendSlice(out, items, last, items.length);
+  return out;
+}
+
+/**
+ * Map O, o, l and I to digits inside digit runs. One item in, one item out.
+ * @param {{ ch: string, line: number }[]} items
+ * @returns {{ ch: string, line: number }[]}
+ */
+function mapItemLetters(items) {
+  const mapped = mapLetterDigits(items.map((item) => item.ch).join(""), LETTER_DIGITS);
+  return items.map((item, index) => ({ ch: mapped[index], line: item.line }));
 }
 
 /**
