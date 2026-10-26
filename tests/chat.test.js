@@ -193,7 +193,7 @@ describe("POST /api/chat", () => {
 
     expect(winner).toBe("data");
     expect(text).toContain("Searching project docs");
-    expect(text).toContain("Jay ");
+    expect(text).toContain('"text":"Jay"');
     expect(text).not.toContain("builds cloud systems.");
     release();
     while (true) {
