@@ -8,6 +8,7 @@ frontend/dist-copy/
 .DS_Store
 .vercel
 kb/kb.json
+kb/docs-index.json
 
 # Private resume PDFs. The phone free public file is allowed below.
 mcp-server/*.[Pp][Dd][Ff]
