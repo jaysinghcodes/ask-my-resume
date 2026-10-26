@@ -32,7 +32,7 @@ export function Hero(props) {
             {...{ fetchpriority: "high" }}
           />
         ) : null}
-        <h1>
+        <h1 tabIndex={-1}>
           {content.headline}
           {content.headlineSupport ? <span>{content.headlineSupport}</span> : null}
         </h1>

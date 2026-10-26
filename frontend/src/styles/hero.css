@@ -179,6 +179,14 @@
   }
 }
 
+/* At 390 the role line fit with 1px to spare, so a small font metric change wrapped it.
+   A slight tightening gives it room without changing the size. */
+@media (max-width: 430px) {
+  .hero-role {
+    letter-spacing: -0.01em;
+  }
+}
+
 @media (min-width: 390px) {
   .impact-value {
     font-size: 24px;
