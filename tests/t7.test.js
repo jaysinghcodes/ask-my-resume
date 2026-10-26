@@ -48,7 +48,7 @@ import { JD_FIT_PROMPT, checkJdFitAnswer } from "../lib/jd-fit.js";
 import { getKb, recordIds } from "../lib/kb-data.js";
 import { readCaps, resetLimitState, validateChatBody } from "../lib/limits.js";
 import { SYSTEM_PROMPT, buildSystem } from "../lib/prompts.js";
-import { createDashNet, sourceFor, sourcesForAnswer } from "../lib/sources.js";
+import { createCiteFilter, createDashNet, scopeIds, sourceFor, sourcesForAnswer, stripCites } from "../lib/sources.js";
 import { TOOLS, executeTool, getRecord, searchDocs } from "../lib/tools.js";
 
 const ENV_KEYS = ["ANTHROPIC_API_KEY", "MODEL_ID", "IP_SALT", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN", "ALLOWED_ORIGINS", "NODE_ENV"];
@@ -316,11 +316,79 @@ describe("JD fit (mode jd_fit)", () => {
     expect(events.at(-1)?.event).toBe("done");
   });
 
-  it("an answer with nothing renderable sends the server error (empty state is a follow-up)", async () => {
+  it("an answer that filters to zero items is an empty success: 200, no text, empty sources", async () => {
     expect(finalJdFitAnswer("No cited matches here.", recordIds()).text).toBe("");
-    fake.scripts.push([{ text: "I could not find anything relevant." }]);
-    const { events } = await ask({ messages: user("JD text"), mode: "jd_fit" });
-    expect(events.at(-1)).toEqual({ event: "error", data: expect.objectContaining({ code: "server" }) });
-    expect(events.some((e) => e.event === "delta")).toBe(false);
+    fake.scripts.push([{ text: "Gaps\n- Kafka\n- Go [ghost-record]" }]);
+    const { status, events, answer } = await ask({ messages: user("JD text"), mode: "jd_fit" });
+    expect(status).toBe(200);
+    expect(events.map((e) => e.event)).toEqual(["status", "sources", "done"]);
+    expect(answer).toBe("");
+    expect(events.find((e) => e.event === "sources")?.data).toEqual({ sources: [] });
+    expect(events.some((e) => e.event === "error")).toBe(false);
+  });
+});
+
+describe("scope cites (Atlas ruling, PR #34 product calls 1)", () => {
+  const cleat = { type: /** @type {const} */ ("project"), id: "project-cleat" };
+  const captech = { type: /** @type {const} */ ("role"), id: "role-captech-consultant" };
+
+  it("a project scope covers the project, its doc chunks and skills evidenced by it", () => {
+    const ids = scopeIds(cleat);
+    expect(ids.has("project-cleat")).toBe(true);
+    expect(ids.has("doc-cleat-architecture-1-one-liner-stack")).toBe(true);
+    expect(ids.has("skill-typescript")).toBe(true);
+    expect(ids.has("project-mission-control")).toBe(false);
+    expect([...ids].some((id) => id.startsWith("doc-mission-control"))).toBe(false);
+    expect(ids.has("bullet-captech-consultant-4")).toBe(false);
+  });
+
+  it("a role scope covers the role, its bullets and skills evidenced by them", () => {
+    const ids = scopeIds(captech);
+    expect(ids.has("bullet-captech-consultant-4")).toBe(true);
+    expect(ids.has("bullet-captech-consultant-support")).toBe(true);
+    expect(ids.has("skill-python")).toBe(true);
+    expect(ids.has("bullet-procrewz-1")).toBe(false);
+    expect(ids.has("project-cleat")).toBe(false);
+  });
+
+  it("the sources mapper drops ids outside the scope", () => {
+    const text = "Cleat [project-cleat] and Mission Control [project-mission-control] and a bank [bullet-captech-consultant-4].";
+    expect(sourcesForAnswer(text, { scope: cleat }).map((s) => s.id)).toEqual(["project-cleat"]);
+    expect(sourcesForAnswer(text).map((s) => s.id)).toEqual(["project-cleat", "project-mission-control", "bullet-captech-consultant-4"]);
+  });
+
+  it("strips dropped markers and the space before them, and leaves links and numbers alone", () => {
+    const keep = (/** @type {string} */ id) => id === "a";
+    expect(stripCites("One [a]. Two [b]. Three [b] [a]. A [link](https://x.y) and [1].", keep)).toBe("One [a]. Two. Three [a]. A [link](https://x.y) and [1].");
+  });
+
+  it("catches a dropped marker split across deltas", () => {
+    const filter = createCiteFilter((id) => id === "a");
+    const out = ["Jay ships [gh", "ost-rec", "ord]", ". More [", "a", "]", " done"].map((part) => filter.push(part)).join("") + filter.flush();
+    expect(out).toBe("Jay ships. More [a] done");
+  });
+
+  it("a scoped ask whose model cites an out of scope id drops it from sources and from the streamed text", async () => {
+    fake.scripts.push([
+      { text: "Cleat runs a locked stack [doc-cleat-architecture-2-primary-stack-locked-for-v1]. Mission Control does too [project-mission-control][doc-mission-control-api-4-7-models-and-spend]. Made up [ghost-record]." },
+    ]);
+    const { events, answer } = await ask({ messages: user("How is it built?"), scope: cleat });
+    expect(answer).toBe("Cleat runs a locked stack [doc-cleat-architecture-2-primary-stack-locked-for-v1]. Mission Control does too. Made up.");
+    for (const event of events.filter((e) => e.event === "delta")) expect(event.data.text).not.toMatch(/mission-control|ghost-record/);
+    expect(events.find((e) => e.event === "sources")?.data.sources.map((s) => s.id)).toEqual(["doc-cleat-architecture-2-primary-stack-locked-for-v1"]);
+    expect(events.at(-1)?.event).toBe("done");
+  });
+
+  it("a role scoped ask drops a project cite", async () => {
+    fake.scripts.push([{ text: "He ships agents [bullet-captech-consultant-4] and built Cleat [project-cleat]." }]);
+    const { events, answer } = await ask({ messages: user("CapTech?"), scope: captech });
+    expect(answer).toBe("He ships agents [bullet-captech-consultant-4] and built Cleat.");
+    expect(events.find((e) => e.event === "sources")?.data.sources.map((s) => s.id)).toEqual(["bullet-captech-consultant-4"]);
+  });
+
+  it("an unscoped ask strips unknown ids from the streamed text too", async () => {
+    fake.scripts.push([{ text: "Jay ships agents [bullet-captech-consultant-4] and more [ghost-record]." }]);
+    const { answer } = await ask({ messages: user("Agents?") });
+    expect(answer).toBe("Jay ships agents [bullet-captech-consultant-4] and more.");
   });
 });
