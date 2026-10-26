@@ -180,7 +180,7 @@
     "one_liner": "Chat assistant that answers questions about Jay's experience using Claude tool use with a resume search tool, so every answer is grounded in the source.",
     "problem": "A resume is a static document and a recruiter's actual question is usually more specific than anything on it. A chatbot pointed at a resume will happily make things up, which is worse than useless when the subject is your own professional history.",
     "what_jay_built": "Claude tool use with a resume search tool: Claude calls the search tool against Jay's resume and keeps calling it until it can produce a final answer grounded in the source. Jay built the frontend, the backend, the tool layer and the deployment.",
-    "architecture": "Today: a React and Vite frontend on GitHub Pages and a Node and Express backend on Render. The backend runs a Claude tool use loop with one tool, search_resume, which returns the resume text; Claude calls it until it can answer from the source. Frontend deploys run through GitHub Actions. Planned: one Vercel project with streaming, a structured knowledge base and cited answers.",
+    "architecture": "Today: a React and Vite frontend on GitHub Pages and a Node and Express backend on Render. The chat runs a Claude tool use loop over a cached knowledge base, with search_docs for project doc chunks and get_record for one full record, and cites a record for every claim. Frontend deploys run through GitHub Actions. Planned: one Vercel project with streaming, a structured knowledge base and cited answers.",
     "key_decisions": [
       "Use a tool use loop so the model has to fetch the source before it answers.",
       "Let the model call the tool repeatedly until it has what it needs.",
