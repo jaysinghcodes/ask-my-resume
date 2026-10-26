@@ -23,9 +23,10 @@ function focusable(root) {
  *   ) => void,
  *   links: { id: string, to: string, label: string }[],
  *   resumeHref: string,
- * }} props
+ *   inline?: boolean,
+ * }} props `inline` renders in place instead of a portal (the build's copy snapshot).
  */
-export function MobileMenu({ open, currentId, onClose, onLinkClick, links, resumeHref }) {
+export function MobileMenu({ open, currentId, onClose, onLinkClick, links, resumeHref, inline = false }) {
   const panelRef = useRef(/** @type {HTMLDivElement | null} */ (null));
 
   useEffect(() => {
@@ -71,7 +72,7 @@ export function MobileMenu({ open, currentId, onClose, onLinkClick, links, resum
 
   if (!open) return null;
 
-  return createPortal(
+  const sheet = (
     <div className="sheet" onClick={() => onClose(true)}>
       <div
         ref={panelRef}
@@ -108,7 +109,7 @@ export function MobileMenu({ open, currentId, onClose, onLinkClick, links, resum
           Resume
         </a>
       </div>
-    </div>,
-    document.body,
+    </div>
   );
+  return inline ? sheet : createPortal(sheet, document.body);
 }
