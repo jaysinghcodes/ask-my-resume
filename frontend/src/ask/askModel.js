@@ -3,7 +3,7 @@
  * Nothing here touches the DOM, so the tests can cover it directly.
  */
 
-import { JD_FIT_SECTIONS, renderJdFit } from "../../../lib/jd-fit-rules.js";
+import { JD_FIT_EMPTY, JD_FIT_SECTIONS, renderJdFit } from "../../../lib/jd-fit-rules.js";
 
 export { JD_FIT_SECTIONS };
 
@@ -32,6 +32,7 @@ export const ASK_COPY = {
   jdCancel: "Cancel",
   jdQuestion: "Check fit against this job description",
   jdShow: "Show the job description",
+  jdEmpty: JD_FIT_EMPTY,
   chipsLabel: "Suggested questions",
 };
 
@@ -191,7 +192,7 @@ const CITE = "\u0000";
  * @param {string} text
  * @param {Source[] | null} sources `null` while the sources event has not arrived.
  * @param {{ streaming?: boolean, jdFit?: boolean }} [options] `jdFit` applies the JD fit rules (see jdFitText).
- * @returns {{ blocks: Block[], sources: NumberedSource[] }}
+ * @returns {{ blocks: Block[], sources: NumberedSource[], empty: boolean }}
  */
 export function layoutAnswer(text, sources, options = {}) {
   let body = String(text ?? "");
@@ -248,7 +249,13 @@ export function layoutAnswer(text, sources, options = {}) {
       if (source) sourcesOut.push({ ...source, n });
     }
   }
-  return { blocks: toBlocks(attached), sources: sourcesOut };
+  const blocks = toBlocks(attached);
+  // A finished JD fit answer with nothing left after the filter shows one line and no
+  // Sources (Atlas ruling, Oct 26 2026, #9). While it streams, the card just waits.
+  if (options.jdFit && !options.streaming && !blocks.some((block) => "items" in block && block.items.length > 0)) {
+    return { blocks: [], sources: [], empty: true };
+  }
+  return { blocks, sources: sourcesOut, empty: false };
 }
 
 /**
