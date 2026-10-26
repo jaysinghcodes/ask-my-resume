@@ -6,9 +6,10 @@ import { HOME_SECTIONS } from "./sections";
 
 const contactOnHome = contactSectionMounted(HOME_SECTIONS);
 
-export default function App() {
+/** The routes and shell, without a router, so the build can prerender them. */
+export function AppRoutes() {
   return (
-    <BrowserRouter>
+    <>
       <ScrollToHash />
       <PageShell>
         <Routes>
@@ -27,6 +28,14 @@ export default function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </PageShell>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
     </BrowserRouter>
   );
 }

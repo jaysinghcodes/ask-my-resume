@@ -62,8 +62,8 @@ function webpSize(buf) {
 describe("hero content from the knowledge base", () => {
   it("reads headline option A, the lede, and the status line from profile", () => {
     const content = heroContent(profile);
-    expect(content.headline).toBe("AI native software engineer.");
-    expect(content.headlineSupport).toBe("Cloud platforms, data infrastructure and production AI.");
+    expect(content.headline).toBe("AI native forward deployed engineer.");
+    expect(content.headlineSupport).toBe("Cloud platforms, data infrastructure and production AI, built directly with clients.");
     expect(content.lede).toBe(
       "I ship end to end, from architecture through deployment and operations, across fintech and large scale enterprise environments.",
     );
@@ -88,7 +88,7 @@ describe("hero content from the knowledge base", () => {
     expect(changed.headline).toBe("Platform engineer.");
     const markup = html(createElement(Hero, { profile: { ...profile, headline: "Platform engineer." } }));
     expect(markup).toContain("Platform engineer.");
-    expect(markup).not.toContain("AI native software engineer.");
+    expect(markup).not.toContain("AI native forward deployed engineer.");
   });
 
   it("uses the planned resume and email paths when the profile links are missing", () => {
@@ -137,8 +137,8 @@ describe("Hero markup", () => {
     expect(markup).toContain('height="72"');
     expect(markup).not.toContain("loading=");
     expect(markup).toContain('fetchpriority="high"');
-    expect(markup).toContain("AI native software engineer.");
-    expect(markup).toContain("Cloud platforms, data infrastructure and production AI.");
+    expect(markup).toContain("AI native forward deployed engineer.");
+    expect(markup).toContain("Cloud platforms, data infrastructure and production AI, built directly with clients.");
     expect(markup).toContain("<b>Software Engineer Consultant</b> at CapTech Consulting");
     expect(markup).toContain("Chicago, IL");
     expect(markup).toContain("Open to new roles");
@@ -170,10 +170,16 @@ describe("Hero markup", () => {
     const strip = fs.readFileSync(path.join(root, "frontend/src/components/ImpactStrip.jsx"), "utf8");
     const model = fs.readFileSync(path.join(root, "frontend/src/components/heroModel.js"), "utf8");
     const combined = `${hero}\n${strip}\n${model}`;
-    expect(combined).not.toContain("AI native software engineer");
+    expect(combined).not.toContain("AI native forward deployed engineer");
     expect(combined).not.toContain("9 mo to 1 wk");
     expect(combined).not.toContain("$7.8M");
     expect(combined).not.toContain("CapTech Consulting");
+  });
+
+  it("balances the headline and steps it down below 360 so it wraps cleanly", () => {
+    const css = fs.readFileSync(path.join(root, "frontend/src/styles/hero.css"), "utf8");
+    expect(css).toMatch(/\.hero h1,\s*\.hero h1 span\s*\{\s*text-wrap: balance;/);
+    expect(css).toMatch(/@media \(max-width: 359px\)\s*\{\s*\.hero h1\s*\{\s*font-size: 30px;/);
   });
 
   it("renders nothing for an empty impact list", () => {
@@ -217,7 +223,7 @@ describe("Ask Jay a question", () => {
     expect(model).not.toContain("pushState");
     expect(scroll).toContain('focus === "ask-input"');
     expect(scroll).toContain('id === "ask"');
-    expect(scroll).toContain('querySelector("h1, h2")');
+    expect(scroll).toContain('querySelector?.("h1, h2")');
     expect(nav).toContain("scrollToId(item.id)");
     expect(focusIdFromState({ focus: "ask-input" })).toBe("ask-input");
     expect(focusIdFromState(null)).toBe("");

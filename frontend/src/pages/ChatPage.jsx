@@ -1,89 +1,204 @@
-import { useEffect, useRef, useState } from "react";
-import { API_URL, CHAT_ERROR_MESSAGE, SUGGESTED_QUESTIONS } from "../config/constants";
-import { toApiMessages } from "../chatHistory";
-import { Message } from "../components/Message";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { API_URL } from "../config/constants";
+import { knowledgeBase } from "../data/knowledgeBase";
+import { streamChat } from "../ask/askClient.js";
+import {
+  ASK_COPY,
+  atMessageCap,
+  buildChatBody,
+  featuredChips,
+  friendlyError,
+  historyFor,
+  normalizeSources,
+} from "../ask/askModel.js";
+import { AskAnswer } from "../components/AskAnswer";
+import { JdFitForm } from "../components/JdFitForm";
 import { ReadingColumn } from "../components/ReadingColumn";
+import { registerAskHandler } from "../components/askAbout";
 
 /**
- * @typedef {{ role: string, content: string }} ChatMessage
+ * @typedef {{
+ *   id: string,
+ *   question: string,
+ *   mode?: "jd_fit",
+ *   scope?: { type: "role" | "project", id: string },
+ *   answer: string,
+ *   sources: import("../ask/askModel.js").Source[] | null,
+ *   status: string,
+ *   state: "waiting" | "streaming" | "done" | "error",
+ *   error: string,
+ * }} Turn
  */
 
-const RATE_LIMITED_MESSAGE =
-  "You've asked a lot of questions in a short time. Try again in a few minutes, or email jaggys44@gmail.com.";
+const CHIPS = featuredChips(/** @type {{ faqs?: unknown }} */ (/** @type {unknown} */ (knowledgeBase)));
+let turnSeq = 0;
 
 /**
- * @param {string} block
- * @param {(event: string, data: Record<string, unknown>) => void} onEvent
+ * The Ask Jay section: one soft card with the input, recruiter chips and the thread.
+ * @param {{ id?: string }} props
  */
-function dispatchEvent(block, onEvent) {
-  let event = "message";
-  /** @type {string[]} */
-  const dataLines = [];
-  for (const line of block.split("\n")) {
-    if (!line || line.startsWith(":")) continue;
-    if (line.startsWith("event:")) event = line.slice(6).trim();
-    else if (line.startsWith("data:")) dataLines.push(line.slice(5).trim());
-  }
-  if (dataLines.length === 0) return;
-  try {
-    const data = JSON.parse(dataLines.join("\n"));
-    if (!data || typeof data !== "object") return;
-    onEvent(event, data);
-  } catch {
-    // A bad event is ignored. The caller shows the friendly server message if no answer arrives.
-  }
-}
-
-/**
- * @param {string} buffer
- * @param {(event: string, data: Record<string, unknown>) => void} onEvent
- * @returns {string}
- */
-function consumeEvents(buffer, onEvent) {
-  const parts = buffer.split("\n\n");
-  const rest = parts.pop() ?? "";
-  for (const part of parts) dispatchEvent(part, onEvent);
-  return rest;
-}
-
-/**
- * @param {Response} response
- * @param {(event: string, data: Record<string, unknown>) => void} onEvent
- */
-async function readEventStream(response, onEvent) {
-  const reader = response.body?.getReader();
-  if (!reader) return;
-  const decoder = new TextDecoder();
-  let buffer = "";
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    buffer = consumeEvents(buffer, onEvent);
-  }
-  buffer += decoder.decode();
-  if (buffer.trim()) dispatchEvent(buffer, onEvent);
-}
-
 export function ChatPage({ id = "ask" }) {
-  const [messages, setMessages] = useState(/** @type {ChatMessage[]} */ ([]));
+  const [turns, setTurns] = useState(/** @type {Turn[]} */ ([]));
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
-  const messagesEndRef = useRef(/** @type {HTMLDivElement | null} */ (null));
-  const inputRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
+  const [jdOpen, setJdOpen] = useState(false);
+  const turnsRef = useRef(turns);
   const abortRef = useRef(/** @type {AbortController | null} */ (null));
+  const inputRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
+  const jdLinkRef = useRef(/** @type {HTMLButtonElement | null} */ (null));
+  const restartRef = useRef(/** @type {HTMLButtonElement | null} */ (null));
+
+  const busy = turns.some((turn) => turn.state === "waiting" || turn.state === "streaming");
+  const capped = atMessageCap(turns);
+
+  /** @param {(current: Turn[]) => Turn[]} update */
+  const updateTurns = useCallback((update) => {
+    setTurns((current) => {
+      const next = update(current);
+      turnsRef.current = next;
+      return next;
+    });
+  }, []);
+
+  /**
+   * @param {string} turnId
+   * @param {(turn: Turn) => Turn} change
+   */
+  const patchTurn = useCallback(
+    (turnId, change) => {
+      updateTurns((current) => current.map((turn) => (turn.id === turnId ? change(turn) : turn)));
+    },
+    [updateTurns],
+  );
+
+  /** @param {Turn} turn */
+  const run = useCallback(
+    (turn) => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const earlier = turnsRef.current.filter((item) => item.id !== turn.id && item.state === "done");
+      const body = buildChatBody(
+        { messages: historyFor(earlier, turn.question), mode: turn.mode, scope: turn.scope },
+        /** @type {import("../ask/askModel.js").AskKb} */ (/** @type {unknown} */ (knowledgeBase)),
+      );
+
+      streamChat({
+        url: `${API_URL}/chat`,
+        body,
+        signal: controller.signal,
+        onEvent: (event, data) => {
+          if (event === "status" && typeof data.text === "string" && data.text.trim()) {
+            const text = data.text.trim();
+            patchTurn(turn.id, (item) => ({ ...item, status: text }));
+          } else if (event === "delta" && typeof data.text === "string" && data.text) {
+            const text = data.text;
+            patchTurn(turn.id, (item) => ({
+              ...item,
+              state: "streaming",
+              status: "",
+              answer: item.answer + text,
+            }));
+          } else if (event === "sources") {
+            const sources = normalizeSources(data.sources);
+            patchTurn(turn.id, (item) => ({ ...item, sources }));
+          } else if (event === "done") {
+            patchTurn(turn.id, (item) =>
+              item.answer.trim()
+                ? { ...item, state: "done", status: "", sources: item.sources ?? [] }
+                : { ...item, state: "error", status: "", error: friendlyError("server") },
+            );
+          } else if (event === "error") {
+            patchTurn(turn.id, (item) => ({
+              ...item,
+              state: "error",
+              status: "",
+              answer: "",
+              sources: null,
+              error: friendlyError(data.code),
+            }));
+          }
+        },
+      });
+    },
+    [patchTurn],
+  );
+
+  /**
+   * @param {string} text
+   * @param {{ mode?: "jd_fit", scope?: Turn["scope"] }} [options]
+   * @returns {boolean}
+   */
+  const send = useCallback(
+    (text, options = {}) => {
+      const question = text.trim();
+      const current = turnsRef.current;
+      const inFlight = current.some((turn) => turn.state === "waiting" || turn.state === "streaming");
+      if (!question || inFlight || atMessageCap(current)) return false;
+      turnSeq += 1;
+      /** @type {Turn} */
+      const turn = {
+        id: `ask-turn-${turnSeq}`,
+        question,
+        mode: options.mode,
+        scope: options.scope,
+        answer: "",
+        sources: null,
+        status: ASK_COPY.waiting,
+        state: "waiting",
+        error: "",
+      };
+      updateTurns((list) => [...list.filter((item) => item.state !== "error"), turn]);
+      run(turn);
+      return true;
+    },
+    [run, updateTurns],
+  );
+
+  function restart() {
+    abortRef.current?.abort();
+    updateTurns(() => []);
+    setInput("");
+    setJdOpen(false);
+    requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+  }
+
+  /** @param {Turn} turn */
+  function retry(turn) {
+    if (busy) return;
+    const fresh = { ...turn, answer: "", sources: null, status: ASK_COPY.waiting, state: "waiting", error: "" };
+    patchTurn(turn.id, () => /** @type {Turn} */ (fresh));
+    run(/** @type {Turn} */ (fresh));
+  }
+
+  /** @param {Turn} turn */
+  function dismiss(turn) {
+    updateTurns((list) => list.filter((item) => item.id !== turn.id));
+    inputRef.current?.focus({ preventScroll: true });
+  }
+
+  const sendRef = useRef(send);
+  sendRef.current = send;
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading, status, error]);
-
-  useEffect(() => {
+    const unregister = registerAskHandler(({ question, scope }) => {
+      if (atMessageCap(turnsRef.current)) {
+        abortRef.current?.abort();
+        updateTurns(() => []);
+      }
+      setJdOpen(false);
+      const sent = sendRef.current(question, { scope });
+      setInput(sent ? "" : question);
+      requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+    });
     return () => {
+      unregister();
       abortRef.current?.abort();
     };
-  }, []);
+  }, [updateTurns]);
+
+  useEffect(() => {
+    if (capped) restartRef.current?.focus({ preventScroll: true });
+  }, [capped]);
 
   function resizeInput() {
     const el = inputRef.current;
@@ -92,189 +207,137 @@ export function ChatPage({ id = "ask" }) {
     el.style.height = Math.min(el.scrollHeight, 160) + "px";
   }
 
-  /**
-   * @param {string} text
-   */
-  function appendAnswer(text) {
-    setMessages((current) => {
-      const next = current.slice();
-      const last = next[next.length - 1];
-      if (last && last.role === "ai") {
-        next[next.length - 1] = { role: "ai", content: last.content + text };
-        return next;
-      }
-      next.push({ role: "ai", content: text });
-      return next;
-    });
-  }
-
-  /**
-   * @param {ChatMessage[]} history
-   */
-  async function requestAnswer(history) {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setError("");
-    setStatus("Looking that up.");
-    setLoading(true);
-    let answer = "";
-    let sawError = false;
-
-    try {
-      const res = await fetch(`${API_URL}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: toApiMessages(history) }),
-        signal: controller.signal,
-      });
-      if (controller.signal.aborted) return;
-
-      const contentType = res.headers.get("content-type") || "";
-      if (!contentType.includes("text/event-stream")) {
-        setMessages(history);
-        setError(res.status === 429 ? RATE_LIMITED_MESSAGE : CHAT_ERROR_MESSAGE);
-        return;
-      }
-
-      await readEventStream(res, (event, data) => {
-        if (controller.signal.aborted) return;
-        if (event === "status" && typeof data.text === "string" && data.text.trim()) {
-          setStatus(data.text);
-          return;
-        }
-        if (event === "delta" && typeof data.text === "string" && data.text) {
-          answer += data.text;
-          setStatus("");
-          appendAnswer(data.text);
-          return;
-        }
-        if (event === "error") {
-          sawError = true;
-          const text = typeof data.text === "string" ? data.text.trim() : "";
-          setError(text || CHAT_ERROR_MESSAGE);
-        }
-      });
-
-      if (controller.signal.aborted) return;
-      if (sawError || answer.trim() === "") {
-        setMessages(history);
-        if (!sawError) setError(CHAT_ERROR_MESSAGE);
-      }
-    } catch {
-      if (controller.signal.aborted) return;
-      setMessages(history);
-      setError(CHAT_ERROR_MESSAGE);
-    } finally {
-      if (abortRef.current === controller) {
-        setStatus("");
-        setLoading(false);
-      }
+  function submitInput() {
+    if (!input.trim()) {
+      inputRef.current?.focus({ preventScroll: true });
+      return;
+    }
+    if (send(input)) {
+      setInput("");
+      if (inputRef.current) inputRef.current.style.height = "auto";
     }
   }
-
-  function sendMessage(text) {
-    const question = text.trim();
-    if (!question || loading) return;
-
-    const newMessages = [...messages, { role: "user", content: question }];
-    setMessages(newMessages);
-    setInput("");
-    if (inputRef.current) inputRef.current.style.height = "auto";
-    requestAnswer(newMessages);
-  }
-
-  function retry() {
-    if (loading || messages.length === 0) return;
-    requestAnswer(messages);
-  }
-
-  function handleKeyDown(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage(input);
-    }
-  }
-
-  const showThread = messages.length > 0 || loading || Boolean(error);
 
   return (
     <section id={id} className="ask-section">
       <ReadingColumn>
-      <p className="kicker">Ask Jay</p>
-      <h1 tabIndex={-1}>Ask about my experience</h1>
-      <p className="ask-sub">
-        An assistant that answers from my resume, project docs and repos, and cites where each
-        answer came from.
-      </p>
+        <p className="kicker">{ASK_COPY.kicker}</p>
+        <h2 tabIndex={-1}>{ASK_COPY.title}</h2>
+        <p className="ask-sub">{ASK_COPY.sub}</p>
 
-      <div className="ask-card">
-        <form
-          className="ask-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            sendMessage(input);
-          }}
-        >
-          <textarea
-            id="ask-input"
-            ref={inputRef}
-            rows={1}
-            value={input}
-            placeholder="Ask about a role, a project, or paste a job description"
-            aria-label="Ask about a role, a project, or paste a job description"
-            disabled={loading}
-            onChange={(event) => {
-              setInput(event.target.value);
-              resizeInput();
-            }}
-            onKeyDown={handleKeyDown}
-          />
-          <button className="ask-go" type="submit" disabled={loading || input.trim() === ""}>
-            Ask
-          </button>
-        </form>
-
-        <div className="chips">
-          {SUGGESTED_QUESTIONS.map((question) => (
-            <button
-              key={question}
-              type="button"
-              disabled={loading}
-              onClick={() => sendMessage(question)}
+        <div className="ask-card">
+          {capped ? (
+            <div className="ask-cap">
+              <p>{ASK_COPY.capNote}</p>
+              <button ref={restartRef} type="button" className="ask-go" onClick={restart}>
+                {ASK_COPY.restart}
+              </button>
+            </div>
+          ) : jdOpen ? (
+            <JdFitForm
+              busy={busy}
+              onCancel={() => {
+                setJdOpen(false);
+                requestAnimationFrame(() => jdLinkRef.current?.focus({ preventScroll: true }));
+              }}
+              onSubmit={(text) => {
+                if (send(text, { mode: "jd_fit" })) {
+                  setJdOpen(false);
+                  requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+                }
+              }}
+            />
+          ) : (
+            <form
+              className="ask-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                submitInput();
+              }}
             >
-              {question}
-            </button>
-          ))}
-        </div>
+              <textarea
+                id="ask-input"
+                ref={inputRef}
+                rows={1}
+                value={input}
+                placeholder={ASK_COPY.placeholder}
+                aria-label={ASK_COPY.placeholder}
+                onChange={(event) => {
+                  setInput(event.target.value);
+                  resizeInput();
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    submitInput();
+                  }
+                }}
+              />
+              <button className="ask-go" type="submit" disabled={busy}>
+                {ASK_COPY.ask}
+              </button>
+            </form>
+          )}
 
-        {showThread && (
-          <div className="convo">
-            {messages.map((message, index) => (
-              <Message key={`${message.role}-${index}`} role={message.role} content={message.content} />
+          {capped ? null : (
+            <div className="chips" role="group" aria-label={ASK_COPY.chipsLabel}>
+              {CHIPS.map((question) => (
+                <button key={question} type="button" disabled={busy} onClick={() => send(question)}>
+                  {question}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="convo" aria-live="polite" aria-busy={busy}>
+            {turns.map((turn) => (
+              <article key={turn.id} className="turn">
+                {turn.mode === "jd_fit" ? (
+                  <>
+                    <p className="turn-q">{ASK_COPY.jdQuestion}</p>
+                    <details className="turn-jd">
+                      <summary>{ASK_COPY.jdShow}</summary>
+                      <p>{turn.question}</p>
+                    </details>
+                  </>
+                ) : (
+                  <p className="turn-q">{turn.question}</p>
+                )}
+                {turn.answer ? (
+                  <AskAnswer
+                    turnId={turn.id}
+                    text={turn.answer}
+                    sources={turn.sources}
+                    streaming={turn.state !== "done"}
+                    jdFit={turn.mode === "jd_fit"}
+                  />
+                ) : null}
+                {turn.status && (turn.state === "waiting" || turn.state === "streaming") ? (
+                  <p className="ask-status">{turn.status}</p>
+                ) : null}
+                {turn.state === "error" ? (
+                  <div className="ask-error" role="alert">
+                    <p>{turn.error}</p>
+                    <button type="button" className="ask-retry" onClick={() => retry(turn)} disabled={busy}>
+                      {ASK_COPY.retry}
+                    </button>
+                    <button type="button" className="ask-dismiss" onClick={() => dismiss(turn)}>
+                      {ASK_COPY.dismiss}
+                    </button>
+                  </div>
+                ) : null}
+              </article>
             ))}
-            {loading && status ? (
-              <p className="ask-status" aria-live="polite">
-                {status}
-              </p>
-            ) : null}
-            {error && (
-              <div className="ask-error" role="alert">
-                <p>{error}</p>
-                <button type="button" className="ask-retry" onClick={retry} disabled={loading}>
-                  Try again
-                </button>
-                <button type="button" className="ask-dismiss" onClick={() => setError("")}>
-                  Dismiss
-                </button>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
           </div>
-        )}
 
-        <div className="ask-foot">Answers are grounded in the resume.</div>
-      </div>
+          {capped || jdOpen ? null : (
+            <div className="ask-foot">
+              <button ref={jdLinkRef} type="button" className="ask-jd-link" onClick={() => setJdOpen(true)}>
+                {ASK_COPY.jdLink}
+              </button>
+            </div>
+          )}
+        </div>
       </ReadingColumn>
     </section>
   );

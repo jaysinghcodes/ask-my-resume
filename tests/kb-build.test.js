@@ -31,7 +31,7 @@ describe("knowledge base build", () => {
     const kb = requireKb(result);
     expect(kb.meta.built_at).toBe("2026-10-20");
     if (!kb.profile) throw new Error("missing profile");
-    expect(kb.profile.headline).toBe("AI native software engineer.");
+    expect(kb.profile.headline).toBe("AI native forward deployed engineer.");
     expect(kb.profile.availability).toBe("Open to new roles");
     expect(kb.roles).toHaveLength(4);
     const pageBullets = kb.bullets.filter((bullet) => bullet.show_on_page);
@@ -760,7 +760,7 @@ describe("knowledge base build", () => {
       "profile.json": record({
         id: "profile",
         confidence: "unsure",
-        headline: "AI native software engineer.",
+        headline: "AI native forward deployed engineer.",
       }),
     }));
 

@@ -6,7 +6,9 @@ import { HOME_SECTIONS } from "../sections";
 import { MobileMenu } from "./MobileMenu";
 import { scrollToId } from "./ScrollToHash";
 
-const LINKS = navItems(HOME_SECTIONS);
+/** The nav and menu links. Exported for the build's open menu copy snapshot. */
+export const NAV_LINKS = navItems(HOME_SECTIONS);
+const LINKS = NAV_LINKS;
 
 /**
  * @param {HTMLElement} node

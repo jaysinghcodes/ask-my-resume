@@ -23,6 +23,18 @@
   color: var(--ink);
 }
 
+.hero h1,
+.hero h1 span {
+  text-wrap: balance;
+}
+
+/* Below 360 the headline steps down a little so "deployed engineer." stays on one line. */
+@media (max-width: 359px) {
+  .hero h1 {
+    font-size: 30px;
+  }
+}
+
 .hero h1 span {
   display: block;
   margin-top: 0;
@@ -164,6 +176,14 @@
 @media (max-width: 760px) {
   .hero-button {
     flex: 1 1 auto;
+  }
+}
+
+/* At 390 the role line fit with 1px to spare, so a small font metric change wrapped it.
+   A slight tightening gives it room without changing the size. */
+@media (max-width: 430px) {
+  .hero-role {
+    letter-spacing: -0.01em;
   }
 }
 
