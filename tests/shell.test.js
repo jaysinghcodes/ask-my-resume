@@ -112,7 +112,7 @@ describe("layout shell", () => {
       .map((name) => read(path.join("frontend", "src", String(name))))
       .join("\n");
 
-    expect(html).toContain("Jay Singh · AI native software engineer");
+    expect(html).toContain("Jay Singh · AI native forward deployed engineer");
     expect(html).toContain('name="viewport"');
     expect(html).toContain('rel="preload"');
     expect(html).not.toContain("fonts.googleapis.com");
