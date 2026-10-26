@@ -191,7 +191,7 @@
   margin: 0 0 12px;
 }
 
-/* A JD fit answer with no cited item left: one quiet line, no Sources (#9). */
+/* A finished JD fit answer with nothing to cite: one quiet line, no Sources (#9, #37). */
 .turn-a .ans-empty {
   color: var(--muted);
 }

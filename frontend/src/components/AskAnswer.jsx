@@ -77,7 +77,7 @@ export function AskAnswer({ turnId, text, sources, streaming, jdFit = false }) {
   if (layout.empty) {
     return (
       <div className="turn-a">
-        <p className="ans-empty">{ASK_COPY.jdEmpty}</p>
+        <p className="ans-empty">{layout.empty === "gathering" ? ASK_COPY.jdGathering : ASK_COPY.jdEmpty}</p>
       </div>
     );
   }

@@ -108,7 +108,9 @@ export function ChatPage({ id = "ask" }) {
           } else if (event === "done") {
             patchTurn(turn.id, (item) =>
               item.answer.trim()
-                ? { ...item, state: "done", status: "", sources: item.sources ?? [] }
+                ? // A JD fit turn keeps null when no sources event came, so it can show the
+                  // gathering line (#37). Other answers treat it as no sources, as before.
+                  { ...item, state: "done", status: "", sources: item.sources ?? (item.mode === "jd_fit" ? null : []) }
                 : { ...item, state: "error", status: "", error: friendlyError("server") },
             );
           } else if (event === "error") {

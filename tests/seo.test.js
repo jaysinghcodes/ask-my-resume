@@ -273,6 +273,25 @@ describe("copy check covers every route and the page source", () => {
     expect(run(tree())).toBe(0);
   });
 
+  it("scans the shared JD fit empty lines in lib/jd-fit-rules.js (#37)", () => {
+    const copyFrom = (/** @type {string} */ d) => {
+      fs.mkdirSync(path.join(d, "lib"), { recursive: true });
+      fs.copyFileSync(path.join(root, "lib/jd-fit-rules.js"), path.join(d, "lib/jd-fit-rules.js"));
+    };
+    expect(run(tree(copyFrom))).toBe(0);
+    for (const bad of ["Still gathering sources \u2014 fit check.", "No cited matches -> this job description."]) {
+      const dir = tree((d) => {
+        copyFrom(d);
+        const file = path.join(d, "lib/jd-fit-rules.js");
+        const source = fs.readFileSync(file, "utf8");
+        const line = bad.startsWith("Still") ? "Still gathering sources for this fit check." : "No cited matches for this job description.";
+        expect(source).toContain(line);
+        fs.writeFileSync(file, source.replace(line, bad));
+      });
+      expect(run(dir), bad).toBe(1);
+    }
+  });
+
   it("fails when the rendered 404 heading has an arrow", () => {
     const dir = tree((d) => {
       const file = path.join(d, "frontend/dist-copy/not-found.html");

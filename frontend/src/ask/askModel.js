@@ -3,7 +3,7 @@
  * Nothing here touches the DOM, so the tests can cover it directly.
  */
 
-import { JD_FIT_EMPTY, JD_FIT_SECTIONS, renderJdFit } from "../../../lib/jd-fit-rules.js";
+import { JD_FIT_EMPTY, JD_FIT_GATHERING, JD_FIT_SECTIONS, renderJdFit } from "../../../lib/jd-fit-rules.js";
 
 export { JD_FIT_SECTIONS };
 
@@ -32,6 +32,7 @@ export const ASK_COPY = {
   jdCancel: "Cancel",
   jdQuestion: "Check fit against this job description",
   jdShow: "Show the job description",
+  jdGathering: JD_FIT_GATHERING,
   jdEmpty: JD_FIT_EMPTY,
   chipsLabel: "Suggested questions",
 };
@@ -179,6 +180,9 @@ const CITE = "\u0000";
  * @typedef {{ type: "text", text: string } | { type: "strong", text: string } | { type: "cite", n: number }} Inline
  * @typedef {{ type: "heading" | "p", inline: Inline[] } | { type: "ul" | "ol", items: Inline[][] }} Block
  * @typedef {{ n: number, label: string, href?: string }} NumberedSource
+ * @typedef {"" | "gathering" | "no-matches"} JdFitEmpty "" for a normal answer; "gathering"
+ *   when a finished JD fit turn got no sources event; "no-matches" when sources came
+ *   (even an empty list) but no item survived the filter.
  */
 
 /**
@@ -192,7 +196,8 @@ const CITE = "\u0000";
  * @param {string} text
  * @param {Source[] | null} sources `null` while the sources event has not arrived.
  * @param {{ streaming?: boolean, jdFit?: boolean }} [options] `jdFit` applies the JD fit rules (see jdFitText).
- * @returns {{ blocks: Block[], sources: NumberedSource[], empty: boolean }}
+ * A finished JD fit answer with nothing to cite shows one line instead (see JdFitEmpty).
+ * @returns {{ blocks: Block[], sources: NumberedSource[], empty: JdFitEmpty }}
  */
 export function layoutAnswer(text, sources, options = {}) {
   let body = String(text ?? "");
@@ -250,12 +255,25 @@ export function layoutAnswer(text, sources, options = {}) {
     }
   }
   const blocks = toBlocks(attached);
-  // A finished JD fit answer with nothing left after the filter shows one line and no
-  // Sources (Atlas ruling, Oct 26 2026, #9). While it streams, the card just waits.
-  if (options.jdFit && !options.streaming && !blocks.some((block) => "items" in block && block.items.length > 0)) {
-    return { blocks: [], sources: [], empty: true };
-  }
-  return { blocks, sources: sourcesOut, empty: false };
+  const empty = jdFitEmpty(blocks, known, options);
+  if (empty) return { blocks: [], sources: [], empty };
+  return { blocks, sources: sourcesOut, empty: "" };
+}
+
+/**
+ * Which empty line a JD fit answer shows, if any (Atlas rulings, Oct 26 2026, #9, #37).
+ * While it streams the card just waits, so neither line flashes. Once it is finished:
+ * no sources event at all means "gathering", since no cite can be checked; sources that
+ * leave no cited item means "no-matches". Neither shows a Sources list.
+ * @param {Block[]} blocks
+ * @param {Source[] | null} sources
+ * @param {{ streaming?: boolean, jdFit?: boolean }} options
+ * @returns {JdFitEmpty}
+ */
+export function jdFitEmpty(blocks, sources, options) {
+  if (!options.jdFit || options.streaming) return "";
+  if (sources == null) return "gathering";
+  return blocks.some((block) => "items" in block && block.items.length > 0) ? "" : "no-matches";
 }
 
 /**

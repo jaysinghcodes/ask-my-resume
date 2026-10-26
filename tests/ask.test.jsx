@@ -20,6 +20,7 @@ import {
   friendlyError,
   historyFor,
   jdCounter,
+  jdFitEmpty,
   layoutAnswer,
   normalizeSources,
   safeHref,
@@ -30,6 +31,7 @@ import { focusTargetFor, resetFocusToTop, scrollToId } from "../frontend/src/com
 import { askAbout, registerAskHandler } from "../frontend/src/components/askAbout.js";
 import { AskAnswer } from "../frontend/src/components/AskAnswer.jsx";
 import { ChatPage } from "../frontend/src/pages/ChatPage.jsx";
+import { JD_FIT_EMPTY, JD_FIT_GATHERING } from "../lib/jd-fit-rules.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 /** @param {unknown} value @returns {any} */
@@ -194,6 +196,92 @@ describe("citations and sources", () => {
     const layout = layoutAnswer("Gaps\n- none [bullet-captech-consultant-4]", normalizeSources(sources));
     expect(layout.blocks.map((b) => b.type)).toEqual(["p", "ul"]);
     expect(jdFitText("Strong matches")).toBe("");
+  });
+
+  describe("JD fit empty states (Atlas rulings, Oct 26 2026, #9 and #37)", () => {
+    const cited = "Strong matches\n- AWS Lambda services [bullet-captech-consultant-4]";
+    const offScope = "Strong matches\n- AWS Lambda services [made-up-id]\n\nHe has no experience with Kafka.";
+    /** @param {Record<string, unknown>} props */
+    const answer = (props) =>
+      render(createElement(AskAnswer, { turnId: "t37", text: cited, sources: null, streaming: false, jdFit: true, ...props }));
+
+    it("keeps the two lines exact, single sourced and free of dashes and arrows", () => {
+      expect(JD_FIT_GATHERING).toBe("Still gathering sources for this fit check.");
+      expect(JD_FIT_EMPTY).toBe("No cited matches for this job description.");
+      expect(ASK_COPY.jdGathering).toBe(JD_FIT_GATHERING);
+      expect(ASK_COPY.jdEmpty).toBe(JD_FIT_EMPTY);
+      expect(JD_FIT_GATHERING).not.toMatch(DASH_OR_ARROW);
+      expect(JD_FIT_EMPTY).not.toMatch(DASH_OR_ARROW);
+    });
+
+    it("shows the gathering line, and no Sources, for a finished JD fit turn with no sources event", () => {
+      const layout = layoutAnswer(cited, null, { jdFit: true });
+      expect(layout).toEqual({ blocks: [], sources: [], empty: "gathering" });
+      const html = answer({ sources: null });
+      expect(html).toContain(`<p class="ans-empty">${JD_FIT_GATHERING}</p>`);
+      expect(html).not.toContain(JD_FIT_EMPTY);
+      expect(html).not.toContain('class="srcs"');
+      expect(html).not.toContain("AWS Lambda");
+    });
+
+    it("treats a missing sources value like no sources event", () => {
+      expect(layoutAnswer(cited, loose(undefined), { jdFit: true }).empty).toBe("gathering");
+      expect(answer({ sources: undefined })).toContain(JD_FIT_GATHERING);
+    });
+
+    it("shows the no cited matches line when sources came but no item survives the filter", () => {
+      const layout = layoutAnswer(offScope, normalizeSources(sources), { jdFit: true });
+      expect(layout).toEqual({ blocks: [], sources: [], empty: "no-matches" });
+      const html = answer({ text: offScope, sources: normalizeSources(sources) });
+      expect(html).toContain(`<p class="ans-empty">${JD_FIT_EMPTY}</p>`);
+      expect(html).not.toContain(JD_FIT_GATHERING);
+      expect(html).not.toContain('class="srcs"');
+      expect(html).not.toMatch(/AWS Lambda|Kafka/);
+    });
+
+    it("shows the no cited matches line for an empty sources list, which drops every cite", () => {
+      expect(layoutAnswer(cited, [], { jdFit: true }).empty).toBe("no-matches");
+      const html = answer({ sources: [] });
+      expect(html).toContain(JD_FIT_EMPTY);
+      expect(html).not.toContain('class="srcs"');
+    });
+
+    it("does not flash either line while streaming", () => {
+      for (const [text, list] of [[cited, null], [offScope, normalizeSources(sources)], ["Strong", []], ["", null]]) {
+        const layout = layoutAnswer(loose(text), loose(list), { jdFit: true, streaming: true });
+        expect(layout.empty).toBe("");
+        const html = answer({ text, sources: list, streaming: true });
+        expect(html).not.toContain(JD_FIT_GATHERING);
+        expect(html).not.toContain(JD_FIT_EMPTY);
+        expect(html).not.toContain("ans-empty");
+      }
+    });
+
+    it("leaves a normal cited JD fit answer unchanged", () => {
+      const layout = layoutAnswer(cited, normalizeSources(sources), { jdFit: true });
+      expect(layout.empty).toBe("");
+      expect(layout.blocks.map((b) => b.type)).toEqual(["heading", "ul"]);
+      expect(layout.sources.map((s) => [s.n, s.href])).toEqual([[1, "#role-captech-consultant"]]);
+      const html = answer({ sources: normalizeSources(sources) });
+      expect(html).toContain("Strong matches");
+      expect(html).toContain('class="srcs"');
+      expect(html).not.toContain("ans-empty");
+    });
+
+    it("never shows either line outside JD fit", () => {
+      for (const list of [null, [], normalizeSources(sources)]) {
+        expect(layoutAnswer("No cites here.", loose(list)).empty).toBe("");
+        expect(jdFitEmpty([], loose(list), {})).toBe("");
+      }
+      const html = render(createElement(AskAnswer, { turnId: "t38", text: "No cites here.", sources: null, streaming: false }));
+      expect(html).not.toContain("ans-empty");
+    });
+
+    it("keeps null sources on a finished JD fit turn and [] on other turns", () => {
+      const page = read("frontend/src/pages/ChatPage.jsx");
+      expect(page).toContain('sources: item.sources ?? (item.mode === "jd_fit" ? null : [])');
+      expect(page).toContain('jdFit={turn.mode === "jd_fit"}');
+    });
   });
 
   describe("JD fit allowlist (Atlas ruling, Oct 20 2026) with Sentinel's r2 probes", () => {

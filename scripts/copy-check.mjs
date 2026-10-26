@@ -6,6 +6,7 @@
  *     prerender step,
  *   frontend/src: copy that only shows after an interaction (menu, chat states, errors,
  *     route titles), read from JSX text, copy attributes and prose string literals,
+ *   SHARED_COPY_FILES: shared modules the page imports copy from, read the same way,
  * for:
  *   dash punctuation (em or en dash, a spaced hyphen, a double hyphen),
  *   arrows (Unicode arrows, "->", "<-", "=>"),
@@ -28,6 +29,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DEFAULT_FILES = ["frontend/dist/index.html"];
 const COPY_DIR = "frontend/dist-copy";
 const SOURCE_DIR = "frontend/src";
+/** Shared modules outside frontend/src whose strings the page shows, such as the JD fit empty lines (#37). */
+export const SHARED_COPY_FILES = ["lib/jd-fit-rules.js"];
 /** The snapshots the prerender step must write. A missing one fails the check. */
 export const REQUIRED_SNAPSHOTS = ["home.html", "about.html", "contact.html", "not-found.html", "contact-page.html", "menu-open.html"];
 
@@ -226,7 +229,7 @@ export function checkCopy(items, banned = []) {
 }
 
 /**
- * @param {{ files?: string[], copyDir?: string, sourceDir?: string, env?: NodeJS.ProcessEnv, base?: string }} [options]
+ * @param {{ files?: string[], copyDir?: string, sourceDir?: string, sharedFiles?: string[], env?: NodeJS.ProcessEnv, base?: string }} [options]
  * @returns {number} 0 clean, 1 a rule hit, 2 a file is missing
  */
 export function main(options = {}) {
@@ -255,7 +258,10 @@ export function main(options = {}) {
     targets.push({ rel, items: extractCopy(fs.readFileSync(absolute, "utf8")) });
   }
   const sourceDir = path.resolve(base, options.sourceDir ?? SOURCE_DIR);
-  for (const file of sourceFiles(sourceDir)) {
+  const shared = (options.sharedFiles ?? SHARED_COPY_FILES)
+    .map((rel) => path.resolve(base, rel))
+    .filter((file) => fs.existsSync(file));
+  for (const file of [...sourceFiles(sourceDir), ...shared]) {
     targets.push({ rel: path.relative(base, file), items: extractSourceCopy(fs.readFileSync(file, "utf8"), file) });
   }
   let failed = false;
