@@ -9,7 +9,7 @@
   "functions": {
     "api/chat.js": {
       "maxDuration": 60,
-      "includeFiles": "frontend/public/Jay-Singh-Resume-Oct-2026.pdf"
+      "includeFiles": "kb/{kb,docs-index}.json"
     },
     "api/health.js": {
       "maxDuration": 60
