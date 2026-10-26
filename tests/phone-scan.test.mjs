@@ -423,6 +423,55 @@ test("fictional 555 is the exchange", () => {
   assertJoinedRunRejected("word", `Call${exchange}${other}now`);
 });
 
+test("issue #23: pipe, colon, tilde, middle dot, and bullet separate digits", () => {
+  for (const sep of ["|", ":", "~", "\u00B7", "\u2022", " | ", "\uFF5C"]) assertHit(us(sep));
+});
+
+test("issue #23: O, o, l, and I inside a digit run count as digits", () => {
+  assertHit(us("-").replace("0123", "O123"));
+  assertHit(us("-").replace("0123", "o123"));
+  assertHit(us("-").replace("0123", "0l23"));
+  assertHit(us("-").replace("0123", "0I23"));
+  assertClean("Python3, i18n, log4j, and l10n shipped.");
+});
+
+test("issue #23: vanity numbers and spelled digits fail", () => {
+  const word = ["FLOW", "ERS"].join("");
+  assertHit(["1", "800", word].join("-"));
+  assertHit(["1", "800", word].join(" "));
+  assertHit(["800", word].join(" "));
+  assertHit(["1", "800", "GOT", "JUNK"].join("-"));
+  const words = ["five", "five", "five", "five", "five", "five", "zero", "one", "two", "three"];
+  assertHit(words.join(" "));
+  assertHit(words.join(""));
+  assertHit(`one ${["555", "555", "012"].join(" ")}`);
+  assertClean(words.slice(0, 9).join(" "));
+  assertClean("HTTP 500 INTERNAL SERVER ERROR");
+  assertClean(["123", "abcdef0"].join(""));
+});
+
+test("issue #23: UUID and date shapes are kept only when valid", () => {
+  assertHit(["55555501", "2312", "3412", "3412", "3412" + "34123412"].join("-"));
+  assertHit(`${["5555", "55", "01"].join("-")} 23`);
+  assertHit(`${["2023", "02", "29"].join("-")} 1234`);
+  assertClean(["550e8400", "e29b", "41d4", "a716", "4466" + "55440000"].join("-"));
+  assertClean(["00000000", "0000", "0000", "0000", "0000" + "00000000"].join("-"));
+  assertClean(`${["2024", "02", "29"].join("-")}T23:59:59Z`);
+});
+
+test("issue #23: year list and ISBN are allowlisted, not special cased", () => {
+  const years = `from ${["2019", "2020", "2021"].join(" ")}`;
+  const isbn = ["978", "3", "16", "148410", "0"].join("-");
+  assertHit(years);
+  assertHit(isbn);
+  const parsed = parseAllowlist(fs.readFileSync(path.join(root, "scripts/phone-scan-allowlist.txt"), "utf8"));
+  assert.deepEqual(parsed.errors, []);
+  const tokens = allowTokens(parsed, "README.md");
+  assert.deepEqual(findPhoneHits(years, tokens), []);
+  assert.deepEqual(findPhoneHits(isbn, tokens), []);
+  assert.equal(findPhoneHits(us(":"), tokens).length, 1);
+});
+
 function fixtureFiles(dir) {
   /** @type {string[]} */
   const files = [];

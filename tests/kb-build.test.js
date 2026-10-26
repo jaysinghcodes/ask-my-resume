@@ -928,6 +928,130 @@ describe("knowledge base build", () => {
   });
 });
 
+describe("privacy filter follow ups (#23)", () => {
+  const us = (/** @type {string} */ sep) => ["555", "555", "0123"].join(sep);
+  const seededAllow = fs.readFileSync(path.join(root, "kb/phone-allowlist.txt"), "utf8");
+
+  /**
+   * @param {string} text
+   * @param {string} [allow]
+   */
+  function check(text, allow) {
+    const files = /** @type {Record<string, unknown>} */ ({ "bullets.json": [bullet({ resume_text: text })] });
+    if (allow !== undefined) files["phone-allowlist.txt"] = allow;
+    const dir = tempKb(files);
+    return { result: build(dir), dir };
+  }
+
+  /** @param {string} text */
+  function expectPhone(text) {
+    const { result, dir } = check(text);
+    expect(result.ok, text).toBe(false);
+    expect(result.errors.join("\n"), text).toMatch(/field=resume_text: phone number/);
+    expect(outputMissing(dir), text).toBe(true);
+  }
+
+  /**
+   * @param {string} text
+   * @param {string} [allow]
+   */
+  function expectClean(text, allow) {
+    const { result } = check(text, allow);
+    expect(result.errors, text).toEqual([]);
+    expect(result.ok, text).toBe(true);
+  }
+
+  it.each([
+    ["pipe", "|"],
+    ["colon", ":"],
+    ["tilde", "~"],
+    ["middle dot", "\u00B7"],
+    ["bullet", "\u2022"],
+    ["spaced pipe", " | "],
+    ["fullwidth pipe", "\uFF5C"],
+  ])("fails digit groups joined by a %s", (_label, sep) => {
+    expectPhone(`Call ${us(sep)} today.`);
+  });
+
+  it("fails letters standing in for digits inside a digit run", () => {
+    expectPhone(`Call ${us("-").replace("0123", "O123")}`);
+    expectPhone(`Call ${us("-").replace("0123", "o123")}`);
+    expectPhone(`Call ${us("-").replace("0123", "0l23")}`);
+    expectPhone(`Call ${us("-").replace("0123", "0I23")}`);
+    expectPhone(`Call ${us(" ").replace("0123", "OI23")}`);
+  });
+
+  it("fails vanity numbers", () => {
+    const word = ["FLOW", "ERS"].join("");
+    expectPhone(`Order at ${["1", "800", word].join("-")}`);
+    expectPhone(`Order at ${["1", "800", word].join(" ")}`);
+    expectPhone(`Order at ${["800", word].join(" ")}`);
+    expectPhone(`Order at ${["+1", "(800)", word].join(" ")}`);
+    expectPhone(`Haul at ${["1", "800", "GOT", "JUNK"].join("-")}`);
+  });
+
+  it("fails spelled out digit sequences of 10 or more", () => {
+    const words = ["five", "five", "five", "five", "five", "five", "zero", "one", "two", "three"];
+    expectPhone(`Call ${words.join(" ")}`);
+    expectPhone(`Call ${words.join("-")}`);
+    expectPhone(`Call ${words.map((word) => word.toUpperCase()).join(" ")}`);
+    expectPhone(`Call ${words.join("")}`);
+    expectClean(`Count ${words.slice(0, 9).join(" ")}`);
+    expectClean("One of two teams shipped three services.");
+  });
+
+  it("fails a phone in UUID shape that is not a valid UUID", () => {
+    expectPhone(["55555501", "2312", "3412", "3412", "3412" + "34123412"].join("-"));
+    expectPhone(["55555501", "2312", "3412", "3412", "3412" + "34123412"].join(" "));
+  });
+
+  it("fails a phone in ISO date shape that is not a real calendar date", () => {
+    expectPhone(`${["5555", "55", "01"].join("-")} 23`);
+    expectPhone(`${["2023", "02", "29"].join("-")} 1234`);
+    expectPhone(`${["2026", "04", "31"].join("-")} 1234`);
+  });
+
+  it("still passes valid UUIDs and real calendar dates", () => {
+    expectClean(["550e8400", "e29b", "41d4", "a716", "4466" + "55440000"].join("-"));
+    expectClean(["550E8400", "E29B", "41D4", "A716", "4466" + "55440000"].join("-"));
+    expectClean(["d1000000", "0000", "4000", "8000", "000000000001"].join(" "));
+    expectClean(["00000000", "0000", "0000", "0000", "0000" + "00000000"].join("-"));
+    expectClean(`Leap day ${["2024", "02", "29"].join("-")} and ${["2026", "12", "31"].join("-")}T23:59:59Z.`);
+    expectClean(`Logged ${["2026", "10", "19"].join("-")}T21:07:00.123+05:30 then ${["2026", "10", "20"].join("-")}.`);
+  });
+
+  it("fails a year list and an ISBN without the allowlist and passes them with it", () => {
+    const years = ["2019", "2020", "2021"].join(" ");
+    const isbn = ["978", "3", "16", "148410", "0"].join("-");
+    expectPhone(`from ${years}`);
+    expectPhone(`ISBN ${isbn}`);
+    const allow = `${years}\tyear list, reviewed\n${isbn}\tISBN, reviewed\n`;
+    expectClean(`from ${years}`, allow);
+    expectClean(`ISBN ${isbn}`, allow);
+  });
+
+  it("ships the year list and ISBN in the reviewed allowlist with a reason", () => {
+    const lines = seededAllow.split(/\r?\n/).filter((line) => line.trim() && !line.trim().startsWith("#"));
+    const tokens = lines.map((line) => line.split("\t")[0]);
+    expect(tokens).toContain(["2019", "2020", "2021"].join(" "));
+    expect(tokens).toContain(["978", "3", "16", "148410", "0"].join("-"));
+    for (const line of lines) expect(line).toMatch(/^\S[^\t]*\t\S/);
+    expectClean(`Shipped from ${["2019", "2020", "2021"].join(" ")}.`, seededAllow);
+    expectClean(`See ISBN ${["978", "3", "16", "148410", "0"].join("-")}.`, seededAllow);
+  });
+
+  it("keeps the #3 bar: hashes, short numbers, and glued text", () => {
+    expectClean("Pinned at 43aff81936cc627f6e3959879246fa6d0e1ca171.");
+    expectClean("Class of 2024. Room 5555. Build abc1234. Ticket 123456789 closed.");
+    expectClean("Python3, i18n and log4j shipped. Meet at 10:30 to 11:45.");
+    expectPhone(`Call ${us("")}call`);
+    expectPhone(`Call ${us("-")}abc`);
+    expectPhone(`Call ${us("-")}x12`);
+    expectPhone(`Call +1${us("")}a`);
+    expectPhone(`Call ${us("-")}`);
+  });
+});
+
 /**
  * @param {Record<string, unknown>} [overrides]
  */
