@@ -23,6 +23,18 @@
   color: var(--ink);
 }
 
+.hero h1,
+.hero h1 span {
+  text-wrap: balance;
+}
+
+/* Below 360 the headline steps down a little so "deployed engineer." stays on one line. */
+@media (max-width: 359px) {
+  .hero h1 {
+    font-size: 30px;
+  }
+}
+
 .hero h1 span {
   display: block;
   margin-top: 0;
