@@ -459,6 +459,12 @@ test("issue #23: UUID and date shapes are kept only when valid", () => {
   assertClean(`${["2024", "02", "29"].join("-")}T23:59:59Z`);
 });
 
+test("issue #23: all digit UUID shape with invalid variant is a hit (RFC 9562, Atlas Oct 26)", () => {
+  assertHit(["11111111", "2222", "3333", "4444", "5555" + "55555555"].join("-"));
+  assertHit(["55555501", "2312", "3412", "3412", "3412" + "34123412"].join("-"));
+  assertClean(["550e8400", "e29b", "41d4", "a716", "4466" + "55440000"].join("-"));
+});
+
 test("issue #23: year list and ISBN are allowlisted, not special cased", () => {
   const years = `from ${["2019", "2020", "2021"].join(" ")}`;
   const isbn = ["978", "3", "16", "148410", "0"].join("-");

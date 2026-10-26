@@ -1005,6 +1005,11 @@ describe("privacy filter follow ups (#23)", () => {
     expectPhone(["55555501", "2312", "3412", "3412", "3412" + "34123412"].join(" "));
   });
 
+  it("fails an all digit UUID shape with an invalid variant (RFC 9562, Atlas Oct 26)", () => {
+    expectPhone(["11111111", "2222", "3333", "4444", "5555" + "55555555"].join("-"));
+    expectClean(["550e8400", "e29b", "41d4", "a716", "4466" + "55440000"].join("-"));
+  });
+
   it("fails a phone in ISO date shape that is not a real calendar date", () => {
     expectPhone(`${["5555", "55", "01"].join("-")} 23`);
     expectPhone(`${["2023", "02", "29"].join("-")} 1234`);
