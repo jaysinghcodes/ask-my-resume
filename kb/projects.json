@@ -180,34 +180,33 @@
     "one_liner": "Chat assistant that answers questions about Jay's experience using Claude tool use with a resume search tool, so every answer is grounded in the source.",
     "problem": "A resume is a static document and a recruiter's actual question is usually more specific than anything on it. A chatbot pointed at a resume will happily make things up, which is worse than useless when the subject is your own professional history.",
     "what_jay_built": "Claude tool use with a resume search tool: Claude calls the search tool against Jay's resume and keeps calling it until it can produce a final answer grounded in the source. Jay built the frontend, the backend, the tool layer and the deployment.",
-    "architecture": "Today: a React and Vite frontend on GitHub Pages and a Node and Express backend on Render. The backend runs a Claude tool use loop with one tool, search_resume, which returns the resume text; Claude calls it until it can answer from the source. Frontend deploys run through GitHub Actions. Planned: one Vercel project with streaming, a structured knowledge base and cited answers.",
+    "architecture": "Live on Vercel: one Vercel Hobby project serves the React and Vite frontend and the /api Vercel Functions from the same origin. The chat function runs a Claude tool use loop with one tool, search_resume, which returns the resume text; Claude calls it until it can answer from the source, and the answer streams back. GitHub Actions runs CI on pull requests. Historical: the first version ran the frontend on GitHub Pages and a Node and Express backend on Render.",
     "key_decisions": [
       "Use a tool use loop so the model has to fetch the source before it answers.",
       "Let the model call the tool repeatedly until it has what it needs.",
-      "Keep it free to run on GitHub Pages and Render, moving to Vercel Hobby in the rebuild."
+      "Keep it free to run on Vercel Hobby. The first version ran free on GitHub Pages and Render."
     ],
     "stack": [
       "React",
       "Vite",
       "Node.js",
-      "Express",
+      "Vercel Functions",
       "Claude API (Anthropic SDK)",
       "GitHub Actions",
-      "GitHub Pages",
-      "Render"
+      "Vercel"
     ],
     "metrics": [],
     "links": [
       {
         "label": "Live demo",
-        "url": "https://jaysinghcodes.github.io/ask-my-resume/"
+        "url": "https://ask-jay.vercel.app/"
       },
       {
         "label": "Code",
         "url": "https://github.com/jaysinghcodes/ask-my-resume"
       }
     ],
-    "status": "Live; being rebuilt with a deeper knowledge base and moving to Vercel",
+    "status": "Live on Vercel; the deeper knowledge base rebuild is in progress",
     "featured": true,
     "confidence": "verified",
     "as_of": "2026-10",

@@ -76,19 +76,34 @@ describe("project checklist", () => {
     expect(setup).not.toMatch(/[—–→←↓↑⇒]/);
   });
 
-  it("runs lint, typecheck, test, and build in CI and leaves the Pages workflow alone", () => {
+  it("runs lint, typecheck, test, and build in CI and has no GitHub Pages workflow", () => {
     const ci = fs.readFileSync(path.join(root, ".github", "workflows", "ci.yml"), "utf8");
-    const deploy = fs.readFileSync(
-      path.join(root, ".github", "workflows", "deploy.yml"),
-      "utf8",
-    );
     expect(ci).toContain("npm run lint");
     expect(ci).toContain("npm run typecheck");
     expect(ci).toContain("npm test");
     expect(ci).toContain("npm run build");
     expect(ci).toContain("pull_request");
-    expect(deploy).toContain("Deploy Frontend to GitHub Pages");
-    expect(deploy).toContain("VITE_API_URL");
+    expect(fs.existsSync(path.join(root, ".github", "workflows", "deploy.yml"))).toBe(false);
+    const workflows = fs.readdirSync(path.join(root, ".github", "workflows"));
+    for (const name of workflows) {
+      const text = fs.readFileSync(path.join(root, ".github", "workflows", name), "utf8");
+      expect(text).not.toContain("deploy-pages");
+      expect(text).not.toContain("upload-pages-artifact");
+    }
+  });
+
+  it("points the live demo at Vercel, not GitHub Pages", () => {
+    const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
+    const setup = fs.readFileSync(path.join(root, "docs", "SETUP.md"), "utf8");
+    expect(readme).toContain("[Live demo](https://ask-jay.vercel.app)");
+    expect(readme).not.toContain("github.io");
+    expect(readme).not.toContain("deploy.yml");
+    expect(setup).toContain("Vercel is the live site");
+    expect(setup).not.toContain("github.io");
+    for (const file of ["profile.json", "projects.json", "faqs.json"]) {
+      const kb = fs.readFileSync(path.join(root, "kb", file), "utf8");
+      expect(kb).not.toContain("github.io");
+    }
   });
 
   it("replaces the env examples and removes the Express server entry", () => {

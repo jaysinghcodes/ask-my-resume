@@ -638,7 +638,7 @@ describe("chat limits", () => {
     expect(setup).toContain("Firewall");
     expect(setup).toContain("429");
     expect(setup).toContain("both Preview and Production");
-    expect(setup).toContain("Issue 13");
+    expect(setup).toContain("Vercel is the live site");
     expect(setup).not.toContain("Set the action to deny");
     expect(setup).not.toMatch(/[—–→←↓↑⇒]/);
   });

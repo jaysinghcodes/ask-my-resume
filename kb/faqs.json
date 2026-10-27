@@ -387,7 +387,7 @@
   {
     "id": "faq-ask-jay",
     "question": "What is Ask Jay?",
-    "answer": "The assistant you are talking to. It uses Claude tool use with a resume search tool: Claude calls the search tool over Jay's resume and knowledge base and keeps searching until it can answer from the source, and answers cite where each fact came from. The original version is React and Vite on GitHub Pages with a Node and Express backend on Render, deployed through GitHub Actions. The rebuild moves it to a single Vercel project with streaming answers.",
+    "answer": "The assistant you are talking to. It uses Claude tool use with a resume search tool: Claude calls the search tool over Jay's resume and knowledge base and keeps searching until it can answer from the source, and answers cite where each fact came from. It runs live on Vercel as a single project with streaming answers, at https://ask-jay.vercel.app. Historically, the original version was React and Vite on GitHub Pages with a Node and Express backend on Render, deployed through GitHub Actions.",
     "cites": [
       "project-ask-my-resume"
     ],
