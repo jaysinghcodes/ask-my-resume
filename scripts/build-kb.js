@@ -1,11 +1,13 @@
 /**
- * Validate kb/ and write kb/kb.json.
+ * Validate kb/ and write kb/kb.json, plus the search_docs keyword index in
+ * kb/docs-index.json (T7).
  * Loads .env when KB_BANNED_TERMS is not already set in the environment.
  */
 
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { buildDocsIndex } from "../lib/docs-index.js";
 import { buildKnowledgeBase } from "../lib/kb-build.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -25,6 +27,11 @@ if (!result.ok) {
 }
 
 console.log("Wrote kb/kb.json");
+
+const built = JSON.parse(fs.readFileSync(path.join(root, "kb", "kb.json"), "utf8"));
+const index = buildDocsIndex(Array.isArray(built.docs) ? built.docs : []);
+fs.writeFileSync(path.join(root, "kb", "docs-index.json"), JSON.stringify(index));
+console.log(`Wrote kb/docs-index.json (${index.documentCount} doc chunks)`);
 
 /**
  * @param {string} file

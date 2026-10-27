@@ -8,17 +8,11 @@ vi.mock("../lib/claude.js", () => ({
   }),
 }));
 
-vi.mock("../lib/resume.js", () => ({
-  loadResume: vi.fn(async () => "resume text"),
-  getResumeText: vi.fn(() => "resume text"),
-}));
-
 import { POST } from "../api/chat.js";
 import { toApiMessages } from "../frontend/src/chatHistory.js";
 import { FRIENDLY_CHAT_ERROR, formatSse } from "../lib/chat.js";
 import { createClient, streamAgenticLoop } from "../lib/claude.js";
 import { FRIENDLY, resetLimitState } from "../lib/limits.js";
-import { loadResume } from "../lib/resume.js";
 
 const ENV_KEYS = [
   "ANTHROPIC_API_KEY",
@@ -147,7 +141,6 @@ describe("POST /api/chat", () => {
     ]);
     expect(formatSse("done", {})).toBe("event: done\ndata: {}\n\n");
     expect(response.headers.get("access-control-allow-origin")).toBeNull();
-    expect(loadResume).not.toHaveBeenCalled();
     expect(createClient).toHaveBeenCalledWith("test-key");
     expect(streamAgenticLoop).toHaveBeenCalledWith(
       expect.anything(),
@@ -156,6 +149,8 @@ describe("POST /api/chat", () => {
         maxTokens: 1024,
         maxToolRounds: 5,
         signal: expect.any(AbortSignal),
+        systemPrompt: expect.any(Array),
+        toolContext: { scope: undefined },
       }),
       expect.any(Function),
     );
@@ -169,7 +164,7 @@ describe("POST /api/chat", () => {
     });
     /** @type {import("vitest").Mock} */ (streamAgenticLoop).mockImplementationOnce(
       async (_client, _options, emit) => {
-        emit({ type: "status", text: "Searching the resume" });
+        emit({ type: "status", text: "Searching project docs" });
         emit({ type: "delta", text: "Jay " });
         await hold;
         emit({ type: "delta", text: "builds cloud systems." });
@@ -197,8 +192,8 @@ describe("POST /api/chat", () => {
     ]);
 
     expect(winner).toBe("data");
-    expect(text).toContain("Searching the resume");
-    expect(text).toContain("Jay ");
+    expect(text).toContain("Searching project docs");
+    expect(text).toContain('"text":"Jay"');
     expect(text).not.toContain("builds cloud systems.");
     release();
     while (true) {
@@ -229,7 +224,7 @@ describe("POST /api/chat", () => {
               {
                 type: "tool_use",
                 id: `tool_${calls}`,
-                name: "search_resume",
+                name: "search_docs",
                 input: { query: "skills" },
               },
             ],

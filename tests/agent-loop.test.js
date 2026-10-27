@@ -33,7 +33,7 @@ function toolStream(id, preamble = "") {
       content.push({
         type: "tool_use",
         id,
-        name: "search_resume",
+        name: "search_docs",
         input: { query: "skills" },
       });
       return {
@@ -255,7 +255,7 @@ describe("streamAgenticLoop", () => {
     expect(deltas.join("")).toBe(`${preamble}\n\nThe resume lists AWS.`);
     expect(result).toBe("\n\nThe resume lists AWS.");
     expect(parts.filter((part) => part.type === "status")).toEqual([
-      { type: "status", text: "Searching the resume" },
+      { type: "status", text: "Searching project docs" },
     ]);
     expect(JSON.stringify(parts)).not.toContain("discard");
   });
@@ -287,7 +287,7 @@ describe("streamAgenticLoop", () => {
     await vi.waitFor(() => {
       expect(parts.some((part) => part.type === "delta" && part.text === "Grounded ")).toBe(true);
     });
-    expect(parts[0]).toEqual({ type: "status", text: "Searching the resume" });
+    expect(parts[0]).toEqual({ type: "status", text: "Searching project docs" });
     expect(parts.map((part) => part.text).join("")).not.toContain("answer.");
     expect(stream).toHaveBeenCalledWith(
       expect.objectContaining({ model: "model-from-env", max_tokens: 128 }),
@@ -334,7 +334,8 @@ describe("streamAgenticLoop", () => {
     expect(SYSTEM_PROMPT).toContain("Do not write text before a tool call");
   });
 
-  it("names project doc search for a tool other than the resume", () => {
+  it("names project doc search for search_docs and a record read for get_record", () => {
     expect(statusTextForTool("search_docs")).toBe("Searching project docs");
+    expect(statusTextForTool("get_record")).toBe("Reading the record");
   });
 });

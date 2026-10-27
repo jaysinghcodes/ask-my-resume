@@ -26,11 +26,6 @@ vi.mock("../lib/claude.js", () => ({
   }),
 }));
 
-vi.mock("../lib/resume.js", () => ({
-  loadResume: vi.fn(async () => "resume text"),
-  getResumeText: vi.fn(() => "resume text"),
-}));
-
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const RAW_IP = "203.0.113.55";
 

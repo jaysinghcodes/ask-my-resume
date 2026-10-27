@@ -53,9 +53,7 @@ describe("project checklist", () => {
     expect(vercel.fluid).toBe(true);
     expect(vercel.functions["api/chat.js"].maxDuration).toBe(60);
     expect(vercel.functions["api/health.js"].maxDuration).toBe(60);
-    expect(vercel.functions["api/chat.js"].includeFiles).toBe(
-      "frontend/public/Jay-Singh-Resume-Oct-2026.pdf",
-    );
+    expect(vercel.functions["api/chat.js"].includeFiles).toBe("kb/{kb,docs-index}.json");
     expect(vercel.rewrites).toEqual([
       { source: "/about", destination: "/index.html" },
       { source: "/contact", destination: "/index.html" },

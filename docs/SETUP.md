@@ -74,11 +74,33 @@ If the variable is missing, blank, or still the `.env.example` placeholder, the 
 
 ## Where shared logic lives
 
-Shared server logic lives in the root `lib/` directory: `claude.js`, `tools.js`, `prompts.js`, `resume.js`, `config.js`, `chat.js`, `limits.js`, and `kb-build.js`. `api/chat.js` and `api/health.js` import it, and so do the Vitest tests.
+Shared server logic lives in the root `lib/` directory: `claude.js`, `tools.js`, `prompts.js`, `sources.js`, `kb-data.js`, `docs-index.js`, `jd-fit.js`, `config.js`, `chat.js`, `limits.js`, and `kb-build.js`. `api/chat.js` and `api/health.js` import it, and so do the Vitest tests.
 
-It used to live in `mcp-server/lib/`. It moved to the repo root so the functions and the tests import one copy, without a second package. The phone free resume PDF is `frontend/public/Jay-Singh-Resume-Oct-2026.pdf`. The tool use loop itself is the same logic, with two required changes from this ticket: `MODEL_ID` comes from the environment with no fallback model, and the loop stops after 5 tool rounds.
+`npm run kb:build` writes `kb/kb.json` and the MiniSearch doc index `kb/docs-index.json`. Both are generated, gitignored, and bundled into the chat function through `includeFiles` in `vercel.json`.
+
+It used to live in `mcp-server/lib/`. It moved to the repo root so the functions and the tests import one copy, without a second package. The phone free resume PDF is `frontend/public/Jay-Singh-Resume-Oct-2026.pdf`. The page links it for download; the chat answers from the knowledge base, not the PDF. The tool use loop itself is the same logic, with two required changes from this ticket: `MODEL_ID` comes from the environment with no fallback model, and the loop stops after 5 tool rounds.
 
 `api/chat.js` is the POST function. `api/health.js` is the GET function. Both are Node.js functions on Fluid compute with `maxDuration` of 60 seconds. The ticket asks for these two files, so they stay separate. The Vite app in `frontend/` is served as static files from the same project. The page calls `/api` on the same origin. There is no CORS middleware.
+
+## Chat API request contract
+
+`POST /api/chat` takes a JSON body with these fields and nothing else. Any other top level field is rejected.
+
+| Field | Required | Rule |
+| --- | --- | --- |
+| `messages` | yes | 1 to 12 messages (`CHAT_MAX_HISTORY`), each exactly `{ "role": "user" or "assistant", "content": "..." }`. Content is a non empty string of at most 8000 characters (`CHAT_MAX_MESSAGE_CHARS`). |
+| `mode` | no | Only `"jd_fit"`, for a pasted job description. The answer comes back in the Strong matches, Partial matches and Closest experience sections. |
+| `scope` | no | Exactly `{ "type": "role" or "project", "id": "..." }`. The id must be a public role or project id in `kb/kb.json`, and its type must match: a role id with `"role"`, a project id with `"project"`. |
+
+`mode` and `scope` are never allowed together.
+
+Errors come back as one SSE `error` event:
+
+1. A malformed body, an unknown field, another mode, a scope that is not a real role or project of that type, or `mode` with `scope` returns HTTP 400 with code `invalid`.
+2. Too many messages, or a message over 8000 characters (a long job description included), returns HTTP 400 with code `too_long` and the T2 length text.
+3. A foreign Origin returns HTTP 403 with `{"code":"forbidden"}`.
+
+A good request streams `status`, `delta`, `sources` and `done` events. Each `[record id]` cite in the answer becomes one `sources` entry, `{ "id", "label", "href" }`, in first cite order. A cite to an id that is not a public record is dropped from `sources` and stripped from the streamed text. With a `scope`, so is a cite outside that scope: a role scope allows the role, its bullets, and skills or achievements evidenced by them; a project scope allows the project, its doc chunks, and skills or achievements evidenced by it. A JD fit answer is checked before it is sent and arrives as one `delta`. If nothing cited is left after the filter, the stream still ends with status 200: no `delta`, `sources` with an empty list, then `done`.
 
 The dev server in `frontend/vite.config.js` proxies `/api` to `http://127.0.0.1:3000`. `npx vercel dev` serves the Vite app and the functions together on that port.
 
