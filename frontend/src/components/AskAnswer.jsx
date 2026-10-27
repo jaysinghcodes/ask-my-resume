@@ -74,6 +74,13 @@ function SourceLabel({ source }) {
 export function AskAnswer({ turnId, text, sources, streaming, jdFit = false }) {
   const layout = layoutAnswer(text, sources, { streaming, jdFit });
   const linked = !streaming && layout.sources.length > 0;
+  if (layout.empty) {
+    return (
+      <div className="turn-a">
+        <p className="ans-empty">{layout.empty === "gathering" ? ASK_COPY.jdGathering : ASK_COPY.jdEmpty}</p>
+      </div>
+    );
+  }
   return (
     <div className="turn-a">
       {layout.blocks.map((block, index) => {
