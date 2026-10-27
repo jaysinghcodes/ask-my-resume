@@ -1,14 +1,17 @@
-# Ask Jay, AI Resume Assistant
+# Ask Jay
 
-An AI chat interface that lets recruiters and hiring managers ask questions about Jay Singh's background. Claude answers from the resume through a tool use loop.
+Ask Jay is Jay Singh's portfolio site with a built in AI chat. Recruiters and hiring managers can read his experience and projects, then ask questions and get answers that Claude writes from his resume and knowledge base.
 
-**[Live demo](https://jaysinghcodes.github.io/ask-my-resume)**
+**[Live demo](https://ask-jay.vercel.app)**
 
-The live demo above is the current GitHub Pages site. This repo is set up as one Vercel Hobby project: the static frontend and `/api` on the same origin. Jay's dashboard steps are in [docs/SETUP.md](docs/SETUP.md). The Pages workflow stays until a later cutover.
+## What it is today
 
-## What is this?
+- Live at [ask-jay.vercel.app](https://ask-jay.vercel.app).
+- A portfolio home page with Experience, Projects, Ask Jay, and Contact sections, plus a downloadable phone free resume PDF.
+- The Ask Jay chat, where Claude calls a `search_resume` tool and answers from the source instead of guessing.
+- One Vercel Hobby project. The static Vite frontend and the `/api` functions are served from the same origin.
 
-Instead of a static resume PDF, anyone can ask about experience, skills, and role fit. Claude calls a `search_resume` tool and answers from the resume text.
+Jay's Anthropic and Vercel dashboard steps are in [docs/SETUP.md](docs/SETUP.md).
 
 ## How it works
 
@@ -52,7 +55,7 @@ If `MODEL_ID` or `ANTHROPIC_API_KEY` is missing, the chat shows "Something went 
 
 ## Deployment
 
-Create the Vercel project from [docs/SETUP.md](docs/SETUP.md). Name it `ask-jay` in the same account as Cleat. Set `ANTHROPIC_API_KEY` and `MODEL_ID` for Production and Preview. `.github/workflows/deploy.yml` still publishes the frontend to GitHub Pages and is left in place on purpose.
+The site deploys as the `ask-jay` Vercel project, in the same account as Cleat. [docs/SETUP.md](docs/SETUP.md) covers the project settings. Set `ANTHROPIC_API_KEY` and `MODEL_ID` for Production and Preview.
 
 ### Phone scan
 
@@ -69,7 +72,7 @@ Create the Vercel project from [docs/SETUP.md](docs/SETUP.md). Name it `ask-jay`
 - `docs/SETUP.md`: Jay's Anthropic and Vercel steps
 - `vercel.json`: build, output directory, Fluid compute, function duration, single page app fallback
 - `.github/workflows/ci.yml`: lint, typecheck, test, and build on every pull request
-- `.github/workflows/deploy.yml`: existing Pages deploy, unchanged
+- `.github/workflows/phone-scan.yml`: phone number scan on every push and pull request
 
 ## How the tool loop works
 

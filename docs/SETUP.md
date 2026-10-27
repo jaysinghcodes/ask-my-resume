@@ -139,6 +139,6 @@ Vercel Hobby allows one rate limit rule. Use it on `/api/chat`. This is separate
 
 The function still enforces its own caps after the firewall: 30 questions per IP per day, and 500 questions per day for the whole site. Change those with `CHAT_PER_IP_DAILY` and `CHAT_SITE_DAILY` if you need to. The defaults are in `.env.example`.
 
-## 8. Cutover
+## 8. Live site
 
-Issue 13 moves the live site from GitHub Pages to Vercel. Before that cutover, set `IP_HASH_SALT` in Vercel for both Preview and Production. Chat stays unavailable on either environment until the salt is set.
+Vercel is the live site at https://ask-jay.vercel.app. The old GitHub Pages site is retired. Set `IP_HASH_SALT` in Vercel for both Preview and Production. Chat stays unavailable on either environment until the salt is set.

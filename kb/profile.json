@@ -53,9 +53,9 @@
     },
     {
       "label": "Ask Jay",
-      "url": "https://jaysinghcodes.github.io/ask-my-resume/",
+      "url": "https://ask-jay.vercel.app/",
       "public": true,
-      "notes": "Update to the vercel.app URL at cutover (ticket T3)"
+      "notes": "Live Vercel site. The old GitHub Pages site is retired."
     }
   ],
   "confidence": "verified",
